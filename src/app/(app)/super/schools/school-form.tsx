@@ -14,6 +14,7 @@ type SyllabusOption = { id: number; board: string; grade: string; name: string }
 /** Legacy super/school-form: details, plan, limits, syllabi and the logo (its colours become the school theme). */
 export function SchoolForm({
   schoolId,
+  direct = false,
   initial = {},
   plans,
   prices,
@@ -22,6 +23,11 @@ export function SchoolForm({
   logo,
 }: {
   schoolId?: number;
+  /**
+   * Bodhira Direct: no plan or seat-limit fields (left out of the post, so the
+   * API keeps them unchanged). not in legacy
+   */
+  direct?: boolean;
   initial?: Values;
   plans: readonly string[];
   /** Monthly ₹ per plan, from the API. */
@@ -61,22 +67,30 @@ export function SchoolForm({
         {text("city", "City", 80)}
         {text("state", "State", 80)}
         {text("country", "Country", 80)}
-        <Field label="Plan" error={e.plan}>
-          <select name="plan" defaultValue={v.plan || "free"} className={inputClass}>
-            {plans.map((p) => (
-              <option key={p} value={p}>
-                {p.charAt(0).toUpperCase() + p.slice(1)} — {prices[p] ? `₹${prices[p].toLocaleString("en-IN")}/mo` : "Free"}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Plan expires" error={e.plan_expires_at}>
-          <input name="plan_expires_at" type="date" defaultValue={String(v.plan_expires_at ?? "").slice(0, 10)} className={inputClass} />
-        </Field>
+        {!direct && (
+          <>
+            <Field label="Plan" error={e.plan}>
+              <select name="plan" defaultValue={v.plan || "free"} className={inputClass}>
+                {plans.map((p) => (
+                  <option key={p} value={p}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)} — {prices[p] ? `₹${prices[p].toLocaleString("en-IN")}/mo` : "Free"}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Plan expires" error={e.plan_expires_at}>
+              <input name="plan_expires_at" type="date" defaultValue={String(v.plan_expires_at ?? "").slice(0, 10)} className={inputClass} />
+            </Field>
+          </>
+        )}
       </div>
       <div className="grid grid-cols-3 items-end gap-3">
-        {num("max_teachers", "Max teachers", 100000, 10)}
-        {num("max_students", "Max students", 1000000, 500)}
+        {!direct && (
+          <>
+            {num("max_teachers", "Max teachers", 100000, 10)}
+            {num("max_students", "Max students", 1000000, 500)}
+          </>
+        )}
         {num("ai_daily_token_limit", "AI tokens / day", 10000000, 5000)}
       </div>
       {!!syllabi.length && (

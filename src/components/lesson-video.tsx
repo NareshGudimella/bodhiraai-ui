@@ -11,7 +11,8 @@ import { isSignedFileUrl, signedFileExpiry } from "@/lib/signed-file";
  * DRM player, whose moving watermark names the viewer; its player API reports
  * time and the end. Otherwise the plain `<video>` with downloads, picture in
  * picture and the context menu turned off. Shared by every role that may play
- * lessons (students, and teachers of the subject).
+ * lessons (students, teachers of the subject, and school admins for
+ * their curricula; not in legacy).
  * security: not in legacy
  */
 
@@ -54,7 +55,7 @@ function loadVdoApi(): Promise<VdoPlayerApi> {
 export type LessonVideoProps = {
   lessonId: number;
   playback: "vdocipher" | "url" | null | undefined;
-  /** The lesson's `content_url` (signed or external), for the `url` player. */
+  /** The lesson's `content_url` (signed or external), for the `url` player; null fetches it via the playback action. */
   src: string | null;
   poster: string | null;
   title: string;
@@ -69,7 +70,14 @@ export function LessonVideo(props: LessonVideoProps) {
   return (
     <div className="relative aspect-video overflow-hidden rounded-2xl bg-black">
       {props.overlay && <div className="absolute right-3 top-3 z-10">{props.overlay}</div>}
-      {props.playback === "vdocipher" ? <VdoLesson {...props} /> : props.src ? <UrlVideo {...props} src={props.src} /> : <Notice icon title="Video unavailable" />}
+      {props.playback === "vdocipher" || (props.playback === "url" && !props.src) ? (
+        // A `url` lesson without its link (the admin content list doesn't send one) fetches it too.
+        <VdoLesson {...props} />
+      ) : props.src ? (
+        <UrlVideo {...props} src={props.src} />
+      ) : (
+        <Notice icon title="Video unavailable" />
+      )}
     </div>
   );
 }

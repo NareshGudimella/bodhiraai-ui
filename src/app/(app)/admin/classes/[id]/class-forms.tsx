@@ -36,7 +36,7 @@ export function LinkSubjectForm({
   teachers: { id: number; name: string }[];
 }) {
   const [state, action, pending] = useActionState(linkSubject.bind(null, classId), undefined);
-  if (!subjects.length) return <p className="text-xs text-ink-3">All school subjects are linked. Add more under Subjects.</p>;
+  if (!subjects.length) return <p className="text-xs text-ink-3">All available subjects are linked.</p>;
   return (
     <form action={action} className="flex flex-wrap items-end gap-2">
       <label className="min-w-36 flex-1 text-xs text-ink-3"><span className="mb-1 block">Subject</span>

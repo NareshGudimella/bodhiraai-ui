@@ -4,6 +4,7 @@ import { FilterBar, FilterInput, FilterSelect, Pagination, toParams } from "@/co
 import { Card, Empty, PageHeader, Pill, buttonClass } from "@/components/ui";
 import { PLAN_KEYS, superApi } from "@/lib/super-api";
 import { tone } from "../format";
+import { DirectBadge } from "./direct-badge";
 
 export const metadata: Metadata = { title: "Schools" };
 
@@ -31,6 +32,7 @@ export default async function SuperSchoolsPage({ searchParams }: PageProps<"/sup
                 <tr key={s.id} className="border-t border-line">
                   <td className="px-4 py-2">
                     <Link href={`/super/schools/${s.id}`} className="font-medium text-ink hover:underline">{s.name}</Link>
+                    {s.is_direct && <span className="ml-2"><DirectBadge /></span>}
                     <span className="block text-xs text-ink-3">{s.code}{s.email ? ` · ${s.email}` : ""}</span>
                   </td>
                   <td className="px-4 py-2 text-ink-2">{[s.city, s.state].filter(Boolean).join(", ") || "—"}</td>

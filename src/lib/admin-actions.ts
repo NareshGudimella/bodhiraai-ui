@@ -71,23 +71,8 @@ export async function unlinkSubject(classId: number, subjectId: number) {
   await mutate(`/admin/classes/${idSeg(classId)}/subjects/${idSeg(subjectId)}`, 'DELETE');
 }
 
-const SUBJECT_FIELDS = ['name', 'grade', 'icon', 'color', 'description'];
-
-export async function createSubject(_: FormState, form: FormData): Promise<FormState> {
-  return mutate('/admin/subjects', 'POST', pick(form, SUBJECT_FIELDS), form);
-}
-
-export async function updateSubject(id: number, _: FormState, form: FormData): Promise<FormState> {
-  return mutate(`/admin/subjects/${idSeg(id)}`, 'PATCH', pick(form, [...SUBJECT_FIELDS, 'is_active']), form);
-}
-
-export async function setSubjectActive(id: number, name: string, active: boolean) {
-  await mutate(`/admin/subjects/${idSeg(id)}`, 'PATCH', { name, is_active: active ? 1 : 0 });
-}
-
-export async function deleteSubject(id: number) {
-  await mutate(`/admin/subjects/${idSeg(id)}`, 'DELETE');
-}
+// Subject create/edit/hide/delete are gone: the API answers 403 ("Subjects
+// come from the Super Admin's curricula."). not in legacy
 
 export async function linkUser(userId: number, otherKey: 'student_id' | 'parent_id', _: FormState, form: FormData) {
   return mutate(`/admin/users/${idSeg(userId)}/links`, 'POST', pick(form, [otherKey, 'relation']), form);

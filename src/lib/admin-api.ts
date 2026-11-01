@@ -32,6 +32,30 @@ export type AdminSubject = {
   chapters_count: number;
 };
 
+/** GET /admin/content: published Super Admin curricula the school uses (plus its own subjects). not in legacy */
+export type AdminContentLesson = {
+  id: number;
+  title: string;
+  type: string;
+  duration_sec: number;
+  playback: 'vdocipher' | 'url' | null;
+  /** Signed link (expires): plain `<img>`, never cached. */
+  thumbnail: string | null;
+};
+export type AdminContent = {
+  syllabi: {
+    /** Null for the last group: the school's own subjects outside any used curriculum. */
+    id: number | null;
+    name: string;
+    subjects: {
+      id: number;
+      name: string;
+      grade: string | null;
+      chapters: { id: number; title: string; lessons: AdminContentLesson[] }[];
+    }[];
+  }[];
+};
+
 export const adminApi = {
   home: () =>
     load<{
@@ -80,6 +104,7 @@ export const adminApi = {
       teachers: { id: number; name: string }[];
     }>(`/admin/classes/${idSeg(id)}/options`),
   subjects: () => load<AdminSubject[]>('/admin/subjects'),
+  content: () => load<AdminContent>('/admin/content'),
   analytics: () =>
     load<{
       classes: { id: number; label: string; students: number; attendance_percent: number; avg_quiz_percent: number }[];

@@ -5,9 +5,10 @@ import { idSeg } from '@/lib/api-path';
 import { mediaUrl } from './media';
 
 /**
- * GET /lessons/{id}/playback for the lesson player (student, and teachers of
- * the subject). The API decides who may play; the token stays on this server
- * and the browser only gets the short-lived OTP (or a signed/external URL).
+ * GET /lessons/{id}/playback for the lesson player (student, teachers of the
+ * subject, and school admins for their curricula: not in legacy). The
+ * API decides who may play; the token stays on this server and the browser
+ * only gets the short-lived OTP (or a signed/external URL).
  * security: not in legacy
  */
 export type LessonPlayback =

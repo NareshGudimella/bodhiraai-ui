@@ -51,6 +51,41 @@ export async function toggleSchool(id: number) {
   refresh();
 }
 
+// not in legacy: School Admin accounts (legacy only made them in seeders).
+const ADMIN_FIELDS = ['name', 'email', 'phone', 'password'];
+
+/** Only the fields the form has: the reset form leaves the phone alone. */
+const present = (form: FormData) => pick(form, ADMIN_FIELDS.filter((f) => form.has(f)));
+
+/** Never send a typed password back to the form. */
+const withoutAdminPassword = (state: FormState) => state && { ...state, values: { ...state.values, password: '' } };
+
+export async function createSchoolAdmin(schoolId: number, _: FormState, form: FormData): Promise<FormState> {
+  try {
+    await api(`/super/schools/${idSeg(schoolId)}/admins`, { body: present(form) });
+  } catch (e) {
+    return withoutAdminPassword(failure(e, 'Could not create the School Admin.', form));
+  }
+  refresh();
+  return { ok: true, message: 'School Admin created.' };
+}
+
+/** Edit and password reset: a blank password keeps the current one. */
+export async function updateSchoolAdmin(schoolId: number, userId: number, _: FormState, form: FormData): Promise<FormState> {
+  try {
+    await api(`/super/schools/${idSeg(schoolId)}/admins/${idSeg(userId)}`, { method: 'PATCH', body: present(form) });
+  } catch (e) {
+    return withoutAdminPassword(failure(e, 'Could not update the School Admin.', form));
+  }
+  refresh();
+  return { ok: true, message: form.get('password') ? 'Password reset. The admin was signed out everywhere.' : 'School Admin updated.' };
+}
+
+export async function toggleSchoolAdmin(schoolId: number, userId: number) {
+  await api(`/super/schools/${idSeg(schoolId)}/admins/${idSeg(userId)}/toggle`, { method: 'POST' });
+  refresh();
+}
+
 const SYLLABUS_FIELDS = ['board', 'grade', 'name', 'description', 'sort_order', 'is_active'];
 
 export async function saveSyllabus(id: number | null, _: FormState, form: FormData): Promise<FormState> {

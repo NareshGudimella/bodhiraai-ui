@@ -18,6 +18,19 @@ export type SchoolRow = {
   city: string | null;
   state: string | null;
   plan_expires_at: string | null;
+  /** The "Bodhira Direct" school (self sign-up students). not in legacy */
+  is_direct?: boolean;
+};
+
+/** not in legacy: a School Admin account (GET /super/schools/:id/admins). */
+export type SchoolAdmin = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  status: string;
+  last_login_at: string | null;
+  created_at: string | null;
 };
 
 export type SchoolModel = {
@@ -39,6 +52,8 @@ export type SchoolModel = {
   ai_daily_token_limit: number;
   logo: string | null;
   settings: { theme?: Record<string, string> } | null;
+  /** The "Bodhira Direct" school: no delete, deactivate, billing or seat caps. not in legacy */
+  is_direct?: boolean;
 };
 
 export type Syllabus = {
@@ -126,6 +141,8 @@ export const superApi = {
       };
       admins: { id: number; name: string; email: string | null; phone: string | null; status: string }[];
     }>(`/super/schools/${idSeg(id)}`),
+  /** not in legacy: the school's School Admin accounts. */
+  schoolAdmins: (id: string | number) => load<SchoolAdmin[]>(`/super/schools/${idSeg(id)}/admins`),
   users: async (params: URLSearchParams) => {
     const { data, meta } = await apiEnvelope<
       { id: number; name: string; email: string | null; phone: string | null; role: string; school: string | null; status: string; created_at: string | null }[]
