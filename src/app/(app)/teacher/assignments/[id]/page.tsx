@@ -1,4 +1,5 @@
 import { Card, PageHeader, Pill, SectionTitle, Stat } from "@/components/ui";
+import { mediaUrl } from "@/lib/media";
 import { fileNameOf } from "@/lib/signed-file";
 import { teacherApi } from "@/lib/teacher-api";
 import { GradeForm } from "./grade-form";
@@ -20,6 +21,8 @@ export default async function AssignmentPage({ params }: PageProps<"/teacher/ass
   const subs = new Map(a.submissions.map((s) => [s.id, s]));
   const submitted = roster.filter((r) => r.submission_id).length;
   const graded = roster.filter((r) => r.graded).length;
+  // Legacy `/media/...` paths resolve against the legacy files; signed links pass through.
+  const attachment = mediaUrl(a.attachment_url);
 
   return (
     <>
@@ -34,11 +37,11 @@ export default async function AssignmentPage({ params }: PageProps<"/teacher/ass
         <Stat label="Pending" value={roster.length - submitted} hint="Not submitted yet" />
         <Stat label="Max marks" value={a.max_marks} hint="Per student" />
       </div>
-      {(a.description || a.attachment_url) && (
+      {(a.description || attachment) && (
         <Card className="mb-6">
           {a.description && <p className="whitespace-pre-line text-sm text-ink">{a.description}</p>}
-          {a.attachment_url && (
-            <a href={a.attachment_url} target="_blank" rel="noopener" className="mt-2 inline-block text-sm font-medium text-primary-dark underline">
+          {attachment && (
+            <a href={attachment} target="_blank" rel="noopener" className="mt-2 inline-block text-sm font-medium text-primary-dark underline">
               Open attachment
             </a>
           )}
@@ -48,6 +51,7 @@ export default async function AssignmentPage({ params }: PageProps<"/teacher/ass
       <ul className="space-y-2">
         {roster.map((r) => {
           const sub = r.submission_id ? subs.get(r.submission_id) : undefined;
+          const file = mediaUrl(sub?.file_url);
           return (
             <li key={r.student_id}>
               <Card className="p-4">
@@ -63,9 +67,9 @@ export default async function AssignmentPage({ params }: PageProps<"/teacher/ass
                 {sub && (
                   <div className="mt-3 space-y-3 border-t border-line pt-3">
                     {sub.note && <p className="whitespace-pre-line text-sm text-ink-2">{sub.note}</p>}
-                    {sub.file_url && (
-                      <a href={sub.file_url} target="_blank" rel="noopener" className="block truncate text-sm font-medium text-primary-dark underline">
-                        📎 {fileNameOf(sub.file_url, "Submitted file")}
+                    {file && (
+                      <a href={file} target="_blank" rel="noopener" className="block truncate text-sm font-medium text-primary-dark underline">
+                        📎 {fileNameOf(file, "Submitted file")}
                       </a>
                     )}
                     <GradeForm submissionId={sub.id} maxMarks={a.max_marks} score={r.score} feedback={sub.feedback} />

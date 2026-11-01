@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader, secondaryButtonClass } from "@/components/ui";
+import { getT } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
 import { askAi } from "@/lib/student-actions";
 import { studentApi } from "@/lib/student-api";
@@ -13,7 +14,7 @@ const askClass =
 
 export default async function LessonPage({ params }: PageProps<"/student/lessons/[id]">) {
   const { lesson, progress, siblings } = await studentApi.lesson((await params).id);
-  const { quiz_state } = await studentApi.chapterLessons(String(lesson.chapter_id));
+  const [{ quiz_state }, t] = await Promise.all([studentApi.chapterLessons(String(lesson.chapter_id)), getT()]);
 
   const index = siblings.findIndex((s) => s.id === lesson.id);
   const prev = index > 0 ? siblings[index - 1] : null;
@@ -63,6 +64,7 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
             body={lesson.content_body ?? null}
             durationSec={lesson.duration_sec}
             initial={progress}
+            labels={{ markComplete: t("Mark Complete"), completed: t("Completed"), notes: t("Notes") }}
             overlay={
               hasContent ? (
                 <form action={askAi.bind(null, prompt)}>
@@ -101,7 +103,7 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
               const isDone = done.has(s.id);
               // Legacy locks lessons after the current one until you get there.
               const locked = !isNow && !isDone && s.sort_order > lesson.sort_order;
-              const state = isNow ? "Now playing" : isDone ? "Completed" : locked ? "Locked" : "";
+              const state = isNow ? "Now playing" : isDone ? t("Completed") : locked ? "Locked" : "";
               const body = (
                 <>
                   <span

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ProgressBar, buttonClass } from "@/components/ui";
-import { aiReply, aiStart } from "@/lib/student-actions";
+import { aiReply, aiStart, type AiResult } from "@/lib/student-actions";
 import type { AiMessage, TokenStatus } from "@/lib/student-api";
 import { RichText } from "./rich-text";
 
@@ -31,7 +31,7 @@ export function Chat({
   const [tokens, setTokens] = useState(initialTokens);
   const [draft, setDraft] = useState("");
   const [pendingText, setPendingText] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; retry: string | null } | null>(null);
   const [pending, startTransition] = useTransition();
   const bottom = useRef<HTMLDivElement>(null);
   const exhausted = tokens.remaining <= 0;
@@ -49,11 +49,21 @@ export function Chat({
     setDraft("");
     setPendingText(body);
     startTransition(async () => {
-      const result = sessionId ? await aiReply(sessionId, body) : await aiStart(body);
+      // A failed call (rate limit, 5xx, network) stays inline with the question
+      // kept and a retry; a 402 has already redirected to /paywall on the server.
+      // not in legacy
+      let result: AiResult;
+      try {
+        result = sessionId ? await aiReply(sessionId, body) : await aiStart(body);
+      } catch {
+        result = { ok: false, status: 0, message: "The tutor is unavailable right now. Please try again in a moment." };
+      }
       setPendingText(null);
       if (!result.ok) {
-        setError(result.message);
+        const retryable = result.status === 0 || result.status === 429 || result.status >= 500;
+        setError({ message: result.message, retry: retryable ? body : null });
         setDraft(body);
+        if (result.tokens) setTokens(result.tokens);
         return;
       }
       setMessages((m) => [...m, ...result.messages]);
@@ -106,7 +116,21 @@ export function Chat({
       </div>
 
       <div className="border-t border-line p-3 sm:p-4">
-        {error && <p role="alert" className="mb-2 rounded-lg bg-danger-light px-3 py-2 text-sm text-danger">{error}</p>}
+        {error && (
+          <div role="alert" className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-danger-light px-3 py-2 text-sm text-danger">
+            <span>{error.message}</span>
+            {error.retry && (
+              <button
+                type="button"
+                onClick={() => send(error.retry!)}
+                disabled={pending}
+                className="rounded-full border border-danger/40 px-3 py-0.5 text-xs font-semibold hover:bg-danger/10 disabled:opacity-50"
+              >
+                Try again
+              </button>
+            )}
+          </div>
+        )}
         {exhausted ? (
           <p className="text-center text-sm font-semibold text-danger">⚡ Daily AI token limit reached. It resets tomorrow.</p>
         ) : (

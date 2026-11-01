@@ -17,7 +17,7 @@ Next.js 16 frontend replacing the legacy Laravel Blade UI. It talks only to bodh
 | Path | Purpose |
 |---|---|
 | `src/lib/api.ts` | Server-only `api<T>(path, {method, body, token})` (returns `data`) and `apiEnvelope<T>` (`data` + `meta`). Both throw `ApiError(message, status, code, errors)` |
-| `src/lib/load.ts` | `load<T>(path)` for pages: API 404/403 → `notFound()` |
+| `src/lib/load.ts` | `load<T>(path)` for pages: API 404/403 → `notFound()`, 402 → `/paywall`. `paywallOn402(e)` does the same in Server Actions' `catch`. Dashboards' error pages: `app/(app)/error.tsx`, `app/(app)/not-found.tsx`, `app/global-error.tsx` |
 | `src/lib/teacher-api.ts`, `parent-api.ts`, `inbox-api.ts` | Typed reads per area (inbox = chat + notifications) |
 | `src/lib/teacher-actions.ts`, `inbox-actions.ts`, `action-result.ts` | Server Actions; form actions return `FormState` (`message`, Laravel `errors`, submitted `values`) and call `refresh()` or `redirect()` on success |
 | `src/components/inbox/` | Notifications list, chat list and thread; shared by the role routes |

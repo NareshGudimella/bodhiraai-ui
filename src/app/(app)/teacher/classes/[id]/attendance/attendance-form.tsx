@@ -44,18 +44,20 @@ export function AttendanceForm({ classId, sheet }: { classId: number; sheet: Att
       </div>
       <Card className="divide-y divide-line p-0">
         {sheet.records.map((r) => (
+          // Each student is a labelled radio group ("Attendance for <name>"), and the
+          // P/A/L/E chips show a focus ring for keyboard users. not in legacy
           <fieldset key={r.student_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
-            <legend className="sr-only">{r.name}</legend>
-            <span className="min-w-0 text-sm">
+            <legend className="sr-only">Attendance for {r.name}{r.roll_no ? `, roll ${r.roll_no}` : ""}</legend>
+            <span className="min-w-0 text-sm" aria-hidden>
               <span className="mr-2 text-ink-3">{r.roll_no ?? "—"}</span>
               <span className="font-medium text-ink">{r.name}</span>
             </span>
-            <span className="flex gap-1">
+            <span role="radiogroup" aria-label={`Attendance for ${r.name}`} className="flex gap-1">
               {STATUSES.map((s) => (
                 <label
                   key={s.value}
                   title={s.label}
-                  className="cursor-pointer rounded-md border border-line px-2.5 py-1 text-xs font-semibold text-ink-2 has-checked:border-brand has-checked:bg-brand has-checked:text-primary-light"
+                  className="cursor-pointer rounded-md border border-line px-2.5 py-1 text-xs font-semibold text-ink-2 has-checked:border-brand has-checked:bg-brand has-checked:text-primary-light has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
                 >
                   <input
                     type="radio"

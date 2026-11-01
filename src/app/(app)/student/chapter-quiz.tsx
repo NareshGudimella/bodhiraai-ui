@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Card, buttonClass } from "@/components/ui";
+import { getT } from "@/lib/i18n";
 import type { QuizState } from "@/lib/student-api";
 
 /** Quiz call-to-action: locked until every lesson is complete (legacy lessons.blade.php). */
-export function ChapterQuiz({ state }: { state: QuizState }) {
+export async function ChapterQuiz({ state }: { state: QuizState }) {
   const { quiz, attempt, all_completed } = state;
   if (!quiz) return null;
+  const t = await getT();
 
   const percent = attempt && attempt.total_marks > 0 ? Math.round((attempt.score / attempt.total_marks) * 100) : 0;
   return (
@@ -25,7 +27,7 @@ export function ChapterQuiz({ state }: { state: QuizState }) {
       {attempt ? (
         <Link href={`/student/attempts/${attempt.id}`} className={buttonClass}>View result</Link>
       ) : all_completed ? (
-        <Link href={`/student/quizzes/${quiz.id}`} className={buttonClass}>Take quiz</Link>
+        <Link href={`/student/quizzes/${quiz.id}`} className={buttonClass}>{t("Take Quiz")}</Link>
       ) : null}
     </Card>
   );

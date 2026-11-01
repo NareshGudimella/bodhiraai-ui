@@ -50,4 +50,6 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test # signed /files/* links (node --test; Node 22.18+ strips the types)
-      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist
+      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist --env= # no-route (top level)
+      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist --env production
+      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist -c wrangler.staging.jsonc

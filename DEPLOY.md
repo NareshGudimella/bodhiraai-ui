@@ -9,14 +9,14 @@ How the Next.js web app runs in production. It's a **Cloudflare Container** behi
 | Piece | Where | What it does |
 |---|---|---|
 | `Dockerfile` | this folder | Builds the standalone Next.js server (`node server.js`, port 3000). The build doesn't call the API |
-| `edge/` | Worker plus container config (`wrangler.jsonc`) | The Worker on `bodhiraai.com/*` |
+| `edge/` | Worker plus container config (`wrangler.jsonc`; `wrangler.staging.jsonc` for the rehearsal) | The Worker on `bodhiraai.com/*` (the route only in `wrangler.jsonc`'s `production` env, from cut-over step 7) |
 | R2 `bodhira-legacy` | bound as `LEGACY_FILES` | Legacy uploads (`media/…`, `cloud/…`) and the site's `.mp4` videos (`assets/…`), copied before cut-over |
 | R2 uploads bucket | the API's `R2_BUCKET` / `R2_PUBLIC_URL` | Public uploads (marketing site / CMS files only), as absolute URLs. Not used by the Worker |
 | R2 `bodhira-private` | bound as `PRIVATE_FILES`; the API's `R2_PRIVATE_BUCKET` | Every non-public upload (avatars, school logos, lesson files and thumbnails, assignment attachments, submissions, recordings). **Never public**: no `r2.dev` URL, no custom domain. Reached only through signed `/files/*` links (security: not in legacy) |
 
 What the Worker does with each request ([edge/src/index.ts](edge/src/index.ts)):
 - **`/api/v1/*`, `/webhooks/*`:** passed to `API_ORIGIN` (Elastic Beanstalk). The mobile app and the gateway webhook URLs stay the same.
-- **`/media/*`, `/cloud/*`, `/assets/**.mp4`:** served from `LEGACY_FILES`, with byte ranges so videos can be seeked.
+- **`/media/*`, `/cloud/*`, `/assets/**.mp4`:** served from `LEGACY_FILES`, with byte ranges so videos can be seeked. `/media/invoices/…` (any letter case, also percent-encoded) answers 404: invoices live only in the private bucket, behind the authenticated invoice endpoints (security: not in legacy; `edge/src/legacy-key.ts`, tested in `edge/test/legacy-key.test.ts`).
 - **`/files/<key>?exp&sig`:** private files from `PRIVATE_FILES`, only with a link the API signed ([edge/src/file-sig.ts](edge/src/file-sig.ts)): `sig` is base64url HMAC-SHA256 with `FILE_URL_SECRET` over `"<decoded key>\n<exp>"`. A missing or wrong signature, an expired link, `exp` more than 24 h ahead, or a forbidden key (`invoices/…`, `..`, `\`, empty segments) answers 403 `{"message":"Link expired or invalid."}`; a missing object 404. Byte ranges as for `/media`. Headers: `Content-Disposition: inline`, `nosniff`, `Referrer-Policy: no-referrer`, `Cache-Control: private, max-age=<seconds until exp, ≤ 3600>`. Locally the API serves `/files/*` itself on :4000. (security: not in legacy)
 - **Everything else:** the web container.
 - **Visitor IP:** every request carries the visitor's IP as `X-Client-IP`, set by the Worker so a visitor can't supply their own. Requests to the API also carry `X-Proxy-Secret`. The web server forwards both when it calls the API.
@@ -40,10 +40,18 @@ Both secrets are listed under `secrets.required` in `wrangler.jsonc` (names only
 Deploys run in GitHub Actions, never from a workstation, so **nobody needs Docker or Colima locally**. GitHub's runners have Docker; wrangler builds `Dockerfile` there and pushes the image to Cloudflare's registry.
 
 - **CI** (`.github/workflows/ci.yml`, every push): lint, type-check, the standalone build, the **image build plus a start check**, and the Worker's dry run.
-- **Deploy** (`.github/workflows/deploy.yml`, manual): Actions → Deploy → Run workflow, on a commit CI passed. It runs `wrangler deploy` in `edge/`, which deploys the Worker and rolls out the containers.
+- **Deploy** (`.github/workflows/deploy.yml`, manual): Actions → Deploy → Run workflow, on a commit CI passed. It runs `wrangler deploy` in `edge/`, which deploys the Worker and rolls out the containers. Choose the target:
+
+  | Target | Config | Route | When |
+  |---|---|---|---|
+  | `no-route` (default) | `wrangler.jsonc`, top level (`--env=`) | **none**: no production traffic; `*.workers.dev` only | Before cut-over |
+  | `production` | `wrangler.jsonc --env production` | `bodhiraai.com/*` | Cut-over step 7 ([runbook](../docs/cutover-runbook.md) §6), then every deploy |
+  | `staging` | `wrangler.staging.jsonc` | the staging host | The rehearsal (runbook §4) |
+
+  Both `wrangler.jsonc` targets deploy the same Worker (`bodhiraai-web`) and container application, so secrets and warm containers carry over to cut-over. A `no-route` deploy never removes a route (wrangler only replaces routes when the config lists some), so after cut-over it would still update production code: use `production` from then on. Wrangler doesn't inherit bindings, vars or containers into an env, so change the top level and `env.production` together.
 
 Once, before the first deploy:
-1. In the repository settings, create the `production` environment with a required reviewer.
+1. In the repository settings, create the `production` environment with a required reviewer (used by `no-route` and `production`), and `staging` for the rehearsal.
 2. Add its secrets `CLOUDFLARE_API_TOKEN` (permissions: Workers Scripts, Containers and R2, edit) and `CLOUDFLARE_ACCOUNT_ID`.
 3. From any machine with Node (no Docker needed):
    ```bash
@@ -58,7 +66,8 @@ Once, before the first deploy:
 Deploy the API first whenever a release changes both apps.
 
 **Before the first deploy:**
-- `bodhiraai.com` must be proxied in Cloudflare DNS (orange cloud). The Worker route is `bodhiraai.com/*`; add `www` the same way if it's used.
+- `bodhiraai.com` must be proxied in Cloudflare DNS (orange cloud) before the `production` target is run. The Worker route is `bodhiraai.com/*` in `env.production` only; add `www` the same way if it's used.
+- **Staging:** replace the `<placeholders>` in `wrangler.staging.jsonc` (host, zone, API origin), create `bodhira-legacy-staging` and `bodhira-private-staging` (public access off), and set the staging secrets with `-c wrangler.staging.jsonc`. Never point it at production buckets or the production API.
 - Check `wrangler.jsonc` against the current Containers docs (`instance_type`, `max_instances`). Containers is a newer product, and wrangler already renamed `standard` to `standard-1`.
 
 **Local check (no Docker):**

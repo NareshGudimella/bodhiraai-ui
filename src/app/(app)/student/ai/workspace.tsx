@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { PageHeader, secondaryButtonClass } from "@/components/ui";
+import { unstable_rethrow } from "next/navigation";
+import { Card, PageHeader, secondaryButtonClass } from "@/components/ui";
+import { ApiError } from "@/lib/api";
 import { studentApi } from "@/lib/student-api";
 import { Chat } from "./chat";
+import { RetryButton } from "./retry-button";
 
 /** Carbon diffForHumans, short: "5 minutes ago". */
 function ago(iso: string): string {
@@ -20,22 +23,51 @@ function ago(iso: string): string {
  * AI tutor page: conversation list + the selected conversation (the most recent
  * one when none is chosen, like the legacy /student/ai page).
  */
-export async function AiWorkspace({ sessionId, fresh = false }: { sessionId?: string; fresh?: boolean }) {
+async function read(sessionId: string | undefined, fresh: boolean) {
   const [sessions, tokens] = await Promise.all([studentApi.aiSessions(), studentApi.aiTokens()]);
   const currentId = fresh ? undefined : (sessionId ?? (sessions[0] ? String(sessions[0].id) : undefined));
   const current = currentId ? await studentApi.aiSession(currentId) : null;
+  return { sessions, tokens, current };
+}
+
+/**
+ * API failures stay on the page with a retry instead of the error page: 429
+ * (rate limit) and 5xx or an unreachable API. A 402 has already redirected to
+ * /paywall and a 404/403 shown not-found (lib/load.ts); unstable_rethrow lets
+ * those, and Next's own signals, through. not in legacy
+ */
+export async function AiWorkspace({ sessionId, fresh = false }: { sessionId?: string; fresh?: boolean }) {
+  let data: Awaited<ReturnType<typeof read>>;
+  try {
+    data = await read(sessionId, fresh);
+  } catch (e) {
+    unstable_rethrow(e);
+    const status = e instanceof ApiError ? e.status : 0;
+    return (
+      <>
+        <Header />
+        <Card>
+          <div role="alert" className="py-6 text-center">
+            <p className="text-4xl" aria-hidden>🤖</p>
+            <p className="mt-2 font-semibold text-brand">
+              {status === 429 ? "Too many requests" : "The AI tutor is unavailable right now"}
+            </p>
+            <p className="mt-1 text-sm text-ink-2">
+              {status === 429 ? "Please wait a moment and try again." : "Please try again in a moment."}
+            </p>
+            <div className="mt-4">
+              <RetryButton />
+            </div>
+          </div>
+        </Card>
+      </>
+    );
+  }
+  const { sessions, tokens, current } = data;
 
   return (
     <>
-      <PageHeader
-        title="AI Tutor"
-        subtitle="Ask questions and get step-by-step help."
-        action={
-          <Link href="/student/ai/new" className={secondaryButtonClass}>
-            + New chat
-          </Link>
-        }
-      />
+      <Header />
       <div className="flex flex-col gap-4 lg:flex-row">
         <nav aria-label="Conversations" className="lg:w-64 lg:shrink-0">
           <ul className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
@@ -64,5 +96,19 @@ export async function AiWorkspace({ sessionId, fresh = false }: { sessionId?: st
         />
       </div>
     </>
+  );
+}
+
+function Header() {
+  return (
+    <PageHeader
+      title="AI Tutor"
+      subtitle="Ask questions and get step-by-step help."
+      action={
+        <Link href="/student/ai/new" className={secondaryButtonClass}>
+          + New chat
+        </Link>
+      }
+    />
   );
 }

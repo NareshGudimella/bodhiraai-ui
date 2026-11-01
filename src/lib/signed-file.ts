@@ -18,6 +18,13 @@ export function isSignedFileUrl(url: string | null | undefined): boolean {
   }
 }
 
+/** When one of our signed links expires (ms since the epoch), or null for any other URL. */
+export function signedFileExpiry(url: string | null | undefined): number | null {
+  if (!isSignedFileUrl(url)) return null;
+  const exp = Number(new URL(url!, 'http://local').searchParams.get('exp'));
+  return Number.isFinite(exp) && exp > 0 ? exp * 1000 : null;
+}
+
 /** The file name at the end of a link, without the query string. */
 export function fileNameOf(url: string, fallback = 'file'): string {
   try {

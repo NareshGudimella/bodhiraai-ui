@@ -6,22 +6,30 @@
 # and R2 edit) and CLOUDFLARE_ACCOUNT_ID, in the "production" (and "staging")
 # environment, so a reviewer can be required. PROXY_SECRET is set once with `wrangler secret
 # put`, not here. Draft: not yet run against Cloudflare.
+#
+# Targets (edge/wrangler.jsonc):
+#   no-route   (default) the Worker and containers WITHOUT the bodhiraai.com route:
+#              takes no production traffic. Use before cut-over.
+#   production adds the bodhiraai.com/* route (`--env production`). Cut-over step 7
+#              (docs/cutover-runbook.md) and every deploy after it.
+#   staging    edge/wrangler.staging.jsonc (staging Worker, route and buckets).
 name: Deploy
 on:
   workflow_dispatch:
     inputs:
       target:
-        description: production (wrangler.jsonc) or staging (wrangler.staging.jsonc, staging route and vars)
+        description: no-route (no bodhiraai.com route), production (bodhiraai.com/* route; cut-over step 7 onwards) or staging
         type: choice
-        options: [production, staging]
-        default: production
+        options: [no-route, production, staging]
+        default: no-route
 concurrency:
   group: deploy-${{ inputs.target }}
   cancel-in-progress: false
 jobs:
   deploy:
     runs-on: ubuntu-24.04
-    environment: ${{ inputs.target }}
+    # no-route uses the production environment's secrets and reviewer too.
+    environment: ${{ inputs.target == 'staging' && 'staging' || 'production' }}
     defaults:
       run:
         working-directory: edge
@@ -33,7 +41,7 @@ jobs:
           cache: npm
           cache-dependency-path: edge/package-lock.json
       - run: npm ci
-      - run: npx wrangler deploy -c ${{ inputs.target == 'staging' && 'wrangler.staging.jsonc' || 'wrangler.jsonc' }}
+      - run: npx wrangler deploy ${{ inputs.target == 'staging' && '-c wrangler.staging.jsonc' || inputs.target == 'production' && '-c wrangler.jsonc --env production' || '-c wrangler.jsonc --env=' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

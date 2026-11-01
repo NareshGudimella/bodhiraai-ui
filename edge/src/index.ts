@@ -10,6 +10,7 @@
  */
 import { Container, getRandom } from '@cloudflare/containers';
 import { keyFromPath, verifyFileLink } from './file-sig';
+import { legacyFileKey } from './legacy-key';
 
 interface Env {
   WEB: DurableObjectNamespace<Web>;
@@ -83,28 +84,6 @@ export default {
     return container.fetch(new Request(request, { headers, body: limitBody(request, path) }));
   },
 } satisfies ExportedHandler<Env>;
-
-/**
- * R2 key of a legacy file. Keys keep the legacy URL paths: media/<public disk
- * path>, cloud/<path>, assets/<path>.mp4 (site videos). Undefined for other
- * paths; null for a legacy path that can't be a file (bad encoding, `..`).
- */
-function legacyFileKey(path: string): string | null | undefined {
-  if (
-    !path.startsWith('/media/') &&
-    !path.startsWith('/cloud/') &&
-    !(path.startsWith('/assets/') && path.toLowerCase().endsWith('.mp4'))
-  ) {
-    return undefined;
-  }
-  let key: string;
-  try {
-    key = decodeURIComponent(path.slice(1));
-  } catch {
-    return null;
-  }
-  return key.split('/').some((s) => s === '..' || s === '') ? null : key;
-}
 
 /** GET/HEAD of an R2 object with byte ranges (video seeking), as legacy's MediaController::stream. */
 async function serveFile(

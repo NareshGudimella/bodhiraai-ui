@@ -1,14 +1,23 @@
 // Edge Worker and web container for https://bodhiraai.com (see ../DEPLOY.md).
 // Secrets aren't kept here: `npx wrangler secret put PROXY_SECRET` and
 // `npx wrangler secret put FILE_URL_SECRET` (the same values as the API's).
+//
+// Two deploys of the same Worker (`bodhiraai-web`):
+//   - top level (Deploy workflow target `no-route`, the default): NO route on
+//     bodhiraai.com, so it never takes production traffic; reachable only on its
+//     *.workers.dev URL for the pre-cut-over check (docs/cutover-runbook.md §5).
+//   - env `production` (target `production`, `wrangler deploy --env production`):
+//     adds the `bodhiraai.com/*` route. Run it first at cut-over step 7, and for
+//     every deploy after cut-over.
+// Wrangler doesn't inherit bindings, vars or containers into an env, so the
+// production block repeats them: change both blocks together.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bodhiraai-web",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
-  "routes": [
-    { "pattern": "bodhiraai.com/*", "zone_name": "bodhiraai.com" }
-  ],
+  // No routes here, on purpose: see above.
+  "workers_dev": true,
   "containers": [
     {
       "class_name": "Web",
@@ -38,5 +47,42 @@
   },
   // Secret names only (set with `wrangler secret put`); `wrangler dev` warns when one is missing.
   "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+
+  "env": {
+    // Cut-over step 7 onwards. Same Worker name, so the containers, Durable
+    // Objects and secrets set before cut-over carry over.
+    "production": {
+      "name": "bodhiraai-web",
+      "routes": [
+        { "pattern": "bodhiraai.com/*", "zone_name": "bodhiraai.com" }
+      ],
+      "workers_dev": false,
+      "containers": [
+        {
+          // The top-level deploy's container application, not a new one.
+          "name": "bodhiraai-web-web",
+          "class_name": "Web",
+          "image": "../Dockerfile",
+          "image_build_context": "..",
+          "instance_type": "standard-1",
+          "max_instances": 5
+        }
+      ],
+      "durable_objects": {
+        "bindings": [{ "name": "WEB", "class_name": "Web" }]
+      },
+      "r2_buckets": [
+        { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy" },
+        // security: not in legacy
+        { "binding": "PRIVATE_FILES", "bucket_name": "bodhira-private" }
+      ],
+      "vars": {
+        "API_ORIGIN": "https://api-origin.bodhiraai.com",
+        "SITE_URL": "https://bodhiraai.com",
+        "WEB_INSTANCES": "3"
+      },
+      "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] }
+    }
+  }
 }

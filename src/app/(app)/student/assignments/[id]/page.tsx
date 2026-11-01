@@ -1,4 +1,5 @@
 import { Card, PageHeader, Pill, SectionTitle } from "@/components/ui";
+import { mediaUrl } from "@/lib/media";
 import { fileNameOf } from "@/lib/signed-file";
 import { studentApi } from "@/lib/student-api";
 import { ASSIGNMENT_STATUS, daysDiff, daysMessage, dueLabel, groupOf, mjYtime } from "../status";
@@ -9,6 +10,9 @@ export default async function StudentAssignmentPage({ params }: PageProps<"/stud
   const { assignment: a, status, submission } = await studentApi.assignment(id);
   const s = ASSIGNMENT_STATUS[status] ?? ASSIGNMENT_STATUS.pending;
   const left = submission ? "" : daysMessage(daysDiff(a.due_date));
+  // Legacy `/media/...` paths resolve against the legacy files; signed links pass through.
+  const attachment = mediaUrl(a.attachment_url);
+  const submitted = mediaUrl(submission?.file_url);
 
   return (
     <>
@@ -27,8 +31,8 @@ export default async function StudentAssignmentPage({ params }: PageProps<"/stud
         <Card>
           <SectionTitle>Instructions</SectionTitle>
           <p className="whitespace-pre-line text-sm text-ink">{a.description || "No instructions."}</p>
-          {a.attachment_url && (
-            <a href={a.attachment_url} target="_blank" rel="noopener" className="mt-3 inline-block text-sm font-medium text-primary-dark underline">
+          {attachment && (
+            <a href={attachment} target="_blank" rel="noopener" className="mt-3 inline-block text-sm font-medium text-primary-dark underline">
               Open attachment
             </a>
           )}
@@ -48,9 +52,9 @@ export default async function StudentAssignmentPage({ params }: PageProps<"/stud
                 </div>
               </dl>
               {submission.note && <p className="whitespace-pre-line text-sm text-ink">{submission.note}</p>}
-              {submission.file_url && (
-                <a href={submission.file_url} target="_blank" rel="noopener" className="mt-2 block truncate text-sm font-medium text-primary-dark underline">
-                  📎 {fileNameOf(submission.file_url)}
+              {submitted && (
+                <a href={submitted} target="_blank" rel="noopener" className="mt-2 block truncate text-sm font-medium text-primary-dark underline">
+                  📎 {fileNameOf(submitted)}
                 </a>
               )}
               {submission.status === "graded" && (

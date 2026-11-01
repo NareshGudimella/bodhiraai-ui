@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, SectionTitle, Stat } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { getT } from "@/lib/i18n";
 import { studentApi } from "@/lib/student-api";
 import { ContinueLearning } from "./continue-learning";
 import { PerformanceOverview } from "./performance";
 import { SubjectGrid } from "./subjects/subject-grid";
 
 export default async function StudentHome() {
-  const data = await studentApi.home();
+  const [data, t] = await Promise.all([studentApi.home(), getT()]);
   const { student, stats, continue_learning, subjects, upcoming_quizzes } = data;
 
   return (
@@ -32,7 +33,7 @@ export default async function StudentHome() {
 
       <div className="mt-8 grid gap-8 [&>*]:min-w-0 lg:grid-cols-[2fr_1fr]">
         <div className="min-w-0">
-          <SectionTitle>Continue learning</SectionTitle>
+          <SectionTitle>{t("Continue Learning")}</SectionTitle>
           {continue_learning.length ? (
             <ContinueLearning items={continue_learning} />
           ) : (
@@ -41,7 +42,7 @@ export default async function StudentHome() {
         </div>
 
         <div>
-          <SectionTitle>Up next: quizzes</SectionTitle>
+          <SectionTitle>{t("Upcoming Quizzes")}</SectionTitle>
           {upcoming_quizzes.length ? (
             <ul className="space-y-2">
               {upcoming_quizzes.map((q, i) => (
@@ -64,7 +65,13 @@ export default async function StudentHome() {
       </div>
 
       <div className="mt-8">
-        <SectionTitle>Your subjects</SectionTitle>
+        {/* Legacy home.blade.php: "Your Subjects" with a "See all →" link. */}
+        <div className="flex items-baseline justify-between gap-3">
+          <SectionTitle>{t("Your Subjects")}</SectionTitle>
+          <Link href="/student/subjects" className="text-sm font-medium text-primary-dark hover:underline">
+            {t("See all")} →
+          </Link>
+        </div>
         <SubjectGrid subjects={subjects} />
       </div>
     </>

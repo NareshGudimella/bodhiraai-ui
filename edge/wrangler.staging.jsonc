@@ -1,0 +1,45 @@
+// Staging Worker and web container for the cut-over rehearsal
+// (docs/cutover-runbook.md §4). Deploy workflow target `staging`.
+// Never point it at production: its own Worker name, route, API origin and
+// buckets. Replace the <placeholders> before the first staging deploy.
+// Secrets aren't kept here: `npx wrangler secret put PROXY_SECRET -c wrangler.staging.jsonc`
+// and `npx wrangler secret put FILE_URL_SECRET -c wrangler.staging.jsonc`
+// (the staging API's values, not production's).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bodhiraai-web-staging",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "routes": [
+    { "pattern": "<staging-host>/*", "zone_name": "<staging-zone>" }
+  ],
+  "workers_dev": false,
+  "containers": [
+    {
+      "class_name": "Web",
+      "image": "../Dockerfile",
+      "image_build_context": "..",
+      "instance_type": "standard-1",
+      "max_instances": 2
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "WEB", "class_name": "Web" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Web"] }],
+  "r2_buckets": [
+    // A copy of a production files snapshot (runbook §4 step 4).
+    { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy-staging" },
+    // The staging API's R2_PRIVATE_BUCKET. Never public.
+    // security: not in legacy
+    { "binding": "PRIVATE_FILES", "bucket_name": "bodhira-private-staging" }
+  ],
+  "vars": {
+    // The staging Beanstalk environment, through a proxied Cloudflare hostname.
+    "API_ORIGIN": "https://<staging-api-origin-host>",
+    "SITE_URL": "https://<staging-host>",
+    "WEB_INSTANCES": "1"
+  },
+  "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+  "observability": { "enabled": true }
+}

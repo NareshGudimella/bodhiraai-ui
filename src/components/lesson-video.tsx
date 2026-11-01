@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { lessonPlayback, type LessonPlayback } from "@/lib/playback-actions";
-import { isSignedFileUrl } from "@/lib/signed-file";
+import { isSignedFileUrl, signedFileExpiry } from "@/lib/signed-file";
 
 /**
  * A lesson's video. `playback === "vdocipher"`: asks the API for a one-time
@@ -74,14 +74,80 @@ export function LessonVideo(props: LessonVideoProps) {
   );
 }
 
-function UrlVideo({ src, poster, onTime, onEnded }: LessonVideoProps & { src: string }) {
+/** Refresh a signed link this long before it expires. */
+const REFRESH_AHEAD_MS = 60_000;
+
+/**
+ * Plain `<video>`. A signed `/files/...` link expires (30 min), after which
+ * the next byte-range request answers 403 and the video errors: fetch a fresh
+ * link (the playback Server Action) and carry on from the same position, also
+ * shortly before the link expires so playback doesn't stall.
+ * security: not in legacy (legacy links never expire)
+ */
+function UrlVideo({ lessonId, src: initialSrc, poster, onTime, onEnded }: LessonVideoProps & { src: string }) {
+  const [src, setSrc] = useState(initialSrc);
+  const [shownSrc, setShownSrc] = useState(initialSrc);
   const [error, setError] = useState(false);
+  const video = useRef<HTMLVideoElement>(null);
+  const playing = useRef(false);
+  // Where to carry on once the new link's metadata has loaded.
+  const resume = useRef<{ at: number; play: boolean } | null>(null);
+  const lastRefresh = useRef(0);
+  const refreshing = useRef(false);
+
+  // A new lesson (or a new link from the server): start over with it.
+  if (initialSrc !== shownSrc) {
+    setShownSrc(initialSrc);
+    setSrc(initialSrc);
+    setError(false);
+  }
+
   const report = (fn: LessonVideoProps["onTime"]) => (e: SyntheticEvent<HTMLVideoElement>) =>
     fn?.(e.currentTarget.currentTime, e.currentTarget.duration || 0);
+
+  /** A fresh signed link for this lesson; false when none could be had. */
+  async function refreshLink(): Promise<boolean> {
+    if (refreshing.current) return true;
+    refreshing.current = true;
+    lastRefresh.current = Date.now();
+    const v = video.current;
+    const at = v?.currentTime ?? 0;
+    const play = playing.current;
+    try {
+      const p = await lessonPlayback(lessonId);
+      if (p.ok && p.provider === "url") {
+        resume.current = { at, play };
+        setSrc(p.url);
+        setError(false);
+        return true;
+      }
+    } catch {
+      // fall through: show the error
+    } finally {
+      refreshing.current = false;
+    }
+    return false;
+  }
+  // Latest closure for the timer below.
+  const refreshRef = useRef(refreshLink);
+  useEffect(() => {
+    refreshRef.current = refreshLink;
+  });
+
+  // Before the link expires, swap in a fresh one.
+  useEffect(() => {
+    const exp = signedFileExpiry(src);
+    if (!exp) return;
+    const timer = window.setTimeout(() => void refreshRef.current(), Math.max(0, exp - REFRESH_AHEAD_MS - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [src]);
+
   return (
     <>
       <video
         key={src}
+        ref={video}
+        src={src}
         controls
         playsInline
         controlsList="nodownload"
@@ -89,13 +155,34 @@ function UrlVideo({ src, poster, onTime, onEnded }: LessonVideoProps & { src: st
         onContextMenu={(e) => e.preventDefault()}
         preload="metadata"
         poster={poster ?? undefined}
+        onPlay={() => {
+          playing.current = true;
+        }}
+        onPause={() => {
+          playing.current = false;
+        }}
+        onLoadedMetadata={(e) => {
+          const r = resume.current;
+          if (!r) return;
+          resume.current = null;
+          const v = e.currentTarget;
+          if (r.at > 0) v.currentTime = r.at;
+          if (r.play) void v.play().catch(() => undefined);
+        }}
         onTimeUpdate={report(onTime)}
         onEnded={report(onEnded)}
-        onError={() => setError(true)}
+        onError={() => {
+          // One refresh per 10 s at most, so a link that keeps failing shows the error.
+          if (isSignedFileUrl(src) && Date.now() - lastRefresh.current > 10_000) {
+            void refreshLink().then((ok) => {
+              if (!ok) setError(true);
+            });
+          } else {
+            setError(true);
+          }
+        }}
         className="size-full object-contain"
-      >
-        <source src={src} type="video/mp4" />
-      </video>
+      />
       {error && (
         <Notice icon title="Video unavailable">
           {/* Legacy shows the link; a signed link of ours stays out of sight. */}

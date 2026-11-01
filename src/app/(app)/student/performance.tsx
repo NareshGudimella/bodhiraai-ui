@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Card, ProgressBar } from "@/components/ui";
+import { getT } from "@/lib/i18n";
 import type { Dashboard } from "@/lib/student-api";
 
 /** Legacy home.blade.php "Performance Overview": completion donut, subject scores, mini metrics, profile completion, achievements. */
-export function PerformanceOverview({ data }: { data: Dashboard }) {
+export async function PerformanceOverview({ data }: { data: Dashboard }) {
   const { stats, performance: perf, continue_learning } = data;
+  const t = await getT();
 
   const total = stats.lessons_total;
   const done = stats.lessons_completed;
@@ -26,7 +28,7 @@ export function PerformanceOverview({ data }: { data: Dashboard }) {
   return (
     <div className="mt-8 grid gap-6 [&>*]:min-w-0 lg:grid-cols-[2fr_1fr]">
       <Card>
-        <h2 className="mb-4 text-lg font-bold text-brand">📊 Performance Overview</h2>
+        <h2 className="mb-4 text-lg font-bold text-brand">📊 {t("Performance Overview")}</h2>
 
         <div className="grid gap-6 [&>*]:min-w-0 md:grid-cols-2">
           <div>
@@ -43,12 +45,12 @@ export function PerformanceOverview({ data }: { data: Dashboard }) {
                 <div className="grid size-24 place-items-center rounded-full bg-card text-center">
                   <div>
                     <p className="text-2xl font-bold text-brand">{doneP}%</p>
-                    <p className="text-[11px] text-ink-3">Completed</p>
+                    <p className="text-[11px] text-ink-3">{t("Completed")}</p>
                   </div>
                 </div>
               </div>
               <ul className="space-y-1.5 text-sm text-ink-2">
-                <li><i className="mr-2 inline-block size-2.5 rounded-full bg-success" />Completed <b className="text-ink">{doneP}% ({done})</b></li>
+                <li><i className="mr-2 inline-block size-2.5 rounded-full bg-success" />{t("Completed")} <b className="text-ink">{doneP}% ({done})</b></li>
                 <li><i className="mr-2 inline-block size-2.5 rounded-full bg-[#E0A93B]" />In progress <b className="text-ink">{inP}% ({inProgress})</b></li>
                 <li><i className="mr-2 inline-block size-2.5 rounded-full bg-line" />Not started <b className="text-ink">{nsP}% ({notStarted})</b></li>
               </ul>
