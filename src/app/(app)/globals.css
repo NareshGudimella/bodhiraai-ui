@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* Brand tokens ported from the legacy design system
+   (bodhiraai.com/public_html/assets/app-web/styles.css). */
+:root {
+  --primary: #c49560;
+  --primary-dark: #a87840;
+  --primary-light: #fdf4e8;
+  --brand: #2a0e13;
+  --brand-mid: #3d1520;
+  --brand-lift: #52202e;
+  --bg: #fefaf6;
+  --card: #ffffff;
+  --page-bg: #f4ece0;
+  --text: #1a0a0c;
+  --text-2: #6b4a38;
+  --text-3: #a8896a;
+  --border: #e8d4b8;
+  --success: #1a7a48;
+  --danger: #c42020;
+  --danger-light: #fef2f2;
+}
+
+/* Settings → Appearance (legacy pmSetTheme): html[data-theme] is set before
+   paint by the inline script in layout.tsx; no attribute means Classic. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1b1216;
+  --card: #271a22;
+  --page-bg: #140d11;
+  --text: #f6ece0;
+  --text-2: #cdbbae;
+  --text-3: #9b8779;
+  --border: #3d2c34;
+  --primary-light: #2e1d24;
+  --danger-light: #2b1517;
+}
+html[data-theme="light"] {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --page-bg: #f6f8fb;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --border: #e2e8f0;
+  --primary-light: #fff7eb;
+}
+
+/* Card style (legacy pmSetCards). Cards built with cardTone() carry their own
+   palette in --cc-*; only html[data-cards="colorful"] uses it, otherwise every
+   card shares the gold scheme. */
+.ccard {
+  --c-soft: #f7ecd9;
+  --c-mid: #a87840;
+  --c-light: #e2b873;
+  position: relative;
+  overflow: hidden;
+}
+html[data-cards="colorful"] .ccard {
+  --c-soft: var(--cc-soft, #f7ecd9);
+  --c-mid: var(--cc-mid, #a87840);
+  --c-light: var(--cc-light, #e2b873);
+}
+html[data-theme="dark"] .ccard {
+  --c-soft: color-mix(in srgb, var(--c-mid) 22%, var(--card));
+}
+.ccard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(160deg, var(--c-light), var(--c-mid));
+}
+.ccard-tile {
+  background: var(--c-soft);
+  color: var(--c-mid);
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-brand: var(--brand);
+  --color-brand-mid: var(--brand-mid);
+  --color-brand-lift: var(--brand-lift);
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-page: var(--page-bg);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+  --color-line: var(--border);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-danger-light: var(--danger-light);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}

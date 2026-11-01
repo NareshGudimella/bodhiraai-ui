@@ -1,0 +1,13 @@
+// Local routing check without Docker (containers off): the API on :4000 started
+// with the same PROXY_SECRET, legacy files in a local R2. See ../DEPLOY.md.
+{
+  "name": "bodhiraai-web-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "containers": [{ "class_name": "Web", "image": "../Dockerfile", "max_instances": 1 }],
+  "durable_objects": { "bindings": [{ "name": "WEB", "class_name": "Web" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Web"] }],
+  "r2_buckets": [{ "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy" }],
+  "vars": { "API_ORIGIN": "http://127.0.0.1:4000", "SITE_URL": "http://localhost:8787", "WEB_INSTANCES": "1", "PROXY_SECRET": "local-test-secret-42" },
+  "dev": { "enable_containers": false }
+}

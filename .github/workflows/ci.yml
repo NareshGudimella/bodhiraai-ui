@@ -1,0 +1,52 @@
+# Checks every push and pull request: the web app, its container image and the
+# edge Worker. GitHub's runners have Docker, so nobody needs it locally.
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      # The image's build (standalone output); it doesn't call the API.
+      - run: npx next build
+        env:
+          NEXT_OUTPUT: standalone
+  image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # The image Cloudflare Containers runs: it must build and start. /health needs
+      # the API, so a static file is the check.
+      - run: docker build --platform linux/amd64 -t bodhira-web .
+      - run: docker run -d --name web -p 3000:3000 -e API_URL=http://127.0.0.1:9/api/v1 bodhira-web
+      - run: |
+          for i in $(seq 1 30); do
+            curl -fs -o /dev/null http://127.0.0.1:3000/robots.txt && exit 0
+            sleep 1
+          done
+          docker logs web
+          exit 1
+  edge:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: edge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: edge/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist

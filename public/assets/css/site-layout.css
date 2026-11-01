@@ -1,0 +1,569 @@
+/* The marketing layout's own styles (legacy resources/views/layouts/app.blade.php <head>), moved verbatim. */
+        .header .primary-header-inner .header-logo img,
+        .header .mid-header .header-logo img,
+        .header-logo img {
+            max-width: 255px;
+            width: auto;
+            height: auto;
+            max-height: 107px !important;
+            object-fit: contain;
+        }
+
+        /* ============ Brand theme: maroon + gold (premium) ============ */
+        :root { --brand-maroon:#5C1A26; --brand-maroon-dark:#2A0E13; --brand-gold:#C49560; --brand-gold-2:#A87840; --brand-gold-bright:#E2B873; --ivory:#FBF6EF; }
+        body { background-color:var(--ivory) !important; }
+        /* Remove the page preloader / spinning icon */
+        #preloader { display:none !important; }
+
+        /* FIX broken icon boxes: the theme uses Font Awesome PRO weights
+           (light/thin/sharp/regular) we don't have — force them to the free
+           Solid font so every icon renders cleanly. Brands stay as brands. */
+        i.fa-light, i.fa-thin, i.fa-regular, i.fa-sharp, i.fal, i.fat, i.far,
+        .fa-sharp.fa-light, .fa-sharp.fa-thin, .fa-sharp.fa-regular {
+            font-family:"Font Awesome 6 Free" !important; font-weight:900 !important;
+        }
+        i.fa-brands, i.fab { font-family:"Font Awesome 6 Brands" !important; font-weight:400 !important; }
+
+        /* About-page feature card icon badges (Vision / Mission / What it's Not) */
+        .about-feature-card .icon {
+            width:58px !important; height:58px !important; border-radius:16px !important; display:grid !important; place-items:center !important;
+            background:linear-gradient(135deg,var(--brand-gold),#45121c) !important; margin-bottom:18px !important;
+            box-shadow:0 10px 20px -10px rgba(69,18,28,.5) !important;
+        }
+        .about-feature-card .icon i { color:#fff !important; font-size:22px !important; }
+        .about-feature-card { background:#fff; border:1px solid #ECE3D6; border-radius:18px; padding:30px 26px; height:100%; transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+        .about-feature-card:hover { transform:translateY(-5px); border-color:#E2C79C; box-shadow:0 24px 46px -28px rgba(42,14,19,.45); }
+        .about-feature-card .title { color:var(--brand-maroon-dark); font-size:19px; margin-bottom:8px; }
+        .about-feature-card p { color:#6b5847; font-size:14.5px; line-height:1.65; }
+
+        /* Image-icon badges: the theme inverts the icon to white on :hover and
+           turns the badge gold (white-on-gold is barely visible). Force a dark
+           maroon badge on hover so the white icon stays crisp and on-brand. */
+        .content-item:hover .icon,
+        .promo-item:hover .promo-thumb .icon,
+        .category-item:hover .icon,
+        .category-item-2:hover .icon,
+        .cat-item-3:hover .icon,
+        .choose-use-item:hover .icon,
+        .insta-item:hover .icon {
+            background:linear-gradient(135deg,#7A2433,#45121C) !important;
+            background-color:#5C1A26 !important;
+        }
+
+        /* Contact page info badges: theme turns the badge gold + icon white on
+           hover (white-on-gold is invisible). Use a dark maroon badge so the
+           white icon stays clearly visible. */
+        .contact-content .contact-list .list-item:hover .icon {
+            background:linear-gradient(135deg,#7A2433,#45121C) !important;
+            background-color:#5C1A26 !important;
+            color:#fff !important;
+        }
+        .contact-content .contact-list .list-item:hover .icon i { color:#fff !important; }
+
+        /* Tighter spacing between social icons (footer + top bar) */
+        .footer-section .footer-social, .header .top-bar .social-list, .top-social-wrap .social-list {
+            display:flex !important; flex-wrap:wrap; align-items:center; gap:8px !important; padding-left:0 !important; margin-bottom:0; list-style:none;
+        }
+        .footer-section .footer-social li, .header .top-bar .social-list li, .top-social-wrap .social-list li {
+            margin:0 !important; padding:0 !important;
+        }
+
+        /* Tighter vertical spacing between sections */
+        .pt-120 { padding-top:70px !important; }
+        .pb-120 { padding-bottom:70px !important; }
+        .pt-100 { padding-top:58px !important; }
+        .pb-100 { padding-bottom:58px !important; }
+        .pt-90  { padding-top:52px !important; }
+        .pb-90  { padding-bottom:52px !important; }
+        .counter-section { padding:48px 0 !important; }
+        @media (max-width:767px){
+            .pt-120{padding-top:48px!important;} .pb-120{padding-bottom:48px!important;}
+            .pt-100{padding-top:42px!important;} .pb-100{padding-bottom:42px!important;}
+            .pt-90{padding-top:40px!important;}  .pb-90{padding-bottom:40px!important;}
+        }
+
+        /* ===== Subjects grid — enterprise card layout ===== */
+        .course-category .subj-grid {
+            display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
+            max-width:1080px; margin:48px auto 0;
+        }
+        @media (max-width:991px){ .course-category .subj-grid{ grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:560px){ .course-category .subj-grid{ grid-template-columns:1fr; } }
+        .course-category .subj-card {
+            display:flex; align-items:center; gap:15px; position:relative; overflow:hidden;
+            background:#fff; border:1px solid #EFE6DA; border-radius:18px; padding:18px 20px;
+            box-shadow:0 1px 2px rgba(16,24,40,.04); transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+        .course-category .subj-card::before {
+            content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+            background:linear-gradient(180deg,var(--brand-gold),#45121c); transform:scaleY(0); transform-origin:top; transition:transform .25s ease;
+        }
+        .course-category .subj-card:hover { transform:translateY(-4px); border-color:#E2C79C; box-shadow:0 22px 42px -26px rgba(42,14,19,.45); }
+        .course-category .subj-card:hover::before { transform:scaleY(1); }
+        .course-category .subj-ic {
+            flex:none; width:52px; height:52px; border-radius:14px; display:grid; place-items:center;
+            color:#fff; font-size:20px; background:linear-gradient(135deg,var(--brand-gold),#45121c);
+            box-shadow:0 8px 16px -10px rgba(69,18,28,.55); transition:transform .25s ease;
+        }
+        .course-category .subj-ic i { color:#fff !important; }
+        .course-category .subj-card:hover .subj-ic { transform:scale(1.06) rotate(-3deg); }
+        .course-category .subj-meta { display:flex; flex-direction:column; line-height:1.3; }
+        .course-category .subj-name { font-family:'Poppins',sans-serif; font-weight:700; color:var(--brand-maroon-dark); font-size:16px; }
+        .course-category .subj-sub { font-size:12.5px; color:#9b8674; margin-top:2px; }
+        .course-category .subj-go { margin-left:auto; color:#CBB695 !important; font-size:14px; transition:transform .25s ease, color .25s ease; }
+        .course-category .subj-card:hover .subj-go { color:var(--brand-gold-2) !important; transform:translateX(4px); }
+
+        /* Browse-by-class chips */
+        .course-category .subj-classes {
+            display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center;
+            max-width:1080px; margin:36px auto 0; padding-top:28px; border-top:1px solid #ECE3D6;
+        }
+        .course-category .subj-classes-label { font-size:12px; font-weight:800; color:#9b8674; text-transform:uppercase; letter-spacing:.09em; margin-right:4px; }
+        .course-category .subj-chip {
+            display:inline-flex; align-items:center; gap:9px; background:#fff; border:1px solid #E9DDCC;
+            border-radius:999px; padding:10px 18px; font-weight:600; color:var(--brand-maroon) !important; font-size:14px;
+            transition:background .2s ease, border-color .2s ease, transform .2s ease;
+        }
+        .course-category .subj-chip i { color:var(--brand-gold-2) !important; font-size:13px; }
+        .course-category .subj-chip:hover { background:#FDF4E8; border-color:var(--brand-gold); transform:translateY(-2px); }
+
+        /* ===== Student showing layout =====
+           The ivory board sits IN FRONT of the student (so his cutout edge is
+           hidden); a clipped duplicate of just his HAND is layered on top of the
+           board so it reads as if he is gripping its edge. */
+        .course-category .subj-stage { position:relative; margin-top:46px; }
+        /* student sits ON TOP of the board (z-index 3) so his gripping hand is
+           fully visible resting on the board's left edge */
+        .course-category .subj-girl {
+            position:absolute; left:0; bottom:0; z-index:3; width:auto; height:100%;
+            max-height:600px; pointer-events:none; filter:drop-shadow(2px 16px 26px rgba(42,14,19,.22));
+        }
+        .course-category .subj-board {
+            position:relative; z-index:2; margin-left:150px;
+            background:#FBF6EF; border:1px solid #ECE0CF; border-radius:24px;
+            padding:46px 46px 40px 108px; box-shadow:0 30px 70px -34px rgba(42,14,19,.30);
+        }
+        .course-category .subj-board .section-heading { text-align:left; margin-bottom:28px; }
+        .course-category .subj-board .section-heading .sub-heading { color:var(--brand-gold-2); }
+        .course-category .subj-board .section-heading .section-title { font-size:31px; line-height:1.18; color:var(--brand-maroon-dark); margin-bottom:0; }
+        .course-category .subj-board .subj-grid.subj-grid--two {
+            grid-template-columns:repeat(2,1fr); max-width:none; margin:0; gap:16px;
+        }
+        /* Enterprise subject cards: white on the ivory board, hairline border */
+        .course-category .subj-board .subj-card {
+            background:#fff; border:1px solid #EFE6DA; border-radius:14px; padding:16px 18px;
+            box-shadow:0 1px 2px rgba(16,24,40,.05);
+        }
+        .course-category .subj-board .subj-card .subj-name { font-size:15.5px; }
+        .course-category .subj-board .subj-card .subj-sub { font-size:12px; }
+        .course-category .subj-board .subj-ic { width:48px; height:48px; border-radius:12px; font-size:18px; }
+        .course-category .subj-board .subj-classes {
+            max-width:none; margin:24px 0 0; justify-content:flex-start; border-top-color:#E7DAC7;
+        }
+        .course-category .subj-board .subj-classes-label { color:#9b8674; }
+        /* Keep the "student holding the board" layout on tablet & mobile too —
+           just scaled down (boy stays overlapping the board's left edge). */
+        @media (max-width:1199px){
+            .course-category .subj-girl { max-height:520px; }
+            .course-category .subj-board { margin-left:135px; padding-left:78px; }
+        }
+        @media (max-width:880px){
+            .course-category .subj-girl { max-height:430px; }
+            .course-category .subj-board { margin-left:118px; padding:32px 26px 28px 66px; }
+        }
+        @media (max-width:600px){
+            .course-category { overflow-x:hidden; }
+            /* On phones hide the student photo and let the board go full-width. */
+            .course-category .subj-girl { display:none; }
+            .course-category .subj-board {
+                position:relative; margin-left:0; min-width:0;
+                padding:26px 18px 24px;
+            }
+            .course-category .subj-board .subj-grid.subj-grid--two { grid-template-columns:minmax(0,1fr) !important; gap:11px; }
+            .course-category .subj-board .subj-card { padding:13px 14px !important; gap:11px; min-width:0 !important; }
+            .course-category .subj-board .subj-meta { min-width:0 !important; flex:1 1 0%; }
+            .course-category .subj-board .subj-name, .course-category .subj-board .subj-sub { white-space:normal !important; overflow-wrap:anywhere; }
+            .course-category .subj-board .section-heading { margin-bottom:18px; }
+            .course-category .subj-board .section-heading .section-title { font-size:21px; line-height:1.22; overflow-wrap:anywhere; }
+            .course-category .subj-board .subj-ic { width:42px; height:42px; font-size:16px; }
+            .course-category .subj-board .subj-classes { gap:8px; }
+            .course-category .subj-board .subj-chip { padding:8px 13px; font-size:12.5px; }
+        }
+
+        /* Maroon utility top bar */
+        .header .top-bar { background:linear-gradient(90deg,#2A0E13,#5C1A26) !important; border-bottom:1px solid rgba(226,184,115,.18); }
+        .header .top-bar, .header .top-bar a, .header .top-bar span, .header .top-bar i { color:#F3E6D4 !important; }
+        .header .top-bar a:hover, .header .top-bar i { color:var(--brand-gold-bright) !important; }
+        .header .top-bar .social-list a i { color:var(--brand-gold-bright) !important; }
+
+        /* PREMIUM maroon primary navigation (no more white) */
+        .header .primary-header {
+            background:linear-gradient(100deg,#2A0E13 0%,#3E1019 55%,#5C1A26 100%) !important;
+            box-shadow:0 10px 34px -14px rgba(42,14,19,.55);
+            border-bottom:1px solid rgba(226,184,115,.22);
+        }
+        /* The inner wrapper carries a white bg in the theme — clear it so the maroon shows. */
+        .header .primary-header-inner { background-color:transparent !important; }
+        .header.sticky-active .primary-header { background:linear-gradient(100deg,#22090D 0%,#3E1019 60%,#5C1A26 100%) !important; }
+        .primary-header .mobile-menu-items .sub-menu > li > a,
+        .primary-header .mean-bar a, .primary-header nav a {
+            color:#F1E4D2 !important; font-weight:600; letter-spacing:.2px; position:relative;
+            font-size:12px !important; padding-top:42px !important; padding-bottom:42px !important;
+        }
+        .primary-header .mobile-menu-items .sub-menu > li { margin:0 9px !important; }
+        .primary-header .mobile-menu-items .sub-menu > li > a::after {
+            content:""; position:absolute; left:0; bottom:-7px; height:2px; width:0;
+            background:linear-gradient(90deg,var(--brand-gold-bright),var(--brand-gold)); transition:width .28s ease;
+        }
+        .primary-header .mobile-menu-items .sub-menu > li > a:hover,
+        .primary-header .mobile-menu-items .sub-menu > li.active > a { color:var(--brand-gold-bright) !important; }
+        .primary-header .mobile-menu-items .sub-menu > li > a:hover::after { width:100%; }
+        .header-right-icon a, .header-right .number, .mobile-side-menu-toggle i { color:#F1E4D2 !important; }
+        .header-right-icon a:hover { color:var(--brand-gold-bright) !important; }
+        .header-right-icon .number { background:var(--brand-gold) !important; color:#2A0E13 !important; }
+
+        /* Primary buttons → maroon→gold gradient */
+        .ed-primary-btn, .read-more.ed-primary-btn, button.ed-primary-btn {
+            background:linear-gradient(135deg,var(--brand-maroon),var(--brand-gold)) !important;
+            border:none !important; color:#fff !important; box-shadow:0 10px 24px -10px rgba(92,26,38,.55) !important;
+        }
+        .ed-primary-btn:hover { filter:brightness(1.08); }
+        .header-btn { background:linear-gradient(135deg,var(--brand-gold),var(--brand-gold-2)) !important; color:#2A0E13 !important; font-weight:700 !important; }
+
+        /* Inner-page header banner → maroon brand with a readable light title
+           (replaces the clashing multi-colour stock photo). */
+        .page-header { position:relative; background:linear-gradient(120deg,#2A0E13 0%,#47272c 55%,#5C1A26 100%) !important; }
+        .page-header .bg-item { background:linear-gradient(120deg,#2A0E13 0%,#47272c 55%,#5C1A26 100%) !important; }
+        .page-header .bg-img, .page-header .shape, .page-header .shapes, .page-header .overlay { display:none !important; }
+        .page-header::after { content:""; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(60% 90% at 15% 0%, rgba(226,184,115,.16), transparent 55%); }
+        .page-header .page-header-content { position:relative; z-index:1; }
+        .page-header .title, .page-header .page-header-content .title { color:#F6EEDD !important; }
+        .page-header .breadcrumb a, .page-header .breadcrumb li, .page-header .breadcrumb span,
+        .page-header .breadcrumb-list a, .page-header .breadcrumb-list li,
+        .page-header .sub-title, .page-header .sub-title a, .page-header .sub-title span { color:rgba(246,238,221,.9) !important; }
+        .page-header .sub-title a.inner-page { color:var(--brand-gold-bright) !important; }
+        .page-header .breadcrumb a:hover, .page-header .sub-title a:hover { color:var(--brand-gold-bright) !important; }
+
+        /* Headings: maroon with the highlight word in gold (on LIGHT sections) */
+        .section-title { color:var(--brand-maroon-dark) !important; }
+        .section-title span { color:var(--brand-gold) !important; }
+        .sub-heading { color:var(--brand-gold-2) !important; }
+        .sub-heading .heading-icon { background:linear-gradient(135deg,var(--brand-gold),#45121c) !important; color:#fff !important; }
+
+        /* Default links use the brand gold accent (kills leftover Bootstrap blue) */
+        a { color:var(--brand-gold-2); }
+        a:hover { color:var(--brand-gold); }
+        /* Tabs / pill navs → gold + maroon instead of blue */
+        .course-nav .nav-link, .nav-tabs .nav-link, .nav-pills .nav-link { color:var(--brand-maroon) !important; }
+        .course-nav .nav-link.active, .nav-tabs .nav-link.active, .nav-pills .nav-link.active,
+        .course-nav .nav-link:hover, .nav-tabs .nav-link:hover { color:var(--brand-gold) !important; }
+        .nav-tabs .nav-link.active, .nav-pills .nav-link.active { border-color:rgba(196,149,96,.4) !important; }
+
+        /* ===== DARK / maroon sections: make text light so it's visible ===== */
+        .white-content .section-title, .promo-section .section-title, .counter-section .section-title,
+        .cta-section .section-title, .promo-heading .section-title, .stats .section-title { color:#F6EEDD !important; }
+        .white-content .section-title span, .promo-section .section-title span,
+        .cta-section .section-title span, .counter-section .section-title span { color:var(--brand-gold-bright) !important; }
+        .white-content .sub-heading, .promo-section .sub-heading, .cta-section .sub-heading { color:var(--brand-gold-bright) !important; }
+        .white-content p, .promo-section .promo-item p, .counter-section p, .cta-section p { color:rgba(246,238,221,.85) !important; }
+        .white-content .title, .white-content h3.title, .promo-item .title { color:#fff !important; }
+        .white-content a, .promo-section a, .counter-section a, .cta-section a { color:#F6EEDD; }
+        .white-content a:hover, .promo-section a:hover, .cta-section a:hover { color:var(--brand-gold-bright); }
+
+        /* ===== Icons: brand badge style — gold circle + white icon (logo colours only) ===== */
+        /* Font icons inside content become gold. */
+        section i.fa-solid, section i.fa-regular, section i.fa-light, section i.fa-sharp,
+        section i.fas, section i.far, section i.fal,
+        .single-feature i, .feature-item i, .service-item i, .box-icon i {
+            color:var(--brand-gold) !important;
+        }
+        /* Icon BADGES — same look as the "Welcome to Bodhira.ai" eyebrow: a gold
+           gradient circle with a WHITE icon. Applied to every icon container. */
+        .category-item a span,
+        .about-counter-item .icon,
+        .promo-item .promo-thumb .icon,
+        .single-feature .icon, .service-item .icon, .feature-item .icon, .box-icon {
+            background:linear-gradient(135deg,var(--brand-gold),#45121c) !important;
+            border-radius:50% !important;
+            display:inline-flex !important; align-items:center !important; justify-content:center !important;
+            width:48px !important; height:48px !important; min-width:48px !important; padding:0 !important;
+            box-shadow:0 8px 16px -10px rgba(69,18,28,.45) !important; overflow:hidden !important;
+        }
+        /* The icon image inside a badge → pure white so it reads on the circle. */
+        .category-item a span img,
+        .about-counter-item .icon img,
+        .promo-item .promo-thumb .icon img,
+        .single-feature .icon img, .service-item .icon img, .feature-item .icon img {
+            filter:brightness(0) invert(1) !important;
+            width:30px !important; height:30px !important; object-fit:contain !important; margin:0 !important;
+        }
+        /* Flat (Font Awesome) icons inside badges → white */
+        .category-item a span i,
+        .about-counter-item .icon i,
+        .promo-item .promo-thumb .icon i,
+        .single-feature .icon i, .service-item .icon i, .feature-item .icon i {
+            color:#fff !important; font-size:18px !important; line-height:1 !important;
+        }
+        /* Any other stray decorative icon images → single warm gold tint (no teal/multicolour). */
+        section img[src*="/icon/"] { filter: grayscale(1) sepia(1) saturate(2.4) hue-rotate(347deg) brightness(.92); }
+        /* Remove the theme's decorative dot/blob "shape" graphics across the site. */
+        img[src*="/shapes/"], .shape img, .shapes, .hero-img-shape, .promo-shape, .breadcrumb-shape { display:none !important; }
+
+        /* Hero floating, animated education icons (replace the dotted shapes) */
+        .hero-section { position:relative; }
+        .hero-float-icons { position:absolute; inset:0; pointer-events:none; z-index:1; }
+        .hero-float-icons .float-ico {
+            position:absolute; display:grid; place-items:center; width:60px; height:60px; border-radius:18px;
+            background:linear-gradient(135deg,var(--brand-gold),#45121c); color:#fff; font-size:23px;
+            box-shadow:0 16px 32px -12px rgba(69,18,28,.55), inset 0 2px 5px rgba(255,255,255,.4); overflow:hidden;
+        }
+        .hero-float-icons .float-ico::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+            background:radial-gradient(58% 46% at 30% 22%, rgba(255,255,255,.5), transparent 62%); }
+        /* Positioned around the hero image / far corners so they never cover the heading. */
+        .float-ico.fi-1 { top:6%;  right:36%; width:50px;height:50px;font-size:19px; animation:floatY 6s ease-in-out infinite; }
+        .float-ico.fi-2 { top:30%; right:2%;  animation:floatY 7.5s ease-in-out infinite .4s; }
+        .float-ico.fi-3 { top:5%;  right:7%;  animation:floatY 6.8s ease-in-out infinite .8s; }
+        .float-ico.fi-4 { bottom:16%; right:4%; width:52px;height:52px;font-size:20px; animation:floatY 7s ease-in-out infinite .2s; }
+        .float-ico.fi-5 { top:60%; right:30%; width:48px;height:48px;font-size:18px; animation:floatY 8s ease-in-out infinite .6s; }
+        .float-ico.fi-6 { top:6%; left:3%; width:48px;height:48px;font-size:18px; animation:floatY 6.4s ease-in-out infinite 1s; }
+        @keyframes floatY { 0%,100%{ transform:translateY(0) rotate(-3deg); } 50%{ transform:translateY(-16px) rotate(3deg); } }
+        @media (max-width:991px){ .hero-float-icons{ display:none !important; } }
+
+        /* ===================== Premium FAQ accordion ===================== */
+        .faq-accordion .accordion, #accordionExample { --bs-accordion-border-color:transparent; }
+        .faq-accordion .accordion-item {
+            background:#fff !important; border:1px solid #EFE4D6 !important; border-radius:16px !important;
+            margin-bottom:16px !important; overflow:hidden;
+            box-shadow:0 10px 26px -18px rgba(42,14,19,.25);
+            transition:box-shadow .28s ease, border-color .28s ease, transform .28s ease;
+        }
+        .faq-accordion .accordion-item:hover { transform:translateY(-2px); box-shadow:0 18px 38px -20px rgba(42,14,19,.35); }
+        .faq-accordion .accordion-item:has(.accordion-button:not(.collapsed)) {
+            border-color:rgba(196,149,96,.55) !important; box-shadow:0 20px 44px -20px rgba(168,120,64,.5);
+        }
+        .faq-accordion .accordion-header { margin:0; }
+        .faq-accordion .accordion-button {
+            background:transparent !important; box-shadow:none !important; padding:20px 22px !important;
+            font-weight:700 !important; font-size:17px !important; color:var(--brand-maroon-dark) !important;
+            display:flex !important; align-items:center !important; gap:14px !important;
+        }
+        .faq-accordion .accordion-button:not(.collapsed) { color:var(--brand-maroon) !important; }
+        /* Number badge → gold→maroon glossy chip */
+        .faq-accordion .accordion-button span {
+            flex:none; display:inline-grid; place-items:center; width:40px; height:40px; border-radius:12px;
+            background:linear-gradient(135deg,var(--brand-gold),#45121c); color:#fff !important;
+            font-size:14px; font-weight:800;
+            box-shadow:0 8px 16px -8px rgba(69,18,28,.5), inset 0 1px 3px rgba(255,255,255,.4);
+        }
+        /* Chevron → gold, in a soft circle, rotates when open */
+        .faq-accordion .accordion-button::after {
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23A87840' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") !important;
+            background-repeat:no-repeat !important; background-position:center !important; background-size:16px !important;
+            width:36px !important; height:36px !important; border-radius:50% !important;
+            background-color:rgba(196,149,96,.14) !important; margin-left:auto !important;
+            transition:transform .3s ease, background-color .3s ease !important; transform:rotate(0deg) !important;
+        }
+        .faq-accordion .accordion-button:not(.collapsed)::after {
+            transform:rotate(180deg) !important;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") !important;
+            background-color:var(--brand-gold-2) !important;
+        }
+        .faq-accordion .accordion-body { padding:0 24px 22px 76px !important; color:#6b5847 !important; font-size:15px !important; line-height:1.78 !important; }
+        @media (max-width:575px){ .faq-accordion .accordion-body{ padding-left:24px !important; } }
+        /* Odometer / counters in gold */
+        .odometer, .counter-item .title, .number.count { color:var(--brand-gold) !important; }
+
+        /* Maroon footer with gold headings */
+        .footer-section { background:linear-gradient(180deg,#2A0E13,#1A0A0C) !important; }
+        .footer-section .widget-header, .footer-top .title { color:var(--brand-gold) !important; }
+        .footer-section .footer-list a:hover, .footer-section .footer-social a:hover { color:var(--brand-gold-bright) !important; }
+        .footer-section .footer-social a i { color:var(--brand-gold-bright) !important; }
+        .footer-section .footer-social a:hover i { color:#fff !important; }
+
+        /* Mobile off-canvas menu — dark head so the light logo reads */
+        .mobile-side-menu .side-menu-head { background:#2A0E13 !important; padding:18px 20px; border-bottom:1px solid rgba(226,184,115,.2); }
+        .mobile-side-menu .side-menu-head img { max-height:54px; width:auto; }
+        .mobile-side-menu .side-menu-list i { color:var(--brand-gold) !important; }
+
+        /* ====================== PREMIUM GLOSS + MOTION ====================== */
+        *{ -webkit-font-smoothing:antialiased; }
+        /* Frosted-glass sticky nav with a top sheen */
+        .header .primary-header { backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); transition:background .3s, box-shadow .3s; }
+        .header .primary-header::before { content:""; position:absolute; inset:0; pointer-events:none;
+            background:linear-gradient(180deg, rgba(255,255,255,.10), transparent 42%); }
+        .header.sticky-active .primary-header.fixed { background:linear-gradient(100deg, rgba(34,9,13,.90), rgba(92,26,38,.90)) !important; box-shadow:0 14px 40px -16px rgba(0,0,0,.55); }
+
+        /* Glossy buttons: top highlight + sweeping shine + lift */
+        .ed-primary-btn { position:relative; overflow:hidden; border-radius:40px !important; transition:transform .25s ease, box-shadow .25s ease, filter .25s ease; isolation:isolate; }
+        .ed-primary-btn::before { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,0) 48%); pointer-events:none; }
+        .ed-primary-btn::after { content:""; position:absolute; top:0; left:-85%; width:55%; height:100%; background:linear-gradient(115deg, transparent, rgba(255,255,255,.45), transparent); transform:skewX(-18deg); transition:left .6s ease; pointer-events:none; }
+        .ed-primary-btn:hover::after { left:135%; }
+        .ed-primary-btn:hover { transform:translateY(-2px); box-shadow:0 18px 34px -14px rgba(92,26,38,.65) !important; filter:brightness(1.06); }
+
+        /* Circular badges with a subtle GLOSSY top sheen */
+        .category-item a span, .about-counter-item .icon, .promo-item .promo-thumb .icon,
+        .sub-heading .heading-icon, .single-feature .icon, .service-item .icon, .feature-item .icon, .box-icon,
+        .counter-section .counter-ico, .req-emblem .req-core, .req-emblem .req-orbit {
+            position:relative;
+            box-shadow:0 8px 16px -10px rgba(69,18,28,.45) !important;
+            transition:transform .25s ease, box-shadow .25s ease;
+        }
+        .category-item a span::after, .about-counter-item .icon::after, .promo-item .promo-thumb .icon::after,
+        .sub-heading .heading-icon::after, .single-feature .icon::after, .service-item .icon::after,
+        .counter-section .counter-ico::after, .req-emblem .req-core::after {
+            content:"" !important; position:absolute !important; inset:0 !important; border-radius:inherit !important; pointer-events:none !important;
+            background:linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.06) 48%, transparent 70%) !important;
+            display:block !important;
+        }
+        /* Subject pills: round the pill, tint ITS background on hover (not the square outer box). */
+        .category-item { background:transparent !important; }
+        .category-item a {
+            border-radius:999px !important; overflow:hidden;
+            transition:background .25s ease, color .25s ease, transform .25s ease, box-shadow .25s ease;
+        }
+        .category-item:hover { transform:none !important; box-shadow:none !important; background:transparent !important; }
+        .category-item a:hover {
+            background:#FDF4E8 !important; color:var(--brand-maroon-dark) !important;
+            transform:translateY(-3px); box-shadow:0 16px 30px -16px rgba(42,14,19,.35) !important;
+        }
+        .category-item a:hover span { transform:scale(1.06); }
+
+        /* Card depth + hover lift (other cards) */
+        .promo-item, .single-feature, .feature-item, article {
+            transition:transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease;
+        }
+        .promo-item:hover, .single-feature:hover, article:hover {
+            transform:translateY(-6px); box-shadow:0 26px 50px -26px rgba(42,14,19,.45) !important;
+        }
+        /* Glossy sheen on dark/maroon bands */
+        .counter-section, .promo-section, .cta-section, .footer-section { position:relative; }
+        .counter-section::before, .promo-section::before, .footer-section::before {
+            content:""; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(80% 60% at 50% -10%, rgba(226,184,115,.16), transparent 60%);
+        }
+
+        /* Logo kept completely plain — NO overflow / animation / filter / transform /
+           shine on the wrapper or the img. Any of those force the browser to
+           re-rasterize an animated GIF every frame, which makes it restart and only
+           ever show the first frame (the "stuck on the first letter" bug). Let the
+           GIF play on its own. */
+        .header-logo { position:relative; display:inline-block; }
+        .header-logo img { animation:none !important; filter:none !important; will-change:auto !important; }
+        @media (prefers-reduced-motion: reduce){ .ed-primary-btn::after{ animation:none!important; } }
+
+        /* ===================== Premium counter / stats band ===================== */
+        /* Merge promo + counter into one seamless dark band — no edge glow / seam */
+        .promo-section::before, .promo-section::after, .counter-section::before, .counter-section::after { content:none !important; display:none !important; }
+        /* Promo + counter bands share the exact same dark maroon */
+        .promo-section { background:#2A0E13 !important; }
+        .promo-section .bg-item, .promo-section .bg-shape-1, .promo-section .bg-shape-2 { display:none !important; }
+        /* Remove the vertical separator lines between promo cards and counter columns */
+        .promo-section .promo-item { border:0 !important; }
+        .promo-section .promo-item::before, .promo-section .promo-item::after,
+        .promo-section [class*="col-"]::before, .promo-section [class*="col-"]::after,
+        .counter-section [class*="col-"] .counter-item::after,
+        .counter-section .counter-item::before, .counter-section .counter-item::after { display:none !important; background:none !important; border:0 !important; }
+        .counter-section { background:#2A0E13 !important; padding:66px 0 !important; position:relative; overflow:hidden; }
+        .counter-section::after { content:""; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(70% 120% at 15% -10%, rgba(255,255,255,.14), transparent 55%); }
+        .counter-section .counter-item { text-align:center; padding:6px 14px; position:relative; border:0 !important; z-index:1; }
+        .counter-section .counter-item::before { display:none !important; }   /* kill theme teal divider */
+        /* subtle gold/white separators between columns (no teal) */
+        .counter-section [class*="col-"]:not(:last-child) .counter-item::after {
+            content:""; position:absolute; right:-12px; top:16%; bottom:16%; width:1px;
+            background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0)); }
+        .counter-section .counter-ico {
+            display:inline-grid; place-items:center; width:66px; height:66px; border-radius:20px; margin-bottom:18px;
+            background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:26px;
+            box-shadow:inset 0 2px 6px rgba(255,255,255,.3), 0 14px 26px -12px rgba(42,14,19,.5);
+            -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+            animation:floatY 6s ease-in-out infinite; will-change:transform; }
+        .counter-section .col-lg-3:nth-child(2) .counter-ico { animation-delay:.5s; }
+        .counter-section .col-lg-3:nth-child(3) .counter-ico { animation-delay:1s; }
+        .counter-section .col-lg-3:nth-child(4) .counter-ico { animation-delay:1.5s; }
+        .counter-section .counter-item:hover .counter-ico { background:rgba(255,255,255,.26); transform:translateY(-4px) scale(1.05); }
+        .counter-section .counter-item .title { color:#fff !important; font-size:44px !important; font-weight:800 !important; text-shadow:0 2px 10px rgba(42,14,19,.25); }
+        .counter-section .counter-item p { color:rgba(255,255,255,.92) !important; letter-spacing:.05em; font-weight:600; }
+
+        /* ===================== "Set Up Your School" (request) band — maroon + gold only ===================== */
+        .request-section { background:linear-gradient(120deg,#2A0E13 0%,#47272c 55%,#5C1A26 100%) !important; background-image:linear-gradient(120deg,#2A0E13 0%,#47272c 55%,#5C1A26 100%) !important; position:relative; overflow:hidden; }
+        .request-section .bg-img, .request-section .shape { display:none !important; }   /* drop the off-brand stock photo */
+        .request-section::after { content:""; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(60% 80% at 20% 10%, rgba(226,184,115,.14), transparent 55%); }
+        .request-section .section-title { color:#F6EEDD !important; }
+        .request-section .section-title span { color:var(--brand-gold-bright) !important; }
+        .request-section .desc, .request-section p { color:rgba(246,238,221,.82) !important; }
+        .request-section .form-control {
+            background:rgba(255,255,255,.06) !important; border:1px solid rgba(226,184,115,.35) !important;
+            color:#F6EEDD !important; border-radius:40px !important; height:58px !important; padding:0 24px !important;
+        }
+        .request-section .form-control::placeholder { color:rgba(246,238,221,.6) !important; }
+        .request-section .form-control:focus { border-color:var(--brand-gold) !important; box-shadow:0 0 0 3px rgba(196,149,96,.2) !important; }
+        .request-section .form-items { display:flex; flex-wrap:wrap; gap:16px; margin-bottom:8px; }
+        .request-section .form-items .form-item { flex:1 1 240px; margin:0 !important; }
+        .request-section .request-btn { margin-top:24px !important; }
+        .request-section .request-btn .ed-primary-btn { padding:16px 40px !important; }
+
+        /* Framed photo on the maroon band (replaces the off-brand stock photo) */
+        .req-photo { position:relative; padding:10px; }
+        .req-photo::before { content:""; position:absolute; inset:0; border-radius:26px;
+            background:linear-gradient(135deg, rgba(226,184,115,.55), rgba(92,26,38,.15)); }
+        .req-photo img {
+            position:relative; width:100%; height:440px; object-fit:cover; border-radius:20px;
+            border:1px solid rgba(226,184,115,.4);
+            box-shadow:0 30px 60px -24px rgba(0,0,0,.6); animation:floatY 7s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce){ .req-photo img{ animation:none; } }
+
+        /* ============================================================
+           MOBILE RESPONSIVE PASS — marketing site
+           Loads after the theme CSS so these win. Kills horizontal
+           scroll and tames oversized template type on small screens.
+           ============================================================ */
+        /* `clip` on the root clips the off-canvas drawer (a translated position:fixed
+           panel) which `overflow-x:hidden` on <body> cannot — this is what was
+           triggering mobile shrink-to-fit / clipped headings. */
+        html { overflow-x: clip; }
+        body { overflow-x: hidden; max-width: 100%; }
+        img, video, iframe { max-width: 100%; height: auto; }
+        /* Belt-and-braces: the closed drawer must never sit wider than the screen. */
+        @media (max-width: 992px){
+            .mobile-side-menu { width: min(86vw, 340px) !important; max-width: 86vw !important; }
+        }
+
+        @media (max-width: 991px){
+            /* The decorative shapes/blobs are the usual overflow culprits. */
+            .page-header .shapes, .hero-section .shapes, .hero-float-icons { display:none !important; }
+        }
+
+        @media (max-width: 767px){
+            .container { padding-left:18px !important; padding-right:18px !important; }
+            /* Tame the template's large display headings on phones. */
+            .section-heading .section-title, .hero-content .section-title { font-size:28px !important; line-height:1.24 !important; }
+            .page-header .title, .page-header-content .title, .page-header h1 { font-size:30px !important; line-height:1.18 !important; }
+            .footer-top .title, .footer-top-wrap .title { font-size:22px !important; line-height:1.32 !important; }
+            .section-heading p, .hero-content p { font-size:15px !important; }
+
+            /* Hero: center + stack cleanly, no overlap or cut text. */
+            .hero-section { text-align:center; }
+            .hero-section .hero-content .section-heading { margin-bottom:24px !important; }
+            .hero-section .hero-btn-wrap { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+            .hero-section .hero-btn-wrap .ed-primary-btn { flex:1 1 46%; text-align:center; padding-left:14px; padding-right:14px; }
+            .hero-section .hero-author { justify-content:center; }
+            .hero-section .hero-content .bottom-text { margin-top:18px; }
+            .hero-img-wrap { margin-top:30px; }
+
+            /* Footer: single column, comfortable spacing, no clipped text. */
+            .footer-top .footer-form, .footer-form { flex-direction:column; gap:10px; }
+            .footer-top .footer-form input, .footer-form input { width:100% !important; }
+            .footer-section .footer-widget { margin-bottom:26px; }
+            .footer-section p, .footer-list a { word-break:break-word; }
+        }
+
+        @media (max-width: 575px){
+            .section-heading .section-title, .hero-content .section-title { font-size:25px !important; }
+            .ed-primary-btn { white-space:normal; }
+            /* Stat / counter rows: 2-up instead of cramped single rows. */
+            .counter-section .counter-item .title { font-size:32px !important; }
+        }

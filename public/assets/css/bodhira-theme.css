@@ -1,0 +1,68 @@
+/*
+ * BODHIRA brand overrides
+ * Loaded after main.css. Tweaks logo sizing and a few accent details
+ * that the global hex replace can't easily reach.
+ */
+
+/* --- Header logo: the BODHIRA banner is 4.4:1 ratio, give it room --- */
+.header .primary-header-inner .header-logo img,
+.header .mid-header .header-logo img,
+.header-logo img {
+    max-width: 220px;
+    width: auto;
+    height: auto;
+    max-height: 64px;
+    object-fit: contain;
+}
+@media (max-width: 1399px) {
+    .header .primary-header-inner .header-logo img { max-width: 200px; }
+}
+@media (max-width: 1200px) {
+    .header .primary-header-inner .header-logo img { max-width: 180px; }
+}
+@media (max-width: 767px) {
+    .header .primary-header-inner .header-logo img { max-width: 160px; }
+}
+
+/* Footer logo + mobile side-menu logo */
+.footer-widget .header-logo img,
+.mobile-side-menu .side-menu-head img {
+    max-width: 200px;
+    max-height: 56px;
+    object-fit: contain;
+}
+
+/* --- Brand colour polish --- */
+:root {
+    --bodhira-maroon: #2A0E13;
+    --bodhira-maroon-2: #3D1620;
+    --bodhira-gold: #C49560;
+    --bodhira-gold-soft: #E8C896;
+}
+
+/* Make sure top-bar text uses gold so it reads on the dark maroon */
+.header .top-bar { background: var(--bodhira-maroon); }
+.header .top-bar a,
+.header .top-bar span,
+.header .top-bar li,
+.header .top-bar .top-social-wrap span { color: #F5E9D3; }
+.header .top-bar a:hover { color: var(--bodhira-gold); }
+
+/* Primary button — make sure the focus / hover gold is on-brand */
+.ed-primary-btn { background-color: var(--bodhira-maroon); color: #fff; }
+.ed-primary-btn:hover,
+.ed-primary-btn:focus { background-color: var(--bodhira-gold); color: #fff; }
+.ed-primary-btn:before { background-color: var(--bodhira-gold); }
+
+/* Page-header overlay tone — give it a warm maroon wash */
+.page-header .overlay { background-color: rgba(42, 14, 19, 0.65) !important; }
+
+/* Footer background uses the dark maroon */
+.footer-section { background-color: var(--bodhira-maroon) !important; }
+
+/* Pricing-card "active" plan highlight uses gold border */
+.pricing-item.active { border-color: var(--bodhira-gold); }
+
+/* Subtle section accents - the heading icon "bolt" */
+.section-heading .sub-heading .heading-icon { color: var(--bodhira-gold); }
+.section-heading .sub-heading .heading-icon i { color: var(--bodhira-gold); }
