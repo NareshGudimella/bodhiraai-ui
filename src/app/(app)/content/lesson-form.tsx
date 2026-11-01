@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass, secondaryButtonClass } from "@/components/ui";
 import type { FormState } from "@/lib/action-result";
+import { isSignedFileUrl } from "@/lib/signed-file";
 
 type Initial = Partial<{
   title: string;
@@ -41,6 +42,9 @@ export function LessonForm({
   const video = useRef<HTMLVideoElement | null>(null);
   const duration = useRef<HTMLInputElement>(null);
   const text = (k: string) => (v[k] == null ? "" : String(v[k]));
+  // The current file's link is only a hint; a signed link of ours (it expires) isn't worth showing.
+  // security: not in legacy
+  const current = (k: string) => (isSignedFileUrl(text(k)) ? "Uploaded file" : text(k));
   const checked = (k: string, fallback: boolean) => (v[k] === undefined ? fallback : v[k] === true || v[k] === "1");
 
   function grab(at: number) {
@@ -101,7 +105,7 @@ export function LessonForm({
             <input name="content_file" type="file" accept={type === "pdf" ? "application/pdf" : "video/*"} onChange={(ev) => picked(ev.target.files?.[0])} className="block w-full text-sm" />
           </Field>
           <Field label="…or a URL" error={e.content_url} hint={edit ? "Leave blank to keep the current file" : undefined}>
-            <input name="content_url" type="url" defaultValue={edit ? "" : text("content_url")} placeholder={edit ? text("content_url") : "https://"} className={inputClass} />
+            <input name="content_url" type="url" defaultValue={edit ? "" : text("content_url")} placeholder={edit ? current("content_url") : "https://"} className={inputClass} />
           </Field>
         </div>
       )}
@@ -113,7 +117,7 @@ export function LessonForm({
           <input name="thumbnail_file" type="file" accept="image/*" className="block w-full text-sm" />
         </Field>
         <Field label="…or thumbnail URL" error={e.thumbnail}>
-          <input name="thumbnail" type="url" defaultValue={edit ? "" : text("thumbnail")} placeholder={edit ? text("thumbnail") : "https://"} className={inputClass} />
+          <input name="thumbnail" type="url" defaultValue={edit ? "" : text("thumbnail")} placeholder={edit ? current("thumbnail") : "https://"} className={inputClass} />
         </Field>
       </div>
       {thumb && (

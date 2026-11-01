@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type ReactNode } from "react";
+import { LessonVideo } from "@/components/lesson-video";
 import { Card, ProgressBar, buttonClass } from "@/components/ui";
 import { saveProgress } from "@/lib/student-actions";
 import type { Progress } from "@/lib/student-api";
@@ -12,6 +13,7 @@ const TICK_MS = 5000;
 export function LessonPlayer({
   lessonId,
   type,
+  playback,
   title,
   src,
   poster,
@@ -22,6 +24,8 @@ export function LessonPlayer({
 }: {
   lessonId: number;
   type: string;
+  /** API `playback`: "vdocipher" plays through VdoCipher (security: not in legacy). */
+  playback?: "vdocipher" | "url" | null;
   title: string;
   src: string | null;
   poster: string | null;
@@ -32,10 +36,9 @@ export function LessonPlayer({
   overlay?: ReactNode;
 }) {
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const position = useRef({ current: 0, duration: 0 });
   const lastTick = useRef(0);
   const [progress, setProgress] = useState(initial);
-  const [videoError, setVideoError] = useState(false);
   const [pending, startTransition] = useTransition();
   const done = progress.status === "completed";
 
@@ -47,49 +50,43 @@ export function LessonPlayer({
     if (justCompleted) router.refresh();
   }
 
-  function onTimeUpdate() {
+  function onTime(current: number, duration: number) {
+    position.current = { current, duration };
     const now = Date.now();
-    if (done || now - lastTick.current < TICK_MS || !videoRef.current) return;
+    if (done || now - lastTick.current < TICK_MS) return;
     lastTick.current = now;
-    void saveProgress(lessonId, videoRef.current.currentTime).then(apply);
+    void saveProgress(lessonId, current).then(apply);
   }
 
+  /** The end always reports the final position (the 90% rule completes the lesson). */
+  function onEnded(current: number, duration: number) {
+    position.current = { current, duration };
+    if (done) return;
+    lastTick.current = Date.now();
+    void saveProgress(lessonId, current).then(apply);
+  }
+
+  const isVideo = type === "video" && (playback === "vdocipher" || !!src);
+
   function markComplete() {
-    const v = videoRef.current;
-    const watched = v ? v.currentTime || v.duration || 0 : durationSec;
+    const { current, duration } = position.current;
+    const watched = isVideo ? current || duration || 0 : durationSec;
     startTransition(async () => apply(await saveProgress(lessonId, watched, true)));
   }
 
   return (
     <>
-      {type === "video" && src ? (
-        <div className="relative aspect-video overflow-hidden rounded-2xl bg-black">
-          {overlay && <div className="absolute right-3 top-3 z-10">{overlay}</div>}
-          <video
-            ref={videoRef}
-            controls
-            playsInline
-            controlsList="nodownload"
-            preload="metadata"
-            poster={poster ?? undefined}
-            onTimeUpdate={onTimeUpdate}
-            onError={() => setVideoError(true)}
-            className="size-full object-contain"
-          >
-            <source src={src} type="video/mp4" />
-          </video>
-          {videoError && (
-            <div className="absolute inset-0 grid place-items-center bg-black/85 p-6 text-center text-white">
-              <div>
-                <p className="text-4xl" aria-hidden>⚠️</p>
-                <p className="mt-2 font-semibold">Video unavailable</p>
-                <a href={src} target="_blank" rel="noopener" className="mt-1 block break-all text-xs text-primary">
-                  {src}
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
+      {isVideo ? (
+        <LessonVideo
+          lessonId={lessonId}
+          playback={playback}
+          src={src}
+          poster={poster}
+          title={title}
+          overlay={overlay}
+          onTime={onTime}
+          onEnded={onEnded}
+        />
       ) : type === "pdf" && src ? (
         <div className="relative">
           {overlay && <div className="absolute right-6 top-3 z-10">{overlay}</div>}

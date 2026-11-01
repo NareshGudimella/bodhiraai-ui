@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { api, apiEnvelope } from './api';
 import { failure, forwardForm, type FormState } from './action-result';
 import { idSeg } from '@/lib/api-path';
+import { isSignedFileUrl } from './signed-file';
 
 /** Server Actions for the super admin content library (/content). */
 
@@ -32,9 +33,15 @@ export async function deleteChapter(chapterId: number, subjectId: number) {
 
 const LESSON_FIELDS = ['title', 'type', 'content_url', 'content_body', 'thumbnail', 'thumbnail_data', 'duration_sec', 'is_free', 'is_published'];
 
-/** Multipart: the media file and thumbnail go only when chosen. */
+/**
+ * Multipart: the media file and thumbnail go only when chosen. A signed link to
+ * our own file pasted back into a URL field is dropped (the field then keeps
+ * the current file), never saved as an external link; the API also refuses it.
+ * security: not in legacy
+ */
 function lessonForm(form: FormData, extra: string[] = []) {
   const out = forwardForm(form, [...LESSON_FIELDS, ...extra], 'content_file');
+  for (const k of ['content_url', 'thumbnail']) if (isSignedFileUrl(out.get(k) as string | null)) out.delete(k);
   const thumb = form.get('thumbnail_file');
   if (thumb instanceof File && thumb.size > 0 && thumb.name) out.set('thumbnail_file', thumb, thumb.name);
   return out;

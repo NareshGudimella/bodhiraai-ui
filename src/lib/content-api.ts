@@ -32,6 +32,8 @@ export type ContentLesson = {
   type: 'video' | 'pdf' | 'text';
   thumbnail: string | null;
   content_url: string | null;
+  /** VdoCipher, `content_url`, or nothing (security: not in legacy). */
+  playback?: 'vdocipher' | 'url' | null;
   content_body: string | null;
   duration_sec: number;
   sort_order: number;

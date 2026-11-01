@@ -1,5 +1,6 @@
 // Edge Worker and web container for https://bodhiraai.com (see ../DEPLOY.md).
-// Secrets aren't kept here: `npx wrangler secret put PROXY_SECRET`.
+// Secrets aren't kept here: `npx wrangler secret put PROXY_SECRET` and
+// `npx wrangler secret put FILE_URL_SECRET` (the same values as the API's).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bodhiraai-web",
@@ -23,7 +24,10 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Web"] }],
   "r2_buckets": [
     // Legacy uploads and site videos, copied before cut-over (docs/cutover-runbook.md).
-    { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy" }
+    { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy" },
+    // Private uploads behind signed /files/* links: the API's R2_PRIVATE_BUCKET. Never public.
+    // security: not in legacy
+    { "binding": "PRIVATE_FILES", "bucket_name": "bodhira-private" }
   ],
   "vars": {
     // The Elastic Beanstalk environment, through a proxied Cloudflare hostname.
@@ -32,5 +36,7 @@
     // Web containers requests are spread across (at most max_instances).
     "WEB_INSTANCES": "3"
   },
+  // Secret names only (set with `wrangler secret put`); `wrangler dev` warns when one is missing.
+  "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
   "observability": { "enabled": true }
 }

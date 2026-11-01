@@ -26,6 +26,8 @@ Next.js 16 frontend replacing the legacy Laravel Blade UI. It talks only to bodh
 | `src/lib/student-api.ts` | Typed reads for `/student/*`. A 404 becomes `notFound()`. Follow this pattern (`<role>-api.ts`) for other roles |
 | `src/lib/student-actions.ts` | Server Actions for client components (save progress, quizzes, AI chat) |
 | `src/lib/media.ts` | `mediaUrl()`: resolves `/media/...` and `/cloud/...` against `LEGACY_URL` (uploads still live in the legacy app) |
+| `src/lib/signed-file.ts` | Private uploads arrive as short-lived signed links (`<site>/files/<key>?exp&sig`; `localhost:4000` in dev): `isSignedFileUrl()`, `fileNameOf()`. Client-safe |
+| `src/components/lesson-video.tsx`, `src/lib/playback-actions.ts` | Lesson video for every role that may play it: `playback === 'vdocipher'` → `lessonPlayback()` (Server Action, `GET /lessons/{id}/playback`) and VdoCipher's iframe plus player API; otherwise `<video>` without download, PiP or context menu |
 | `src/lib/session.ts` | httpOnly cookies `bodhira_token` (API token) and `bodhira_role` (a redirect hint only) |
 | `src/lib/dal.ts` | `getCurrentUser()` (GET /auth/me, memoised per request), `requireRole(...)`, `requireStudent()` (role plus paywall → `/paywall`) |
 | `src/lib/auth-actions.ts` | Server Actions `login`, `logout`, `sendResetLink`, `resetPassword` |
@@ -69,6 +71,7 @@ Next.js 16 frontend replacing the legacy Laravel Blade UI. It talks only to bodh
 - Redirects answer 302, as Laravel's `redirect()` does: pass `302` to `NextResponse.redirect()` and `statusCode: 302` in `next.config.ts` (Next defaults to 307).
 - Forms: `useActionState(action)`. React resets uncontrolled inputs after an action runs, so return `failure(e, msg, form)` and give fields `defaultValue={state?.values?.x}` plus a matching `key`; otherwise a validation error wipes what the user typed. Show `state.errors.<field>[0]` under each field.
 - Multi-column grids: put `[&>*]:min-w-0` on the grid, so a wide table or long title can't push the single-column mobile layout off-screen. Wide tables go in an `overflow-x-auto` container.
+- Private files (avatars, logos, lesson files and thumbnails, assignment attachments, submissions) are signed links that expire (30 min): render them with plain `<img>`/`<a>`/`<iframe>` (not `next/image`), never put them in a `'use cache'` scope, show file names with `fileNameOf()`, and never prefill a URL input with one (edit forms leave URL fields blank and show "Uploaded file"). Content editors don't get a lesson video player. New third-party scripts or frames go in `LEGACY_CSP` (`next.config.ts`). security: not in legacy
 - Client components never call the API directly. They call Server Actions, which use `api()` with the httpOnly token.
 - Browser tests: Next keeps previously visited pages in the DOM as hidden `<Activity>` trees, so scope selectors to visible elements (for example `getByRole`, or `:visible`). After navigating, wait for the page's content, not just the URL, because the loading placeholder shows first.
 

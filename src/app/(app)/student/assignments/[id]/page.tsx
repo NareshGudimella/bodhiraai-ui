@@ -1,9 +1,8 @@
 import { Card, PageHeader, Pill, SectionTitle } from "@/components/ui";
+import { fileNameOf } from "@/lib/signed-file";
 import { studentApi } from "@/lib/student-api";
 import { ASSIGNMENT_STATUS, daysDiff, daysMessage, dueLabel, groupOf, mjYtime } from "../status";
 import { SubmitForm } from "./submit-form";
-
-const fileName = (url: string) => decodeURIComponent(url.split("/").pop() ?? "file");
 
 export default async function StudentAssignmentPage({ params }: PageProps<"/student/assignments/[id]">) {
   const { id } = await params;
@@ -51,7 +50,7 @@ export default async function StudentAssignmentPage({ params }: PageProps<"/stud
               {submission.note && <p className="whitespace-pre-line text-sm text-ink">{submission.note}</p>}
               {submission.file_url && (
                 <a href={submission.file_url} target="_blank" rel="noopener" className="mt-2 block truncate text-sm font-medium text-primary-dark underline">
-                  📎 {fileName(submission.file_url)}
+                  📎 {fileNameOf(submission.file_url)}
                 </a>
               )}
               {submission.status === "graded" && (

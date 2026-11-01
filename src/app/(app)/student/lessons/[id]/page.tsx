@@ -23,13 +23,14 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
 
   // Legacy lesson.blade.php:108-170: the first question each "Ask AI" button sends.
   const where = [chapter?.subject?.name, chapter?.title].filter(Boolean).join(" → ");
+  const hasVideo = lesson.playback === "vdocipher" || !!lesson.content_url;
   const prompt =
-    lesson.type === "video" && lesson.content_url
+    lesson.type === "video" && hasVideo
       ? `I'm watching '${lesson.title}'${where ? ` from ${where}` : ""}. Can you explain the key concepts?`
       : lesson.type === "pdf" && lesson.content_url
         ? `I'm reading '${lesson.title}'. Can you help me understand it?`
         : `I'm reading '${lesson.title}'. Can you explain it more clearly?`;
-  const hasContent = !!lesson.content_url || !!lesson.content_body;
+  const hasContent = hasVideo || !!lesson.content_body;
 
   return (
     <>
@@ -55,6 +56,7 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
           <LessonPlayer
             lessonId={lesson.id}
             type={lesson.type}
+            playback={lesson.playback}
             title={lesson.title}
             src={mediaUrl(lesson.content_url)}
             poster={mediaUrl(lesson.thumbnail)}

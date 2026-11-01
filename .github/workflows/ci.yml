@@ -49,4 +49,5 @@ jobs:
           cache-dependency-path: edge/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      - run: npm test # signed /files/* links (node --test; Node 22.18+ strips the types)
       - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist

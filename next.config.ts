@@ -1,19 +1,23 @@
 import type { NextConfig } from "next";
 
 /**
- * Legacy SecurityHeaders middleware, on every response. The CSP is legacy's,
- * unchanged; it applies to production builds only, because `next dev` needs
- * eval, which it blocks. HSTS likewise (legacy: secure or non-local requests).
+ * Legacy SecurityHeaders middleware, on every response. The CSP is legacy's
+ * plus the VdoCipher lesson player (its iframe, and the player API script that
+ * reports progress; the iframe runs on VdoCipher's origin, so nothing else of
+ * theirs is needed here; security: not in legacy). It applies to production
+ * builds only, because `next dev` needs eval, which it blocks. HSTS likewise
+ * (legacy: secure or non-local requests).
  */
+const VDOCIPHER = "https://player.vdocipher.com";
 const LEGACY_CSP = [
   "default-src 'self'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com",
-  "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net",
+  `script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net ${VDOCIPHER}`,
   "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
-  "frame-src 'self' https: https://api.razorpay.com",
+  `frame-src 'self' https: https://api.razorpay.com ${VDOCIPHER}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self' https://api.razorpay.com https://checkout.stripe.com",

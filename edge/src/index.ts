@@ -3,15 +3,21 @@
  * Nginx server block):
  *   /api/v1/*, /webhooks/*  -> the API on Elastic Beanstalk (API_ORIGIN)
  *   /media/*, /cloud/*, /assets/**.mp4 -> legacy files copied to R2 (LEGACY_FILES)
+ *   /files/*                -> private uploads (PRIVATE_FILES), signed links only
  *   everything else         -> the Next.js web app in a Cloudflare Container
  * The visitor's address goes along as X-Client-IP with PROXY_SECRET, which
  * the API believes (bodhiraai-api/src/common/http/client-ip.ts).
  */
 import { Container, getRandom } from '@cloudflare/containers';
+import { keyFromPath, verifyFileLink } from './file-sig';
 
 interface Env {
   WEB: DurableObjectNamespace<Web>;
   LEGACY_FILES: R2Bucket;
+  /** Private uploads (avatars, logos, lesson files, submissions); the API's R2_PRIVATE_BUCKET. */
+  PRIVATE_FILES: R2Bucket;
+  /** Same value as the API's FILE_URL_SECRET (a Worker secret). */
+  FILE_URL_SECRET: string;
   API_ORIGIN: string;
   SITE_URL: string;
   WEB_INSTANCES: string;
@@ -53,6 +59,10 @@ export default {
           redirect: 'manual',
         }),
       );
+    }
+
+    if (path === '/files' || path.startsWith('/files/')) {
+      return privateFile(request, env, url);
     }
 
     const tooBig = checkBodyLimit(request, path);
@@ -101,6 +111,8 @@ async function serveFile(
   request: Request,
   bucket: R2Bucket,
   key: string,
+  /** Final say on the response headers (private files). */
+  finish?: (headers: Headers) => void,
 ): Promise<Response> {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method Not Allowed', {
@@ -108,17 +120,31 @@ async function serveFile(
       headers: { Allow: 'GET, HEAD' },
     });
   }
-  const object = await bucket.get(key, {
-    range: request.headers,
-    onlyIf: request.headers,
-  });
+  const rangeHeader = request.headers.get('range');
+  let object: R2Object | R2ObjectBody | null;
+  try {
+    object = await bucket.get(key, {
+      range: request.headers,
+      onlyIf: request.headers,
+    });
+  } catch (e) {
+    // R2 rejects a range it can't satisfy; anything else is a real error.
+    if (rangeHeader) return new Response(null, { status: 416 });
+    throw e;
+  }
   if (!object) return new Response('Not Found', { status: 404 });
+  // A range that starts past the end is 416, not the whole file (R2 may clamp it).
+  const start = /^bytes=(\d+)-/.exec(rangeHeader ?? '');
+  if (start && Number(start[1]) >= object.size) {
+    return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${object.size}` } });
+  }
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('ETag', object.httpEtag);
   headers.set('Accept-Ranges', 'bytes');
   hardenFile(headers);
+  finish?.(headers);
   if (!('body' in object)) return new Response(null, { status: 304, headers });
 
   let status = 200;
@@ -147,6 +173,37 @@ async function serveFile(
   return new Response(request.method === 'HEAD' ? null : object.body, {
     status,
     headers,
+  });
+}
+
+/**
+ * GET/HEAD /files/<key>?exp&sig: a private upload behind a short-lived link
+ * the API signed (file-sig.ts). Anything wrong with the link is the same 403,
+ * so a probe can't tell a forbidden key from a bad signature; a valid link to
+ * a missing object is a 404. The browser may keep the file only until the
+ * link expires (at most an hour), never in a shared cache.
+ * security: not in legacy
+ */
+async function privateFile(request: Request, env: Env, url: URL): Promise<Response> {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+  }
+  const key = keyFromPath(url.pathname.slice('/files/'.length));
+  const check =
+    key === null
+      ? { ok: false as const }
+      : await verifyFileLink(env.FILE_URL_SECRET, key, url.searchParams.get('exp'), url.searchParams.get('sig'));
+  if (!check.ok || key === null) {
+    return Response.json(
+      { message: 'Link expired or invalid.' },
+      { status: 403, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } },
+    );
+  }
+  const maxAge = Math.max(0, Math.min(check.exp - Math.floor(Date.now() / 1000), 3600));
+  return serveFile(request, env.PRIVATE_FILES, key, (headers) => {
+    headers.set('Content-Disposition', 'inline');
+    headers.set('Cache-Control', `private, max-age=${maxAge}`);
+    headers.set('Referrer-Policy', 'no-referrer');
   });
 }
 

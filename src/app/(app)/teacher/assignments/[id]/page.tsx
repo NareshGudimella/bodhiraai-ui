@@ -1,4 +1,5 @@
 import { Card, PageHeader, Pill, SectionTitle, Stat } from "@/components/ui";
+import { fileNameOf } from "@/lib/signed-file";
 import { teacherApi } from "@/lib/teacher-api";
 import { GradeForm } from "./grade-form";
 
@@ -64,7 +65,7 @@ export default async function AssignmentPage({ params }: PageProps<"/teacher/ass
                     {sub.note && <p className="whitespace-pre-line text-sm text-ink-2">{sub.note}</p>}
                     {sub.file_url && (
                       <a href={sub.file_url} target="_blank" rel="noopener" className="block truncate text-sm font-medium text-primary-dark underline">
-                        📎 {decodeURIComponent(sub.file_url.split("/").pop() ?? "Submitted file")}
+                        📎 {fileNameOf(sub.file_url, "Submitted file")}
                       </a>
                     )}
                     <GradeForm submissionId={sub.id} maxMarks={a.max_marks} score={r.score} feedback={sub.feedback} />
