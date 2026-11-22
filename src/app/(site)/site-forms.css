@@ -1,0 +1,30 @@
+/*
+ * Lead-form pages (/contact, /book-demo, /student-registration): the utilities their Tailwind
+ * markup needs that would be unreadable as arbitrary values (Tailwind migration phase 2, not in
+ * legacy; components in src/components/site/kit-forms-fields.tsx). Imported by site.css.
+ */
+
+/** The select's chevron (was `.bp-select`'s background image), 14px from the right. */
+@utility kf-select-chevron {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%237D6C66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+/**
+ * A 5px bullet in the error summary (was `.kf-alert__list li::before`). An @utility, not
+ * `before:` classes: those would also give the list item a `content` it doesn't need.
+ */
+@utility kf-bullet {
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .65em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .7;
+  }
+}

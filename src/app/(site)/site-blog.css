@@ -1,0 +1,104 @@
+/*
+ * Prose for the blog group (Tailwind migration phase 2, not in legacy; docs/site-design-kit.md):
+ * blog post bodies (CMS HTML, rendered raw) and the legal pages' text. Replaces `.bp-prose`
+ * (site-ui.css) with the `.bh-page` element defaults it relied on, and the blog body / legal
+ * document overrides from site-ui-blog.css. Imported by site.css.
+ *
+ * `site-prose` styles the elements inside (they can't take classes). The variants only set
+ * custom properties on the same element, which `site-prose` reads, so no two rules compete:
+ *   site-prose-article  the blog post body (720px, 18px / 1.8, the first paragraph as a lead)
+ *   site-prose-legal    the legal document (full width, 16.5px, ruled and anchored h2s, ink bold)
+ */
+@utility site-prose {
+  max-width: var(--prose-max, 760px);
+  font-family: var(--font-sans);
+  font-size: var(--prose-size, 17px);
+  line-height: var(--prose-leading, 1.75);
+  color: var(--color-body);
+
+  & > :first-child { margin-top: 0; }
+
+  & p { margin: 0 0 20px; font-family: var(--font-sans); font-size: inherit; font-weight: 400; line-height: inherit; color: var(--color-body); }
+  & > p:first-child {
+    font-size: var(--prose-lead-size, inherit);
+    line-height: var(--prose-lead-leading, inherit);
+    color: var(--prose-lead-color, var(--color-body));
+  }
+
+  & :is(h2, h3, h4) { font-family: var(--font-sans); color: var(--color-ink); line-height: 1.2; transition: none; }
+  & h2 {
+    margin: var(--prose-h2-mt, 48px) 0 16px;
+    padding-top: var(--prose-h2-pt, 0);
+    border-top: var(--prose-h2-rule, 0 solid);
+    scroll-margin-top: var(--prose-h2-scroll, 0);
+    font-size: var(--prose-h2-size, clamp(24px, 1vw + 18px, 30px));
+    font-weight: 800;
+    letter-spacing: -.02em;
+  }
+  & > h2:first-child { margin-top: var(--prose-h2-first-mt, 0); padding-top: 0; border-top: 0 solid; }
+  & h3 { margin: 36px 0 12px; font-size: 21px; font-weight: 700; letter-spacing: -.01em; }
+  & h4 { margin: 28px 0 10px; font-size: 18px; font-weight: 700; }
+
+  & :is(b, strong) { color: var(--prose-strong, inherit); }
+  & strong { font-weight: 700; }
+
+  & :is(ul, ol) { margin: 0 0 20px; padding-left: 24px; }
+  & ul { list-style: disc; }
+  & ol { list-style: decimal; }
+  & li { margin-bottom: 8px; padding-left: 4px; }
+  & li::marker { color: var(--color-gold-2); }
+
+  & a {
+    color: var(--color-wine);
+    text-decoration: underline;
+    text-decoration-color: rgba(122, 36, 55, .35);
+    text-underline-offset: 3px;
+  }
+  & a:hover { color: var(--color-wine); text-decoration-color: currentColor; }
+  & a:focus-visible { outline: 2px solid var(--color-maroon); outline-offset: 3px; border-radius: 8px; }
+
+  & blockquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    border-left: 4px solid var(--color-gold);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+  & blockquote p:last-child { margin-bottom: 0; }
+  & img { display: block; max-width: 100%; height: auto; margin: 28px 0; border-radius: var(--radius-md); }
+  & hr { margin: 40px 0; border: 0; border-top: 1px solid var(--color-line-2); }
+  & code { padding: 2px 6px; border-radius: 6px; background: var(--color-cream-2); font-size: .9em; }
+  & table { display: block; overflow-x: auto; width: 100%; margin: 0 0 24px; border-collapse: collapse; font-size: 15px; }
+  & :is(th, td) { padding: 10px 14px; border: 1px solid var(--color-line-2); text-align: left; }
+  & th { background: var(--color-cream); color: var(--color-ink); }
+}
+
+/* The blog post body (was `.bpb-article__body`). */
+@utility site-prose-article {
+  --prose-max: 720px;
+  --prose-size: 18px;
+  --prose-leading: 1.8;
+  --prose-lead-size: 20px;
+  --prose-lead-leading: 1.7;
+  --prose-lead-color: var(--color-ink);
+  @variant max-sm {
+    --prose-size: 17px;
+    --prose-lead-size: 18px;
+  }
+}
+
+/* The legal document (was `.bpb-legal__doc .bp-prose`). */
+@utility site-prose-legal {
+  --prose-max: none;
+  --prose-size: 16.5px;
+  --prose-h2-mt: 44px;
+  --prose-h2-first-mt: 44px; /* as before: the old first-child reset lost to the legal h2 rule */
+  --prose-h2-pt: 32px;
+  --prose-h2-rule: 1px solid var(--color-line);
+  --prose-h2-scroll: 104px;
+  --prose-h2-size: clamp(21px, .6vw + 17px, 25px);
+  --prose-strong: var(--color-ink);
+  @variant max-md { --prose-size: 16px; }
+}

@@ -18,16 +18,31 @@ function withoutPasswords(form: FormData) {
   return copy;
 }
 
-const SIGNUP_FIELDS = ['name', 'email', 'phone', 'password', 'password_confirmation', 'syllabus_id', 'plan_key', 'cycle', 'accept'];
+const SIGNUP_FIELDS = ['name', 'email', 'phone', 'password', 'password_confirmation', 'syllabus_id', 'plan_key', 'cycle'];
 
-/** B2C sign-up (legacy RegisterController::store): signs in, then checkout for a paid plan or the dashboard. */
+/**
+ * B2C sign-up (legacy RegisterController::store): signs in, then checkout for a paid plan or the dashboard.
+ * Consent (not in legacy, 2026-11-22): the form's checkbox is `consent=1` like the lead forms (legacy:
+ * `accept`). Without it the action answers a Laravel-style error on `consent` and doesn't call the API;
+ * with it the API gets `accept=1`, which it still validates (`accepted`).
+ */
 export async function registerStudent(_: FormState, form: FormData): Promise<FormState> {
   let target: string;
+  if (form.getAll('consent').at(-1) !== '1') {
+    return {
+      ok: false,
+      message: 'Please agree to the Terms of Service and Privacy Policy to create your account.',
+      errors: { consent: ['Please agree to the Terms of Service and Privacy Policy to create your account.'] },
+      values: Object.fromEntries(
+        [...withoutPasswords(form).entries()].filter(([k, v]) => typeof v === 'string' && !k.startsWith('$')) as [string, string][],
+      ),
+    };
+  }
   try {
     const { data, message } = await apiEnvelope<{
       token: string;
       checkout: { subscription_id: number; cycle: string } | null;
-    }>('/auth/register/student', { body: pick(form, SIGNUP_FIELDS), token: null });
+    }>('/auth/register/student', { body: { ...pick(form, SIGNUP_FIELDS), accept: '1' }, token: null });
     await setSession(data.token, 'student');
     await setFlash(message);
     target = data.checkout

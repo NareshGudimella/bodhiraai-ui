@@ -66,7 +66,7 @@ Once, before the first deploy:
 Deploy the API first whenever a release changes both apps.
 
 **Before the first deploy:**
-- `bodhiraai.com` must be proxied in Cloudflare DNS (orange cloud) before the `production` target is run. The Worker route is `bodhiraai.com/*` in `env.production` only; add `www` the same way if it's used.
+- `bodhiraai.com` must be proxied in Cloudflare DNS (orange cloud) before the `production` target is run. The Worker route is `bodhiraai.com/*` in `env.production` only; `www` gets a 301 Redirect Rule to the apex instead (see "One canonical host" in §4).
 - **Staging:** replace the `<placeholders>` in `wrangler.staging.jsonc` (host, zone, API origin), create `bodhira-legacy-staging` and `bodhira-private-staging` (public access off), and set the staging secrets with `-c wrangler.staging.jsonc`. Never point it at production buckets or the production API.
 - Check `wrangler.jsonc` against the current Containers docs (`instance_type`, `max_instances`). Containers is a newer product, and wrangler already renamed `standard` to `standard-1`.
 
@@ -88,7 +88,11 @@ Deploy the API first whenever a release changes both apps.
 - **Private files in pages:** avatars, logos, thumbnails and attachments arrive as signed links that change with every response; pages render them with plain `<img>`/`<a>`/`<iframe>` (no `next/image`, so nothing is cached under one URL), and forms never send one back as a typed URL (`lib/signed-file.ts`).
 - **Redirects:** they are built from `SITE_URL` (`lib/site-url.ts`), because the container sees `http://` and an internal host. The Worker also sets `X-Forwarded-Proto` and `X-Forwarded-Host`.
 - **The secret on API calls:** every call from this server to the API sends `X-Proxy-Secret` (`lib/proxy-secret.ts`), and the API refuses calls without it. Any new `fetch` to the API must spread `proxySecretHeader()` (or `visitorHeaders()`).
-- **Root files:** `robots.txt` and `favicon.png` were copied from legacy `public_html`.
+- **Root files:** `favicon.png` was copied from legacy `public_html`. `robots.txt` and `sitemap.xml` are generated per request (`src/app/robots.ts`, `src/app/sitemap.ts`) from `SITE_URL` and the site API (SEO: not in legacy, whose robots.txt only said `Disallow:`).
+- **One canonical host (SEO, not in legacy; to set up at cut-over, nothing is deployed):** canonical, Open Graph, sitemap and JSON-LD URLs all use `SITE_URL` (`https://bodhiraai.com`), so every other address must answer a 301 to it:
+  - **http → https:** Cloudflare dashboard → SSL/TLS → Edge Certificates → **Always Use HTTPS** on (a 301 at the edge, before the Worker). HSTS is already sent by production builds.
+  - **www → apex:** a proxied DNS record for `www` (orange cloud) and a **Redirect Rule** (Rules → Redirect Rules): hostname equals `www.bodhiraai.com` → dynamic `concat("https://bodhiraai.com", http.request.uri.path)`, status **301**, preserve query string. Don't add a Worker route for `www` then; the rule answers first.
+  - Check after cut-over: `curl -sI http://bodhiraai.com/about`, `curl -sI https://www.bodhiraai.com/about?x=1` → `301` with `Location: https://bodhiraai.com/about` (and `?x=1`).
 
 ## 5. Known limits
 

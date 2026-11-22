@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/page-meta";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -7,7 +8,9 @@ import { Icon, type IconName } from "@/components/site/icons";
 import { billingApi } from "@/lib/billing-api";
 import { SignupForm } from "./signup-form";
 
-export const metadata: Metadata = { title: "Sign up" };
+export async function generateMetadata(): Promise<Metadata> {
+  return publicPageMetadata("/register/student", "Sign up", "Create your Bodhira.ai student account: pick your board and grade and get instant access to the full syllabus. No card needed for the trial.");
+}
 
 const TITLE = "Create your student account";
 
@@ -20,7 +23,7 @@ export default function RegisterStudentPage({ searchParams }: PageProps<"/regist
   return (
     <Suspense
       fallback={
-        <AuthShell eyebrow="Sign up" title={TITLE} wide panel={null}>
+        <AuthShell eyebrow="Sign up" title={TITLE} wide panel={null} placeholder>
           <div aria-busy="true" className="mt-7 space-y-5">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="h-12 animate-pulse rounded-xl bg-[rgba(42,14,19,.06)]" />
@@ -94,7 +97,7 @@ async function Body({ searchParams }: Pick<PageProps<"/register/student">, "sear
               <span className="opacity-70">Change plan?</span>
               <Link
                 href="/pricing"
-                className="rounded font-semibold text-(--auth-gold-bright) underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-(--auth-gold-bright)"
+                className="rounded font-semibold text-(--auth-gold-bright) underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-(color:--auth-gold-bright)"
               >
                 Compare all →
               </Link>

@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Fragment } from "react";
 import { connection } from "next/server";
 import { FlashClear } from "@/components/site/flash-clear";
-import { Icon } from "@/components/site/icons";
 import { KfFocusResult } from "@/components/site/kit-forms-focus";
-import { KfAlert, KfPhoto } from "@/components/site/kit-forms-fields";
-import { CheckList, Eyebrow } from "@/components/site/page-kit";
+import { KF_PAGE, KfAlert, KfAside, KfChip, KfFormCard, KfHelp, KfHeroChips, KfLayout, KfPhoto, KfSideCard, kfSection } from "@/components/site/kit-forms-fields";
+import { CheckList } from "@/components/site/page-kit";
 import { PageHero } from "@/components/site/page-hero";
 import { SeoSchema } from "@/components/site/seo-schema";
 import { RevealOnScroll } from "@/components/site/site-enhance";
@@ -18,7 +17,9 @@ import { DemoForm } from "./demo-form";
 export const instant = false;
 
 export async function generateMetadata(): Promise<Metadata> {
-  return siteMetadata("/book-demo", "Book a Demo · Bodhira.ai");
+  return siteMetadata("/book-demo", "Book a Demo · Bodhira.ai", {
+    description: "Book a demo of Bodhira.ai. Tell us who you are and we'll set up a personalised walkthrough for your school.",
+  });
 }
 
 /** What the walkthrough covers: the homepage FAQ's answers, shortened. not in legacy */
@@ -39,11 +40,11 @@ const COVERS = [
  * (public/assets/img/pages/forms/CREDITS.md), a "what we'll show you" list
  * (homepage FAQ copy), the support phone from the `contact.phone` setting, and
  * the school / student counts from SITE_STATS. The inline <style> block is
- * gone (styles in site-ui-forms.css).
+ * gone; Tailwind since the migration's phase 2 (kit-forms-fields.tsx).
  */
 export default function BookDemoPage({ searchParams }: PageProps<"/book-demo">) {
   return (
-    <div className="bh-page kf-page">
+    <div className={KF_PAGE}>
       <SeoSchema path="book-demo" />
       <PageHero
         eyebrow="Book a Demo"
@@ -52,25 +53,20 @@ export default function BookDemoPage({ searchParams }: PageProps<"/book-demo">) 
         lead="Tell us who you are and we'll set up a personalised walkthrough."
         breadcrumbs={[{ label: "Book a Demo" }]}
       >
-        <ul className="bp-chips kf-hero-chips" aria-label="Bodhira.ai in numbers">
-          <li><span className="bp-chip"><Icon name="school" size={16} />{SITE_STATS.schools.label} partner schools</span></li>
-          <li><span className="bp-chip"><Icon name="users" size={16} />{SITE_STATS.students.label} students</span></li>
-          <li><span className="bp-chip"><Icon name="bookOpen" size={16} />{SITE_STATS.subjects.label} subjects</span></li>
-        </ul>
+        <KfHeroChips label="Bodhira.ai in numbers">
+          <KfChip icon="school">{SITE_STATS.schools.label} partner schools</KfChip>
+          <KfChip icon="users">{SITE_STATS.students.label} students</KfChip>
+          <KfChip icon="bookOpen">{SITE_STATS.subjects.label} subjects</KfChip>
+        </KfHeroChips>
       </PageHero>
 
-      <section className="bp-section kf-section" aria-labelledby="demo-form-title">
-        <div className="bh-container kf-layout">
-          <div className="bp-form-card kf-card" id="book-demo-form" data-reveal>
-            <div className="kf-card__head">
-              <Eyebrow>Book a Demo</Eyebrow>
-              <h2 id="demo-form-title" className="kf-card__title">Request your walkthrough</h2>
-              <p>Choose who you are, then fill in a few details.</p>
-            </div>
+      <section className={kfSection({ flushTop: true })} aria-labelledby="demo-form-title">
+        <KfLayout>
+          <KfFormCard id="book-demo-form" eyebrow="Book a Demo" titleId="demo-form-title" title="Request your walkthrough" intro="Choose who you are, then fill in a few details.">
             <Form searchParams={searchParams} />
-          </div>
+          </KfFormCard>
           <Aside />
-        </div>
+        </KfLayout>
       </section>
       <RevealOnScroll />
     </div>
@@ -82,30 +78,17 @@ async function Aside() {
   const [img, setting] = await Promise.all([imageResolver(), settingResolver()]);
   const phone = setting("contact.phone", "+91 99852 52786");
   return (
-    <aside className="kf-aside" aria-labelledby="demo-covers">
+    <KfAside labelledBy="demo-covers">
       <KfPhoto
         src={img(null, "assets/img/pages/forms/demo-smartboard.jpg")}
         alt="A teacher standing in front of an interactive smart board during a lesson"
-        chip={
-          <span className="bp-glass kf-photo__chip">
-            <span className="bp-tile bp-tile--sm bp-tile--solid"><Icon name="presentation" size={20} /></span>
-            <span><strong>Personalised</strong><span>Walkthrough for your school</span></span>
-          </span>
-        }
+        chip={{ icon: "presentation", title: "Personalised", text: "Walkthrough for your school" }}
       />
-      <div className="bp-card kf-benefits" data-reveal>
-        <h2 id="demo-covers" className="kf-side-title">What we&apos;ll show you</h2>
-        <p>One walkthrough of the whole platform, for your school or your child.</p>
-        <CheckList items={COVERS} />
-      </div>
-      <div className="kf-help bp-on-dark" data-reveal>
-        <span className="bp-tile bp-tile--sm bp-tile--light"><Icon name="phone" size={20} /></span>
-        <div>
-          <span className="kf-help__label">Prefer to talk?</span>
-          <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`}>{phone}</a>
-        </div>
-      </div>
-    </aside>
+      <KfSideCard titleId="demo-covers" title={<>What we&apos;ll show you</>} intro="One walkthrough of the whole platform, for your school or your child." introMargin="mb-5">
+        <CheckList items={COVERS} gap="gap-3.5" />
+      </KfSideCard>
+      <KfHelp label="Prefer to talk?" phone={phone} />
+    </KfAside>
   );
 }
 
@@ -113,8 +96,9 @@ async function Form({ searchParams }: Pick<PageProps<"/book-demo">, "searchParam
   await connection();
   const [flash, q] = await Promise.all([getSiteFlash(), searchParams]);
   const as = q.as === "student" ? "student" : "school";
-  const old = flash.old ?? {};
-  const errors = flash.errors ?? {};
+  // Not the footer newsletter's errors (its own bag).
+  const old = flash.bag ? {} : flash.old ?? {};
+  const errors = flash.bag ? {} : flash.errors ?? {};
   // old('type', $preselect)
   const type = old.type === "student" || old.type === "school" ? old.type : as;
   const success = flash.messages?.demo_success;
@@ -122,12 +106,12 @@ async function Form({ searchParams }: Pick<PageProps<"/book-demo">, "searchParam
     name: "demo-name", email: "demo-email", phone: "demo-phone", city: "demo-city",
     organization: type === "school" ? "demo-organization" : "demo-current-school",
     designation: "demo-designation", student_count: "demo-student-count", grade: "demo-grade",
-    board: "demo-board", message: "demo-message",
+    board: "demo-board", message: "demo-message", consent: "demo-consent",
   };
   return (
     <>
       {/* key: a new flash remounts these, so each one is cleared and focused */}
-      {(success || flash.errors) && <Fragment key={JSON.stringify(flash)}><FlashClear /><KfFocusResult /></Fragment>}
+      {(success || Object.keys(errors).length > 0) && <Fragment key={JSON.stringify(flash)}><FlashClear /><KfFocusResult /></Fragment>}
       <KfAlert status={success} errors={errors} fieldIds={ids} />
       <DemoForm key={JSON.stringify(old)} initialType={type} old={old} errors={errors} />
     </>

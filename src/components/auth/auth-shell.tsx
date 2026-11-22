@@ -2,6 +2,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/site/icons";
 import { SITE_STATS } from "@/lib/site-stats";
+import { preferWebp } from "@/lib/webp";
 
 // The marketing site's typeface, for the sign-in pages only (dashboards keep Geist).
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], display: "swap" });
@@ -28,6 +29,8 @@ const POINTS: { icon: IconName; title: string; text: string }[] = [
  * - `panel`: replaces the value points (shown on small screens too); `null` hides them.
  * - `after`: content under the card (links to the other pages).
  * - `wide`: a wider card for longer forms.
+ * - `placeholder`: a loading fallback; the title renders as a `<p>`, so the
+ *   no-JS HTML (fallback + streamed page) still has exactly one `<h1>` (SEO: not in legacy).
  */
 export function AuthShell({
   eyebrow,
@@ -38,6 +41,7 @@ export function AuthShell({
   panel,
   after,
   wide,
+  placeholder,
   children,
 }: {
   eyebrow?: string;
@@ -48,6 +52,7 @@ export function AuthShell({
   panel?: ReactNode;
   after?: ReactNode;
   wide?: boolean;
+  placeholder?: boolean;
   children: ReactNode;
 }) {
   const custom = panel !== undefined;
@@ -62,7 +67,7 @@ export function AuthShell({
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- static photo, sized and compressed by hand */}
         <img
-          src="/assets/img/auth/auth-classroom.jpg"
+          src={preferWebp("/assets/img/auth/auth-classroom.jpg")}
           alt=""
           width={1120}
           height={1400}
@@ -83,10 +88,10 @@ export function AuthShell({
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
-            className="inline-flex w-fit rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--auth-gold-bright)"
+            className="inline-flex w-fit rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(color:--auth-gold-bright)"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- static logo */}
-            <img src="/assets/img/logo/bodhira-logo-light.png" alt="Bodhira.ai home" width={800} height={240} className="h-9 w-auto sm:h-10" />
+            <img src="/assets/img/logo/bodhira-logo-light.png" alt="Bodhira.ai home" width={708} height={162} className="h-8 w-auto sm:h-9" />
           </a>
 
           <div className="max-w-xl">
@@ -137,7 +142,11 @@ export function AuthShell({
                 {eyebrow}
               </p>
             )}
-            <h1 className="text-[28px] font-extrabold leading-tight tracking-[-.03em] text-ink sm:text-[32px]">{title}</h1>
+            {placeholder ? (
+              <p className="text-[28px] font-extrabold leading-tight tracking-[-.03em] text-ink sm:text-[32px]">{title}</p>
+            ) : (
+              <h1 className="text-[28px] font-extrabold leading-tight tracking-[-.03em] text-ink sm:text-[32px]">{title}</h1>
+            )}
             {lead && <div className="mt-2 text-[15px] leading-relaxed text-ink-2">{lead}</div>}
             {children}
           </div>

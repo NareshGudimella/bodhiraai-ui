@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { CmsLoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: "Web Studio sign in" };
+// Kept out of search results (SEO: not in legacy).
+export const metadata: Metadata = { title: "Web Studio sign in", description: "Sign in to the Bodhira.ai Web Studio.", robots: { index: false, follow: false } };
 
 /**
  * Legacy Cms\AuthController: a separate sign-in for the CMS roles. Layout:

@@ -6,17 +6,20 @@ import type { NextConfig } from "next";
  * reports progress; the iframe runs on VdoCipher's origin, so nothing else of
  * theirs is needed here; security: not in legacy). It applies to production
  * builds only, because `next dev` needs eval, which it blocks. HSTS likewise
- * (legacy: secure or non-local requests).
+ * (legacy: secure or non-local requests). Legacy's cdnjs entries (Font Awesome) are gone:
+ * the marketing site draws its icons as inline SVG since the Tailwind migration (not in legacy).
  */
 const VDOCIPHER = "https://player.vdocipher.com";
 const LEGACY_CSP = [
   "default-src 'self'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
-  "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
   `script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net ${VDOCIPHER}`,
-  "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+  // GA4 also reports to regional *.analytics.google.com hosts; the Pixel posts to facebook.com
+  // (both load only after cookie consent, components/site/consent-analytics.tsx; not in legacy).
+  "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com",
   `frame-src 'self' https: https://api.razorpay.com ${VDOCIPHER}`,
   "object-src 'none'",
   "base-uri 'self'",
@@ -50,18 +53,24 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: '205mb' },
     // proxy.ts runs on page routes and buffers request bodies; past this limit the body is truncated.
     proxyClientMaxBodySize: '205mb',
+    // app/global-not-found.tsx: the site's 404 page for URLs that match no route (two root
+    // layouts, so there is no single not-found.tsx for them). SEO: not in legacy.
+    globalNotFound: true,
   },
   partialPrefetching: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
-  // Legacy Route::redirect()s (302).
+  // Legacy Route::redirect()s (302). The two public pages that moved for good answer
+  // 301 so search engines pass their ranking to the new URL (SEO: not in legacy).
+  // The rest stay 302: entry points to sign-in areas, and dashboard URLs behind
+  // login (not crawled, and a cached 301 couldn't be undone if a URL comes back).
   async redirects() {
     return [
       { source: "/web-admin", destination: "/web-admin/login", statusCode: 302 },
       { source: "/admin/cms", destination: "/web-admin/login", statusCode: 302 },
-      { source: "/blog-details", destination: "/blog", statusCode: 302 },
-      { source: "/signin", destination: "/login", statusCode: 302 },
+      { source: "/blog-details", destination: "/blog", statusCode: 301 },
+      { source: "/signin", destination: "/login", statusCode: 301 },
       // Legacy dashboard URLs that moved in the port, so old bookmarks still land
       // (not in legacy). Role-dependent ones (/notifications, /chat,
       // /account/settings) are in proxy.ts.

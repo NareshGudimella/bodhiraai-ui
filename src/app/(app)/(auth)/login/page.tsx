@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/page-meta";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -7,7 +8,9 @@ import { Flash } from "@/components/flash";
 import { Icon } from "@/components/site/icons";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: "Log in" };
+export async function generateMetadata(): Promise<Metadata> {
+  return publicPageMetadata("/login", "Log in", "Log in to Bodhira.ai: lessons, quizzes and progress for students, teachers, parents and schools.");
+}
 
 /** Legacy auth/login.blade.php. Layout: AuthShell (2026 redesign, not in legacy). */
 export default function LoginPage() {

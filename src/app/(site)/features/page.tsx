@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { CIcon, cmsIcon, type AnyIconName } from "@/components/site/kit-content-icons";
+import { BTN_FOCUS, BTN_FOCUS_DARK, CHIP, CHIPS, COLS, Counters, GRID, HeroBadge, LIST, P, PAGE, card, h3, section, tile } from "@/components/site/kit-content-ui";
 import { CtaBand, SectionHead } from "@/components/site/page-kit";
 import { PageHero } from "@/components/site/page-hero";
 import { SeoSchema } from "@/components/site/seo-schema";
+import { btn, cx } from "@/components/site/ui";
 import { RevealOnScroll } from "@/components/site/site-enhance";
 import { imageResolver, siteMetadata } from "@/lib/site";
 import { getCollections } from "@/lib/site-api";
@@ -27,7 +29,8 @@ const KEY_FEATURES: [AnyIconName, string, string][] = [
 const STATS: [AnyIconName, string, string][] = [
   ["users", "5-in-1", "Student · Teacher · Parent · Admin · School"],
   ["bot", "24/7", "AI doubt-solving assistant"],
-  ["layers", "100%", "Digital academic workflow"],
+  // Was "100%" (not a measured figure; compliance pass, not in legacy, 2026-11-22).
+  ["layers", "One platform", "Digital academic workflow"],
   ["chart", "Real-time", "Progress & performance insight"],
 ];
 
@@ -48,7 +51,10 @@ const ENTERPRISE: [AnyIconName, string, string][] = [
 ];
 
 /** 4 or 8 cards in rows of four, 2 in two columns, anything else in threes. */
-const gridFor = (n: number) => (n === 2 ? "bp-grid--2" : n % 4 === 0 && n % 3 !== 0 ? "bp-grid--4" : "bp-grid--3");
+const gridFor = (n: number) => cx(LIST, GRID, COLS[n === 2 ? 2 : n % 4 === 0 && n % 3 !== 0 ? 4 : 3]);
+
+/** A feature card's text (its last line: no bottom margin). */
+const FEATURE_P = cx(P, "mb-0 text-[15.5px] text-body");
 
 export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/features", 'Platform Features · Bodhira.ai');
@@ -62,13 +68,14 @@ export async function generateMetadata(): Promise<Metadata> {
  * own inline <style> block and Font Awesome icons are gone: kit classes plus
  * site-ui-content.css, line icons (CMS icon names are mapped by `cmsIcon()`).
  * Added: hero and closing-card photos (public/assets/img/pages/content,
- * credits in CREDITS.md there).
+ * credits in CREDITS.md there). Tailwind since the migration's phase 2 (was
+ * `.bh-page` kit classes and site-ui-content.css).
  */
 export default async function FeaturesPage() {
   await connection();
   const [img, { features, services }] = await Promise.all([imageResolver(), getCollections()]);
   return (
-    <div className="bh-page">
+    <div className={PAGE}>
       <SeoSchema path="features" />
 
       <PageHero
@@ -80,42 +87,35 @@ export default async function FeaturesPage() {
         image={{ src: img(null, "assets/img/pages/content/features-hero.jpg"), alt: "A teacher explaining a circuit diagram on an interactive smart board", width: 1200, height: 1000 }}
         actions={
           <>
-            <a href="/register/student" className="bh-btn bh-btn--maroon bh-btn--lg">Get Started Free <CIcon name="arrowRight" size={18} /></a>
-            <a href="/contact" className="bh-btn bh-btn--ghost bh-btn--lg"><CIcon name="headset" size={18} /> Talk to Sales</a>
+            <a href="/register/student" className={btn("maroon", "lg", BTN_FOCUS)}>Get Started Free <CIcon name="arrowRight" size={18} /></a>
+            <a href="/contact" className={btn("ghost", "lg", BTN_FOCUS)}><CIcon name="headset" size={18} /> Talk to Sales</a>
           </>
         }
         badge={
-          <span className="bp-glass">
-            <span className="bp-tile bp-tile--sm bp-tile--solid"><CIcon name="bot" size={20} /></span>
-            <span><strong>24/7</strong><span>AI doubt-solving assistant</span></span>
-          </span>
+          <HeroBadge icon={<CIcon name="bot" size={20} />} value="24/7" label="AI doubt-solving assistant" />
         }
       >
-        <ul className="bp-chips">
+        <ul className={CHIPS}>
           {["One platform, five roles", "AI tutor, 24/7", "Web, tablet & mobile"].map((t) => (
-            <li key={t} className="bp-chip"><CIcon name="check" size={16} />{t}</li>
+            <li key={t} className={CHIP}><CIcon name="check" size={16} />{t}</li>
           ))}
         </ul>
       </PageHero>
 
       {/* Stats band */}
-      <section className="bp-section bp-section--tight bpc-overlap" aria-label="The platform at a glance">
-        <div className="bh-container">
-          <ul className="bp-counters bpc-counters" data-reveal>
-            {STATS.map(([icon, num, label]) => (
-              <li key={num}>
-                <span className="bp-tile bp-tile--light"><CIcon name={icon} size={24} /></span>
-                <strong>{num}</strong>
-                <span>{label}</span>
-              </li>
-            ))}
-          </ul>
+      <section className={section("white", { tight: true })} aria-label="The platform at a glance">
+        <div className="site-container">
+          <Counters
+            items={STATS.map(([icon, num, label]) => ({ key: num, icon: <CIcon name={icon} size={24} />, value: num, label }))}
+            strong="text-[length:clamp(28px,1.6vw_+_14px,38px)]"
+            label="max-w-[220px]"
+          />
         </div>
       </section>
 
       {/* What Bodhira.ai does (CMS features, or the fallback list) */}
-      <section className="bp-section bp-section--flush-top" aria-labelledby="features-what">
-        <div className="bh-container">
+      <section className={section("white", { flushTop: true })} aria-labelledby="features-what">
+        <div className="site-container">
           <SectionHead
             id="features-what"
             eyebrow="What Bodhira.ai Does"
@@ -124,20 +124,20 @@ export default async function FeaturesPage() {
             lead="A complete academic operating system that connects students, teachers, parents and administrators around a single source of truth."
             align="center"
           />
-          <ul className={`bp-grid ${gridFor(features.length || KEY_FEATURES.length)}`}>
+          <ul className={gridFor(features.length || KEY_FEATURES.length)}>
             {features.length
               ? features.map((kf) => (
-                  <li key={kf.id} className="bp-card bp-card--hover bpc-feature" data-reveal>
-                    <span className="bp-tile"><CIcon name={cmsIcon(kf.icon)} size={24} /></span>
-                    <h3 className="bp-h3">{kf.title}</h3>
-                    {kf.description && <p>{kf.description}</p>}
+                  <li key={kf.id} className={card({ hover: true })} data-reveal>
+                    <span className={tile("default", { hover: true, extra: "mb-5" })}><CIcon name={cmsIcon(kf.icon)} size={24} /></span>
+                    <h3 className={h3({ size: "text-[20px]" })}>{kf.title}</h3>
+                    {kf.description && <p className={FEATURE_P}>{kf.description}</p>}
                   </li>
                 ))
               : KEY_FEATURES.map(([icon, title, text]) => (
-                  <li key={title} className="bp-card bp-card--hover bpc-feature" data-reveal>
-                    <span className="bp-tile"><CIcon name={icon} size={24} /></span>
-                    <h3 className="bp-h3">{title}</h3>
-                    <p>{text}</p>
+                  <li key={title} className={card({ hover: true })} data-reveal>
+                    <span className={tile("default", { hover: true, extra: "mb-5" })}><CIcon name={icon} size={24} /></span>
+                    <h3 className={h3({ size: "text-[20px]" })}>{title}</h3>
+                    <p className={FEATURE_P}>{text}</p>
                   </li>
                 ))}
           </ul>
@@ -145,15 +145,23 @@ export default async function FeaturesPage() {
       </section>
 
       {/* How it comes together */}
-      <section className="bp-section bp-section--cream" aria-labelledby="features-steps">
-        <div className="bh-container">
+      <section className={section("cream")} aria-labelledby="features-steps">
+        <div className="site-container">
           <SectionHead id="features-steps" eyebrow="How It Comes Together" title="From school sign-up to parent report —" highlight="in four steps" align="center" />
-          <ol className="bpc-steps">
+          <ol className={cx(LIST, "relative grid grid-cols-4 gap-6 *:min-w-0 max-lg:grid-cols-2 max-lg:gap-y-12 max-sm:grid-cols-1 max-sm:gap-y-8")}>
             {STEPS.map(([title, text], i) => (
-              <li key={title} className="bpc-step" data-reveal>
-                <span className="bpc-step__num" aria-hidden="true">{i + 1}</span>
-                <h3 className="bp-h3">{title}</h3>
-                <p>{text}</p>
+              <li
+                key={title}
+                className={cx(
+                  "relative px-3 text-center",
+                  // dashed connector to the next step (desktop)
+                  "not-last:after:absolute not-last:after:top-8 not-last:after:left-[calc(50%+44px)] not-last:after:h-0.5 not-last:after:w-[calc(100%-88px+24px)] not-last:after:bg-[repeating-linear-gradient(90deg,rgba(196,149,96,.6)_0_8px,transparent_8px_16px)] not-last:after:content-[''] max-lg:not-last:after:hidden",
+                )}
+                data-reveal
+              >
+                <span className="relative z-1 mx-auto mb-5 grid h-16 w-16 place-items-center rounded-full bg-grad-maroon text-[22px] font-extrabold text-white shadow-[0_0_0_8px_#fff,0_16px_30px_-12px_rgba(92,26,38,.55)]" aria-hidden="true">{i + 1}</span>
+                <h3 className={h3({ size: "text-[19px]" })}>{title}</h3>
+                <p className={cx(P, "m-0 text-[15px] text-body")}>{text}</p>
               </li>
             ))}
           </ol>
@@ -162,15 +170,15 @@ export default async function FeaturesPage() {
 
       {/* What we offer (CMS services) */}
       {services.length > 0 && (
-        <section className="bp-section" aria-labelledby="features-offer">
-          <div className="bh-container">
+        <section className={section()} aria-labelledby="features-offer">
+          <div className="site-container">
             <SectionHead id="features-offer" eyebrow="What We Offer" title="Everything your school gets with" highlight="Bodhira.ai" align="center" />
-            <ul className={`bp-grid ${gridFor(services.length)}`}>
+            <ul className={gridFor(services.length)}>
               {services.map((sv) => (
-                <li key={sv.id} className="bp-card bp-card--hover bpc-feature" data-reveal>
-                  <span className="bp-tile bp-tile--gold"><CIcon name={cmsIcon(sv.icon)} size={24} /></span>
-                  <h3 className="bp-h3">{sv.title}</h3>
-                  {sv.excerpt && <p>{sv.excerpt}</p>}
+                <li key={sv.id} className={card({ hover: true })} data-reveal>
+                  <span className={tile("gold", { hover: true, extra: "mb-5" })}><CIcon name={cmsIcon(sv.icon)} size={24} /></span>
+                  <h3 className={h3({ size: "text-[20px]" })}>{sv.title}</h3>
+                  {sv.excerpt && <p className={FEATURE_P}>{sv.excerpt}</p>}
                 </li>
               ))}
             </ul>
@@ -179,8 +187,8 @@ export default async function FeaturesPage() {
       )}
 
       {/* Built for scale */}
-      <section className="bp-section bp-section--dark bp-on-dark" aria-labelledby="features-scale">
-        <div className="bh-container">
+      <section className={section("dark")} aria-labelledby="features-scale">
+        <div className="site-container">
           <SectionHead
             id="features-scale"
             eyebrow="Built for Scale"
@@ -190,28 +198,32 @@ export default async function FeaturesPage() {
             align="center"
             light
           />
-          <ul className="bp-grid bp-grid--3">
+          <ul className={cx(LIST, GRID, COLS[3])}>
             {ENTERPRISE.map(([icon, title, text]) => (
-              <li key={title} className="bpc-glass-card" data-reveal>
-                <span className="bp-tile bp-tile--light"><CIcon name={icon} size={24} /></span>
-                <h3 className="bp-h3">{title}</h3>
-                <p>{text}</p>
+              <li
+                key={title}
+                className="h-full rounded-lg border border-[rgba(226,184,115,.22)] bg-[rgba(255,255,255,.05)] p-8 [transition:background_.3s,border-color_.3s,transform_.3s_var(--ease-bh)] hover:border-[rgba(226,184,115,.45)] hover:bg-[rgba(255,255,255,.09)] hover:[transform:translateY(-4px)] max-sm:p-6"
+                data-reveal
+              >
+                <span className={tile("light", { extra: "mb-5" })}><CIcon name={icon} size={24} /></span>
+                <h3 className={h3({ size: "text-[19px]", color: "text-ivory" })}>{title}</h3>
+                <p className={cx(P, "m-0 text-[15px] text-[rgba(255,244,230,.82)]")}>{text}</p>
               </li>
             ))}
           </ul>
         </div>
       </section>
 
-      <section className="bp-section" aria-label="Get started">
-        <div className="bh-container">
+      <section className={section()} aria-label="Get started">
+        <div className="site-container">
           <CtaBand
             image={img(null, "assets/img/pages/content/features-cta.jpg")}
             title="Ready to modernize your school?"
             text="Join Bodhira.ai and give your students, teachers and parents one connected place to learn, teach and track progress."
             actions={
               <>
-                <a href="/register/student" className="bh-btn bh-btn--gold bh-btn--lg"><CIcon name="rocket" size={18} /> Get Started Free</a>
-                <a href="/pricing" className="bh-btn bh-btn--glass bh-btn--lg"><CIcon name="tag" size={18} /> View Pricing</a>
+                <a href="/register/student" className={btn("gold", "lg", BTN_FOCUS_DARK)}><CIcon name="rocket" size={18} /> Get Started Free</a>
+                <a href="/pricing" className={btn("glass", "lg", BTN_FOCUS_DARK)}><CIcon name="tag" size={18} /> View Pricing</a>
               </>
             }
           />

@@ -41,7 +41,7 @@ export function CIcon({ name, size = 20, className }: { name: AnyIconName; size?
   if (!(name in EXTRA)) return <Icon name={name as IconName} size={size} className={className} />;
   return (
     <svg
-      className={className ? `bh-icon ${className}` : "bh-icon"}
+      className={`bh-icon inline-block flex-none align-middle${className ? ` ${className}` : ""}`}
       width={size}
       height={size}
       viewBox="0 0 24 24"
@@ -69,9 +69,27 @@ const FA: Record<string, AnyIconName> = {
   "fa-globe": "globe", "fa-laptop-code": "code", "fa-seedling": "sprout", "fa-language": "languages", "fa-pen-fancy": "pen",
   "fa-brain": "lightbulb", "fa-lightbulb": "lightbulb", "fa-shapes": "shapes", "fa-school": "school", "fa-award": "award",
   "fa-heart": "heart", "fa-calendar": "calendar", "fa-route": "route", "fa-rocket": "rocket", "fa-tag": "tag", "fa-eye": "eye",
+  // Other common Font Awesome names an editor might type (the CMS field is free text).
+  "fa-calendar-days": "calendar", "fa-calendar-check": "calendar", "fa-tags": "tag", "fa-book-open-reader": "bookOpen",
+  "fa-chart-bar": "chart", "fa-chart-column": "chart", "fa-chart-pie": "chart", "fa-chart-simple": "chart",
+  "fa-user": "user", "fa-user-tie": "user", "fa-user-group": "users", "fa-people-group": "users", "fa-children": "users",
+  "fa-chalkboard": "presentation", "fa-person-chalkboard": "presentation", "fa-trophy": "award", "fa-medal": "award",
+  "fa-certificate": "award", "fa-bullseye": "target", "fa-crosshairs": "target", "fa-circle-question": "help", "fa-question": "help",
+  "fa-face-smile": "smile", "fa-list-check": "listChecks", "fa-table-columns": "dashboard", "fa-gauge": "gauge",
+  "fa-paper-plane": "send", "fa-triangle-exclamation": "alert", "fa-circle-exclamation": "alert", "fa-mobile": "smartphone",
+  "fa-mobile-alt": "smartphone", "fa-film": "clapperboard", "fa-circle-play": "play", "fa-play": "play", "fa-pen": "pen",
+  "fa-pencil": "pen", "fa-pen-to-square": "pen", "fa-microscope": "flask", "fa-atom": "flask", "fa-vial": "flask", "fa-code": "code",
+  "fa-envelope": "mail", "fa-phone": "phone", "fa-location-dot": "mapPin", "fa-clock": "clock", "fa-check": "check",
+  "fa-circle-check": "check", "fa-square-check": "check", "fa-house": "home", "fa-cart-shopping": "cart", "fa-bookmark": "bookmark",
+  "fa-puzzle-piece": "puzzle", "fa-share-nodes": "share", "fa-unlock": "unlock", "fa-lock-open": "unlock", "fa-shield": "shield",
+  "fa-hand-holding-heart": "heart", "fa-wand-sparkles": "sparkles", "fa-magic": "sparkles", "fa-microchip": "bot",
+  "fa-bolt-lightning": "zap", "fa-mobile-retro": "smartphone", "fa-earth-americas": "globe", "fa-earth-europe": "globe",
 };
 
-/** The line icon for a CMS icon value such as "fa-solid fa-robot" or "fa-robot" (sparkles when unknown or empty). */
+/**
+ * The line icon for a CMS icon value such as "fa-solid fa-robot" or "fa-robot" (sparkles when unknown or empty).
+ * Font Awesome is no longer loaded, so every name stored in features / services `icon` must map here.
+ */
 export function cmsIcon(value: string | null | undefined): AnyIconName {
   const names = (value ?? "").split(/\s+/).filter((c) => c.startsWith("fa-") && !/^fa-(solid|regular|light|sharp|brands|thin|duotone)$/.test(c));
   for (const n of names) if (FA[n]) return FA[n];

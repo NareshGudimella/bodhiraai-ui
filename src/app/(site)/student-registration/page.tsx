@@ -4,8 +4,11 @@ import { connection } from "next/server";
 import { FlashClear } from "@/components/site/flash-clear";
 import { Icon } from "@/components/site/icons";
 import { KfFocusResult } from "@/components/site/kit-forms-focus";
-import { KfAlert, KfInput, KfPhoto, KfRequiredNote, KfSelect, KfTextarea } from "@/components/site/kit-forms-fields";
-import { CheckList, Eyebrow } from "@/components/site/page-kit";
+import {
+  KF_FORM, KF_PAGE, KF_ROW, KF_SUBMIT_BTN, KfAlert, KfAside, KfChip, KfConsent, KfFormCard, KfHelp, KfHeroChips, KfInput, KfLayout, KfPhoto,
+  KfSelect, KfSideCard, KfSubmit, KfTextarea, kfSection,
+} from "@/components/site/kit-forms-fields";
+import { CheckList } from "@/components/site/page-kit";
 import { PageHero } from "@/components/site/page-hero";
 import { SeoSchema } from "@/components/site/seo-schema";
 import { RevealOnScroll } from "@/components/site/site-enhance";
@@ -18,7 +21,9 @@ import { SITE_STATS } from "@/lib/site-stats";
 export const instant = false;
 
 export async function generateMetadata(): Promise<Metadata> {
-  return siteMetadata("/student-registration", "Student Registration — Bodhira.ai");
+  return siteMetadata("/student-registration", "Student Registration — Bodhira.ai", {
+    description: "Interested in learning with Bodhira.ai? Fill in your details and our team will get in touch to help you get started.",
+  });
 }
 
 /** Why learn with Bodhira.ai: the homepage FAQ's answers, shortened. not in legacy */
@@ -38,11 +43,15 @@ const BENEFITS = [
  * and `required` attributes), same `status` flash and old input. New: split
  * layout with a photo (public/assets/img/pages/forms/CREDITS.md), labels and
  * per-field errors, a benefits list (homepage FAQ copy), the support phone
- * from the `contact.phone` setting and counts from SITE_STATS.
+ * from the `contact.phone` setting and counts from SITE_STATS. Compliance
+ * pass (not in legacy, 2026-11-22): a required consent checkbox with a notice
+ * of purpose and a parent/guardian statement (`KfConsent`; enquiryStore
+ * checks `consent=1`). Tailwind since the migration's phase 2
+ * (kit-forms-fields.tsx).
  */
 export default function StudentRegistrationPage() {
   return (
-    <div className="bh-page kf-page">
+    <div className={KF_PAGE}>
       <SeoSchema path="student-registration" />
       <PageHero
         eyebrow="Student Registration"
@@ -51,25 +60,20 @@ export default function StudentRegistrationPage() {
         lead="Fill in your details below and our team will get in touch to help you get started."
         breadcrumbs={[{ label: "Student Registration" }]}
       >
-        <ul className="bp-chips kf-hero-chips" aria-label="Bodhira.ai in numbers">
-          <li><span className="bp-chip"><Icon name="users" size={16} />{SITE_STATS.students.label} students</span></li>
-          <li><span className="bp-chip"><Icon name="heart" size={16} />{SITE_STATS.parents.label} parents</span></li>
-          <li><span className="bp-chip"><Icon name="bookOpen" size={16} />{SITE_STATS.subjects.label} subjects</span></li>
-        </ul>
+        <KfHeroChips label="Bodhira.ai in numbers">
+          <KfChip icon="users">{SITE_STATS.students.label} students</KfChip>
+          <KfChip icon="heart">{SITE_STATS.parents.label} parents</KfChip>
+          <KfChip icon="bookOpen">{SITE_STATS.subjects.label} subjects</KfChip>
+        </KfHeroChips>
       </PageHero>
 
-      <section className="bp-section kf-section" aria-labelledby="registration-form-title">
-        <div className="bh-container kf-layout">
-          <div className="bp-form-card kf-card" id="registration-form" data-reveal>
-            <div className="kf-card__head">
-              <Eyebrow>Your details</Eyebrow>
-              <h2 id="registration-form-title" className="kf-card__title">Student Registration</h2>
-              <p>Our team will get in touch to help you get started.</p>
-            </div>
+      <section className={kfSection({ flushTop: true })} aria-labelledby="registration-form-title">
+        <KfLayout>
+          <KfFormCard id="registration-form" eyebrow="Your details" titleId="registration-form-title" title="Student Registration" intro="Our team will get in touch to help you get started.">
             <WithFlash />
-          </div>
+          </KfFormCard>
           <Aside />
-        </div>
+        </KfLayout>
       </section>
       <RevealOnScroll />
     </div>
@@ -81,48 +85,37 @@ async function Aside() {
   const [img, setting] = await Promise.all([imageResolver(), settingResolver()]);
   const phone = setting("contact.phone", "+91 99852 52786");
   return (
-    <aside className="kf-aside" aria-labelledby="registration-why">
+    <KfAside labelledBy="registration-why">
       <KfPhoto
         src={img(null, "assets/img/pages/forms/registration-family.jpg")}
         alt="A mother and her daughter reading a book together on the sofa at home"
-        chip={
-          <span className="bp-glass kf-photo__chip">
-            <span className="bp-tile bp-tile--sm bp-tile--solid"><Icon name="heart" size={20} /></span>
-            <span><strong>{SITE_STATS.parents.label} parents</strong><span>Following their child&rsquo;s progress</span></span>
-          </span>
-        }
+        chip={{ icon: "heart", title: <>{SITE_STATS.parents.label} parents</>, text: <>Following their child&rsquo;s progress</> }}
       />
-      <div className="bp-card kf-benefits" data-reveal>
-        <h2 id="registration-why" className="kf-side-title">Why students learn with Bodhira.ai</h2>
-        <p>Lessons are understood, not memorized.</p>
-        <CheckList items={BENEFITS} />
-      </div>
-      <div className="kf-help bp-on-dark" data-reveal>
-        <span className="bp-tile bp-tile--sm bp-tile--light"><Icon name="phone" size={20} /></span>
-        <div>
-          <span className="kf-help__label">Questions? Call us</span>
-          <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`}>{phone}</a>
-        </div>
-      </div>
-    </aside>
+      <KfSideCard titleId="registration-why" title="Why students learn with Bodhira.ai" intro="Lessons are understood, not memorized." introMargin="mb-5">
+        <CheckList items={BENEFITS} gap="gap-3.5" />
+      </KfSideCard>
+      <KfHelp label="Questions? Call us" phone={phone} />
+    </KfAside>
   );
 }
 
-const IDS = { name: "reg-name", email: "reg-email", phone: "reg-phone", city: "reg-city", grade: "reg-grade", board: "reg-board", school_name: "reg-school", message: "reg-message" };
+const IDS = { name: "reg-name", email: "reg-email", phone: "reg-phone", city: "reg-city", grade: "reg-grade", board: "reg-board", school_name: "reg-school", message: "reg-message", consent: "reg-consent" };
 
 /** Status, errors and old input flashed by the last submit. */
 async function WithFlash() {
   await connection();
   const flash = await getSiteFlash();
   const status = flash.messages?.status;
-  const errors = flash.errors ?? {};
+  // Not the footer newsletter's errors (its own bag).
+  const errors = flash.bag ? {} : flash.errors ?? {};
+  const old = flash.bag ? {} : flash.old ?? {};
   const hasErrors = Object.keys(errors).length > 0;
   return (
     <>
       {/* key: a new flash remounts these, so each one is cleared and focused */}
       {(status || hasErrors) && <Fragment key={JSON.stringify(flash)}><FlashClear /><KfFocusResult /></Fragment>}
       <KfAlert status={status} errors={errors} fieldIds={IDS} />
-      <EnquiryForm key={JSON.stringify(flash.old ?? {})} old={flash.old ?? {}} errors={errors} />
+      <EnquiryForm key={JSON.stringify(old)} old={old} errors={errors} />
     </>
   );
 }
@@ -133,25 +126,33 @@ const BOARDS = ["CBSE", "ICSE", "State Board", "IB", "Cambridge", "Other"];
 function EnquiryForm({ old, errors }: { old: Record<string, string>; errors: Record<string, string[]> }) {
   const e = (k: string) => errors[k]?.[0];
   return (
-    <form action={enquiryStore} className="bp-form kf-form">
-      <div className="bp-form__row">
+    <form action={enquiryStore} className={KF_FORM}>
+      <div className={KF_ROW}>
         <KfInput id={IDS.name} name="name" type="text" label="Student Full Name" req required icon="user" autoComplete="name" defaultValue={old.name} placeholder="e.g. Aarav Kumar" error={e("name")} />
         <KfInput id={IDS.email} name="email" type="email" label="Email Address" req required icon="mail" autoComplete="email" inputMode="email" defaultValue={old.email} placeholder="you@example.com" error={e("email")} />
       </div>
-      <div className="bp-form__row">
+      <div className={KF_ROW}>
         <KfInput id={IDS.phone} name="phone" type="text" label="Phone Number" req required icon="phone" autoComplete="tel" inputMode="tel" defaultValue={old.phone} placeholder="+91 98765 43210" hint="A parent's number is fine." error={e("phone")} />
         <KfInput id={IDS.city} name="city" type="text" label="City" icon="mapPin" autoComplete="address-level2" defaultValue={old.city} placeholder="e.g. Vijayawada" error={e("city")} />
       </div>
-      <div className="bp-form__row">
+      <div className={KF_ROW}>
         <KfSelect id={IDS.grade} name="grade" label="Grade / Class" icon="cap" placeholder="Select Grade / Class" options={GRADES} defaultValue={old.grade ?? ""} error={e("grade")} />
         <KfSelect id={IDS.board} name="board" label="Board" icon="bookOpen" placeholder="Select Board" options={BOARDS} defaultValue={old.board ?? ""} error={e("board")} />
       </div>
       <KfInput id={IDS.school_name} name="school_name" type="text" label="Current School" icon="school" defaultValue={old.school_name} placeholder="Optional" error={e("school_name")} />
       <KfTextarea id={IDS.message} name="message" label="Anything you'd like us to know?" rows={5} defaultValue={old.message} placeholder="Optional: subjects you need help with, a good time to call…" error={e("message")} />
-      <div className="kf-submit">
-        <button className="bh-btn bh-btn--maroon bh-btn--lg" type="submit">Submit Registration <Icon name="arrowRight" size={18} /></button>
-        <KfRequiredNote />
-      </div>
+      <KfConsent
+        id={IDS.consent}
+        checked={old.consent === "1"}
+        error={e("consent")}
+        purpose="We use these details only to contact you about learning with Bodhira.ai and to help you get started. We don't add you to any mailing list."
+        minor="If the student is under 18, a parent or guardian must fill in this form and give consent."
+      >
+        , and I am the student&apos;s parent or guardian or am 18 or older. I agree to Bodhira.ai using these details for the purpose above.
+      </KfConsent>
+      <KfSubmit>
+        <button className={KF_SUBMIT_BTN} type="submit">Submit Registration <Icon name="arrowRight" size={18} /></button>
+      </KfSubmit>
     </form>
   );
 }

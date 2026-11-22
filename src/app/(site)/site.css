@@ -1,0 +1,190 @@
+/*
+ * The marketing site's stylesheet (Tailwind CSS 4; docs/site-design-kit.md), the only CSS the
+ * marketing pages load. Tokens reproduce the 2026 redesign (it replaced the legacy theme's
+ * Bootstrap/main.css and the redesign's own stylesheets in the 2026-11 migration).
+ */
+@import "tailwindcss" source(none);
+@import "./site-blog.css"; /* blog group: prose utilities */
+@import "./site-forms.css"; /* forms group: select chevron, alert bullets */
+/* Plain :hover like the legacy CSS (Tailwind's default only applies on devices that can hover). */
+@custom-variant hover (&:hover);
+@source "../../components/site";
+@source "./";
+@source "../global-not-found.tsx";
+
+@theme {
+  /* Breakpoints match the redesign's media queries: `max-md:` = (max-width: 767px), etc. */
+  --breakpoint-*: initial;
+  --breakpoint-xs: 481px; /* max-xs: ≤480 */
+  --breakpoint-sm: 576px; /* max-sm: ≤575 */
+  --breakpoint-md: 768px; /* max-md: ≤767 */
+  --breakpoint-lg: 992px; /* max-lg: ≤991, lg: ≥992 */
+  --breakpoint-nav: 993px; /* header: max-nav: ≤992 (burger menu), nav: ≥993 */
+  --breakpoint-xl: 1200px; /* max-xl: ≤1199 */
+  --breakpoint-2xl: 1280px; /* max-2xl: ≤1279 */
+
+  --color-maroon: #5C1A26;
+  --color-wine: #7A2437;
+  --color-maroon-deep: #2A0E13;
+  --color-maroon-900: #1E0A0E;
+  --color-gold: #C49560;
+  --color-gold-2: #A87840;
+  --color-gold-bright: #E2B873;
+  --color-gold-text: #8A5A2B;
+  --color-cream: #FBF6EF;
+  --color-cream-2: #F5ECDF;
+  --color-ink: #1F0B10;
+  --color-body: #5A4A46;
+  --color-muted: #7D6C66;
+  --color-line: rgba(42, 14, 19, .08);
+  --color-line-2: rgba(42, 14, 19, .12);
+  --color-ivory: #FFF7EA; /* headings on maroon */
+  --color-error: #B42318;
+  /* Legacy theme colours still visible in the chrome (main.css --ed-*). */
+  --color-legacy-heading: #2A0E13;
+  --color-legacy-text: #6C706F;
+  --color-legacy-border: #E0E5EB;
+
+  /* Font sizes only (no paired line heights, unlike Tailwind's defaults): set leading-* yourself. */
+  --text-*: initial;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+
+  /*
+   * The faces come from next/font (app/(site)/fonts.ts); the family is named directly, not through
+   * its --font-jakarta variable, whose extra "… Fallback" name changes which system font draws the
+   * glyphs Jakarta lacks (→ came from Arial instead of the system UI font).
+   */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* The legacy theme's face; only where the theme's rules still showed it (cookie banner text, side menu contact list). */
+  --font-outfit: "Outfit", serif;
+
+  --radius-*: initial;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 999px;
+
+  --shadow-*: initial;
+  --shadow-xs: 0 1px 2px rgba(31, 11, 16, .05);
+  --shadow-sm: 0 1px 2px rgba(31, 11, 16, .04), 0 4px 12px -4px rgba(31, 11, 16, .08);
+  --shadow-md: 0 1px 2px rgba(31, 11, 16, .04), 0 12px 32px -12px rgba(31, 11, 16, .18);
+  --shadow-lg: 0 2px 6px rgba(31, 11, 16, .05), 0 32px 64px -24px rgba(31, 11, 16, .28);
+
+  --ease-bh: cubic-bezier(.2, .7, .2, 1);
+
+  --animate-pulse-ring: bh-pulse 2.4s ease-out infinite;
+  --animate-fade-in: bh-fade .5s cubic-bezier(.2, .7, .2, 1);
+  @keyframes bh-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+  @keyframes bh-fade { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+}
+
+/* Gradients (not colours, so not theme colours). */
+:root {
+  --grad-maroon: linear-gradient(135deg, #7A2437 0%, #5C1A26 55%, #3F1019 100%);
+  --grad-gold: linear-gradient(135deg, #F0D29C, #E2B873 45%, #C49560);
+  --grad-text: linear-gradient(120deg, #7A2437, #A5523E 60%, #A87840);
+  --grad-text-light: linear-gradient(120deg, #F3D7A6, #E2B873);
+}
+
+/*
+ * ---------- Base ----------
+ * On top of Tailwind's preflight: the element defaults the legacy theme gave every page
+ * (Bootstrap's reboot, main.css, site-layout.css, as computed), kept so nothing moved when those
+ * stylesheets were removed. Components set their own font, colour, size and margins and don't
+ * rely on these. One deliberate difference: body text is Plus Jakarta Sans (the theme: Outfit,
+ * which only the cookie banner text and the side menu's contact list show, via `font-outfit`).
+ */
+@layer base {
+  * { -webkit-font-smoothing: antialiased; }
+  html { overflow-x: clip; }
+  @media (prefers-reduced-motion: no-preference) { :root { scroll-behavior: smooth; } }
+  /* overflow-x: clip, not hidden: hidden makes <body> a scroll container and breaks the sticky header. */
+  body {
+    font-family: var(--font-sans); font-size: 16px; line-height: 1.625; font-weight: 400;
+    color: var(--color-legacy-text); background-color: var(--color-cream);
+    overflow-x: clip; max-width: 100%;
+    -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    margin-bottom: .5rem; font-weight: 600; line-height: 1.2; color: var(--color-legacy-heading);
+    transition: all .3s ease-in-out;
+  }
+  h1 { font-size: 64px; }
+  h2 { font-size: 40px; }
+  h3 { font-size: 24px; }
+  h4 { font-size: 20px; }
+  h5 { font-size: 16px; }
+  h6 { font-size: 14px; }
+  p { font-size: 16px; line-height: 28px; color: var(--color-legacy-text); margin-bottom: 15px; }
+  ol { padding-left: 2rem; margin-bottom: 1rem; list-style: decimal; }
+  ul { list-style: disc; }
+  ol ol, ol ul { margin-bottom: 0; }
+  dl { margin-bottom: 1rem; }
+  dt { font-weight: 700; }
+  dd { margin-bottom: .5rem; }
+  figure, blockquote { margin: 0 0 1rem; }
+  address { margin-bottom: 1rem; font-style: normal; }
+  a { color: var(--color-gold-2); text-decoration: none; outline: none; transition: all .3s ease-in-out; }
+  a:focus { color: inherit; }
+  a:hover { color: var(--color-gold); }
+  img, video, iframe { max-width: 100%; height: auto; }
+  img, svg, video, iframe { display: inline; vertical-align: middle; }
+  label { display: inline-block; }
+  button { outline: none; }
+  button:focus { outline: 0; border: 0; }
+  input { outline: none; }
+  /* Preflight strips form controls; the theme didn't (only fonts inherit). */
+  input, select, textarea { background-color: revert; color: revert; border: revert; border-radius: revert; letter-spacing: revert; font-weight: revert; font-style: revert; }
+  ::placeholder { color: #000; font-size: 16px; opacity: 1; }
+  ::selection { background: #000; color: #fff; text-shadow: none; }
+  code, kbd, pre, samp { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 1em; }
+  code { font-size: .875em; color: #d63384; word-wrap: break-word; }
+  small { font-size: .875em; }
+  table { caption-side: bottom; border-collapse: collapse; }
+  th { text-align: inherit; text-align: -webkit-match-parent; }
+  textarea { resize: vertical; }
+  hr { margin: 1rem 0; color: inherit; border: 0; border-top: 1px solid; opacity: .25; }
+}
+
+/* ---------- Shared utilities ---------- */
+
+/** The page column: 1248px wide with 24px gutters (16px on phones). Was `.bh-container`. */
+@utility site-container {
+  width: 100%;
+  max-width: 1248px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  @variant max-sm { padding-inline: 16px; }
+}
+/** `background: var(--bh-grad)`: the maroon brand gradient. */
+@utility bg-grad-maroon { background: var(--grad-maroon); }
+@utility bg-grad-gold { background: var(--grad-gold); }
+/** Gradient text for the highlighted part of a heading. */
+@utility text-grad { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@utility text-grad-light { background: var(--grad-text-light); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/**
+ * Under prefers-reduced-motion, no transitions anywhere inside (was `.bh-home *, .bh-home *::before`).
+ * Not `motion-reduce:**:before:…`: Tailwind's `before:` adds `content` to every descendant's
+ * ::before, which then shows up as an extra grid item.
+ */
+@utility reduce-motion-tree {
+  @media (prefers-reduced-motion: reduce) {
+    & *, & *::before { transition: none !important; }
+  }
+}
+
+/*
+ * Reveal on scroll (RevealOnScroll in site-enhance.tsx adds the classes). Unlayered so it
+ * beats a block's own transform/transition utilities while it fades in, as before.
+ */
+[data-reveal].is-pending { opacity: 0; transform: translateY(20px); }
+[data-reveal].is-pending.is-in { opacity: 1; transform: none; transition: opacity .7s var(--ease-bh), transform .7s var(--ease-bh); }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal].is-pending { opacity: 1; transform: none; }
+}

@@ -11,7 +11,5 @@ with `file`, then cropped and compressed locally (sharp, mozjpeg q78) at 2× its
 |---|---|---|---|---|
 | `auth-classroom.jpg` | 1120×1400 | Brand panel of every sign-in page: students in uniform at their desks in a bright smart classroom (projector, yellow feature wall), Anjuman Mat. Hr. Sec. School, Chennai, Tamil Nadu | https://unsplash.com/photos/a-group-of-children-sitting-at-desks-in-a-classroom-OcDJhBm8Jnc | Haseeb Modi (Unsplash) |
 
-`hero-journey.webp` in this folder is the legacy login's artwork (`bodhiraai.com/resources/views/auth/login.blade.php`); the new pages don't use it.
-
 Note: the homepage's `blog-fallback-1.jpg` (Pexels, also by Haseeb Modi) is an empty classroom in
 Chennai, possibly the same school; it shows no people.

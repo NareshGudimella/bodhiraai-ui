@@ -4,7 +4,8 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { authLink } from "@/components/auth/auth-styles";
 import { ForgotForm } from "./forgot-form";
 
-export const metadata: Metadata = { title: "Forgot password" };
+// Kept out of search results (SEO: not in legacy).
+export const metadata: Metadata = { title: "Forgot password", description: "Reset the password for your Bodhira.ai account.", robots: { index: false, follow: false } };
 
 /** Legacy auth/forgot.blade.php. Layout: AuthShell (2026 redesign, not in legacy). */
 export default function ForgotPasswordPage() {

@@ -6,16 +6,12 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    // The marketing site ports a static Bootstrap theme: plain <a> (full page
-    // loads, so the theme's jQuery re-initialises), <img>, and its own
-    // stylesheets.
+    // The marketing site: plain <a> (full page loads, as legacy) and <img>
+    // (Site Image Manager overrides resolve to arbitrary URLs).
     files: ["src/app/(site)/**", "src/components/site/**"],
     rules: {
       "@next/next/no-html-link-for-pages": "off",
       "@next/next/no-img-element": "off",
-      "@next/next/no-css-tags": "off",
-      "@next/next/no-sync-scripts": "off",
-      "@next/next/no-page-custom-font": "off",
       // Ported prose keeps its quotes; legacy's GA/GTM tags stay inline.
       "react/no-unescaped-entities": "off",
       "@next/next/next-script-for-ga": "off",

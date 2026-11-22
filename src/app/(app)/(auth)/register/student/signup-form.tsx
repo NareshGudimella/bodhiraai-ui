@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { AuthAlert, AuthField, PasswordInput, Spinner } from "@/components/auth/auth-fields";
-import { authButton, authInput } from "@/components/auth/auth-styles";
+import { authButton, authInput, authLink } from "@/components/auth/auth-styles";
 import { registerStudent } from "@/lib/billing-actions";
 import type { SignupOptions } from "@/lib/billing-api";
 
@@ -24,8 +24,13 @@ export function SignupForm({
   const v = state?.values;
   const e = state?.errors;
   const first = e && Object.values(e)[0]?.[0];
+  const formRef = useRef<HTMLFormElement>(null);
+  // After a failed submit, move focus to the first invalid field (not in legacy).
+  useEffect(() => {
+    if (state?.errors) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [state]);
   return (
-    <form action={action} className="mt-7 space-y-5">
+    <form ref={formRef} action={action} className="mt-7 space-y-5">
       {first && <AuthAlert tone="error">{first}</AuthAlert>}
       {!first && state?.message && state.ok === false && <AuthAlert tone="error">{state.message}</AuthAlert>}
       {planKey && (
@@ -96,17 +101,48 @@ export function SignupForm({
           {(c) => <PasswordInput {...c} name="password_confirmation" required autoComplete="new-password" />}
         </AuthField>
       </div>
-      <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-ink-2">
-        <input
-          type="checkbox"
-          name="accept"
-          value="1"
-          required
-          aria-invalid={e?.accept ? true : undefined}
-          className="mt-0.5 size-[18px] shrink-0 cursor-pointer rounded accent-(--auth-wine) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--auth-wine)"
-        />
-        I agree to the Terms of Service and Privacy Policy.
-      </label>
+      {/* Consent (not in legacy, 2026-11-22): purpose notice, guardian statement, links, `consent=1` checked by registerStudent */}
+      <div className="space-y-2.5 rounded-xl border border-line bg-[rgba(42,14,19,.025)] p-4">
+        <p id="signup-consent-purpose" className="text-[13px] leading-relaxed text-ink-3">
+          We use your details to create and run your account: lessons, quizzes, progress for you and your parents, AI help, and
+          billing. Questions you ask the AI tutor are processed by Anthropic.
+        </p>
+        <p id="signup-consent-minor" className="text-[13px] font-semibold leading-relaxed text-ink-2">
+          Under 18? A parent or guardian must create this account with you and give consent on your behalf.
+        </p>
+        <input type="hidden" name="consent" value="0" />
+        <label htmlFor="signup-consent" className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-ink-2">
+          <input
+            key={`c${v?.consent}`}
+            id="signup-consent"
+            type="checkbox"
+            name="consent"
+            value="1"
+            required
+            aria-required="true"
+            defaultChecked={v?.consent === "1"}
+            aria-invalid={e?.consent || e?.accept ? true : undefined}
+            aria-describedby={`signup-consent-purpose signup-consent-minor${e?.consent ? " signup-consent-error" : ""}`}
+            className="mt-0.5 size-[18px] shrink-0 cursor-pointer rounded accent-(--auth-wine) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(color:--auth-wine)"
+          />
+          <span>
+            I agree to the{" "}
+            <a href="/terms" target="_blank" rel="noopener" className={authLink}>
+              Terms of Service<span className="sr-only"> (opens in a new tab)</span>
+            </a>{" "}
+            and have read the{" "}
+            <a href="/privacy" target="_blank" rel="noopener" className={authLink}>
+              Privacy Policy<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+            . I am 18 or older, or my parent or guardian agrees on my behalf.
+          </span>
+        </label>
+        {e?.consent && (
+          <p id="signup-consent-error" className="text-[13px] font-semibold text-danger">
+            {e.consent[0]}
+          </p>
+        )}
+      </div>
       <button type="submit" disabled={pending} className={authButton}>
         {pending && <Spinner />}
         {pending ? "Creating your account…" : paid ? "Create account · Continue to payment →" : "Start 7-day free trial →"}

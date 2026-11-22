@@ -23,18 +23,32 @@ const fields = (form: FormData) =>
   );
 
 /**
+ * The consent checkbox every lead form carries (`consent=1`; DPDP Act 2023 s.6).
+ * not in legacy: legacy forms had none. Checked here, before the API is called,
+ * and answered like a Laravel 422 on `consent`. The API validates only the
+ * fields it knows (laravelValidate keeps the rule keys), so `consent` is not
+ * forwarded: there is nowhere to store it yet (see the compliance notes).
+ */
+const CONSENT_MESSAGE = 'Please confirm that you have read the Privacy Policy and agree to us using these details to contact you.';
+
+/**
  * Post a lead form to the API, then go back like Laravel: the status message
  * under `key` on success; errors and old input on a 422.
  */
-async function submit(path: string, form: FormData, key: string, to?: string) {
-  const body = fields(form);
+async function submit(path: string, form: FormData, key: string, to?: string, bag?: string) {
+  const { consent, ...body } = fields(form);
   const target = to ?? (await back());
+  if (consent !== '1') {
+    await setSiteFlash({ errors: { consent: [CONSENT_MESSAGE] }, old: body, bag });
+    redirect(await back());
+  }
   try {
     const { message } = await apiEnvelope(path, { body, token: null });
     await setSiteFlash({ messages: { [key]: message ?? '' } });
   } catch (e) {
     if (!(e instanceof ApiError) || !e.errors) throw e;
-    await setSiteFlash({ errors: e.errors, old: body });
+    // old('consent'): the box stays ticked when another field failed.
+    await setSiteFlash({ errors: e.errors, old: { ...body, consent }, bag });
     redirect(await back());
   }
   redirect(target);
@@ -47,7 +61,7 @@ export async function contactSubmit(form: FormData) {
 
 /** PageController::newsletterSubscribe. */
 export async function newsletterSubscribe(form: FormData) {
-  await submit('/leads/newsletter', form, 'newsletter_status');
+  await submit('/leads/newsletter', form, 'newsletter_status', undefined, 'newsletter');
 }
 
 /** PageController::enquiryStore. */

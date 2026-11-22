@@ -2,23 +2,6 @@
 
 import { useEffect } from "react";
 
-/** The redesigned header's compact state once the page scrolls (not in legacy). */
-export function SiteEnhance() {
-  useEffect(() => {
-    const header = document.querySelector(".bh-header");
-    const onScroll = () => {
-      header?.classList.toggle("is-scrolled", window.scrollY > 24);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
-  return null;
-}
-
 /**
  * Fade-up for the page's `[data-reveal]` blocks as they enter the viewport
  * (not in legacy). Render it at the end of the page, so its effect runs after

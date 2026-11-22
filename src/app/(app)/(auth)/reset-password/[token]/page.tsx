@@ -5,7 +5,8 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { authLink } from "@/components/auth/auth-styles";
 import { ResetForm } from "./reset-form";
 
-export const metadata: Metadata = { title: "Set a new password" };
+// A one-time link: kept out of search results (SEO: not in legacy).
+export const metadata: Metadata = { title: "Set a new password", robots: { index: false, follow: false } };
 
 /**
  * Legacy auth/reset.blade.php (the link from the reset email). Layout: AuthShell

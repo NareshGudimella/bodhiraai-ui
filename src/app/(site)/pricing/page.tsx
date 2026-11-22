@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Icon } from "@/components/site/icons";
+import { BTN_FOCUS, BTN_FOCUS_DARK, HeroBadge, PAGE, section } from "@/components/site/kit-content-ui";
 import { CtaBand } from "@/components/site/page-kit";
 import { PageHero } from "@/components/site/page-hero";
 import { PricingPlans } from "@/components/site/pricing-plans";
 import { SeoSchema } from "@/components/site/seo-schema";
+import { btn } from "@/components/site/ui";
 import { RevealOnScroll } from "@/components/site/site-enhance";
 import { assetResolver, siteMetadata } from "@/lib/site";
 import { getPricing } from "@/lib/site-api";
@@ -23,6 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * GET /pricing, same copy, same monthly/yearly switch and sign-up links
  * (`/register/student?plan=…&cycle=…`, schools → /contact). Added: hero photo
  * and a closing "talk to sales" card. Photos: public/assets/img/pages/CREDITS.md.
+ * Tailwind since the migration's phase 2 (was `.bh-page` kit classes).
  */
 export default async function PricingPage() {
   await connection();
@@ -32,7 +35,7 @@ export default async function PricingPage() {
   /** Legacy said "saves you ~2 months" for every plan; use the real best saving (not in legacy). */
   const bestSaving = maxYearlySavingPct([...individual, ...school]);
   return (
-    <div className="bh-page">
+    <div className={PAGE}>
       <SeoSchema path="pricing" />
 
       <PageHero
@@ -44,36 +47,31 @@ export default async function PricingPage() {
         image={{ src: asset("assets/img/pages/pricing-hero.jpg"), alt: "A young boy following an online lesson on a laptop at home, his notebook beside him", width: 1200, height: 1000 }}
         actions={
           <>
-            <a href="#plans" className="bh-btn bh-btn--maroon bh-btn--lg">See the plans <Icon name="arrowRight" size={18} /></a>
-            <a href="/contact" className="bh-btn bh-btn--ghost bh-btn--lg">Talk to Sales</a>
+            <a href="#plans" className={btn("maroon", "lg", BTN_FOCUS)}>See the plans <Icon name="arrowRight" size={18} /></a>
+            <a href="/contact" className={btn("ghost", "lg", BTN_FOCUS)}>Talk to Sales</a>
           </>
         }
         badge={
-          trial > 0 && (
-            <span className="bp-glass">
-              <span className="bp-tile bp-tile--sm bp-tile--solid"><Icon name="sparkles" size={20} /></span>
-              <span><strong>{trial}-day free trial</strong><span>No card needed</span></span>
-            </span>
-          )
+          trial > 0 && <HeroBadge icon={<Icon name="sparkles" size={20} />} value={<>{trial}-day free trial</>} label="No card needed" />
         }
       />
 
-      <section className="bp-section bp-section--cream" id="plans" aria-label="Plans" style={{ scrollMarginTop: 80 }}>
-        <div className="bh-container">
+      <section className={section("cream")} id="plans" aria-label="Plans" style={{ scrollMarginTop: 80 }}>
+        <div className="site-container">
           <PricingPlans individual={individual} school={school} />
         </div>
       </section>
 
-      <section className="bp-section bp-section--flush-top bp-section--cream" aria-label="Talk to us">
-        <div className="bh-container">
+      <section className={section("cream", { flushTop: true })} aria-label="Talk to us">
+        <div className="site-container">
           <CtaBand
             image={asset("assets/img/pages/pricing-schools.jpg")}
             title="Bringing Bodhira.ai to Your Whole School?"
             text="School plans cover every class, teacher and parent. Tell us about your school and we will set up a walkthrough."
             actions={
               <>
-                <a href="/contact" className="bh-btn bh-btn--gold bh-btn--lg">Talk to Sales <Icon name="arrowRight" size={18} /></a>
-                <a href="/book-demo" className="bh-btn bh-btn--glass bh-btn--lg">Book a Demo</a>
+                <a href="/contact" className={btn("gold", "lg", BTN_FOCUS_DARK)}>Talk to Sales <Icon name="arrowRight" size={18} /></a>
+                <a href="/book-demo" className={btn("glass", "lg", BTN_FOCUS_DARK)}>Book a Demo</a>
               </>
             }
           />

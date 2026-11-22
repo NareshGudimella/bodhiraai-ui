@@ -69,7 +69,7 @@ export function PasswordInput({ className, ...props }: Omit<ComponentProps<"inpu
         aria-label={shown ? "Hide password" : "Show password"}
         aria-pressed={shown}
         aria-controls={props.id}
-        className="absolute inset-y-1 right-1 grid w-11 cursor-pointer place-items-center rounded-lg text-ink-3 transition hover:bg-[rgba(42,14,19,.05)] hover:text-(--auth-maroon) focus-visible:outline-2 focus-visible:outline-(--auth-wine)"
+        className="absolute inset-y-1 right-1 grid w-11 cursor-pointer place-items-center rounded-lg text-ink-3 transition hover:bg-[rgba(42,14,19,.05)] hover:text-(--auth-maroon) focus-visible:outline-2 focus-visible:outline-(color:--auth-wine)"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
           {shown ? (

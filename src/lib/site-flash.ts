@@ -12,6 +12,12 @@ export type SiteFlash = {
   messages?: Record<string, string>;
   errors?: Record<string, string[]>;
   old?: Record<string, string>;
+  /**
+   * Laravel's named error bag (`withErrors($v, 'newsletter')`): set when the
+   * errors belong to the footer newsletter form, so the page's own form
+   * doesn't show them. not in legacy
+   */
+  bag?: string;
 };
 
 export async function setSiteFlash(flash: SiteFlash) {
