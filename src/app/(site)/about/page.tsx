@@ -4,6 +4,7 @@ import { SeoSchema } from "@/components/site/seo-schema";
 import { mediaUrl } from "@/lib/media";
 import { assetResolver, siteMetadata, strLimit } from "@/lib/site";
 import { getCollections } from "@/lib/site-api";
+import { SITE_STATS } from "@/lib/site-stats";
 
 /** Renders per request and may block, like the site layout (see its note). */
 export const instant = false;
@@ -80,15 +81,15 @@ export default async function AboutPage() {
                             <div className="about-counter-item">
                                 <div className="icon"><img src={asset("assets/img/icon/about-1.png")} alt="about" /></div>
                                 <div className="content">
-                                    <h3 className="title"><span className="odometer" data-count="9.5">0</span><span className="number">k+</span></h3>
+                                    <h3 className="title"><span className="odometer" data-count={SITE_STATS.students.count}>0</span><span className="number">{SITE_STATS.students.suffix}</span></h3>
                                     <p>Students learning every day<br />across partner schools</p>
                                 </div>
                             </div>
                             <div className="about-counter-item">
                                 <div className="icon"><img src={asset("assets/img/icon/about-2.png")} alt="about" /></div>
                                 <div className="content">
-                                    <h3 className="title"><span className="odometer" data-count="6.7">0</span><span className="number">k+</span></h3>
-                                    <p>Students learning every day<br />across partner schools</p>
+                                    <h3 className="title"><span className="odometer" data-count={SITE_STATS.parents.count}>0</span><span className="number">{SITE_STATS.parents.suffix}</span></h3>
+                                    <p>Parents following their<br />child&rsquo;s progress</p>
                                 </div>
                             </div>
                         </div>
@@ -148,7 +149,7 @@ export default async function AboutPage() {
                 <div className="col-lg-3 col-md-6">
                     <div className="counter-item item-1 white-content">
                         <span className="counter-ico"><i className="fa-solid fa-user-graduate"></i></span>
-                        <h3 className="title"><span className="odometer" data-count="3,192">0</span>+</h3>
+                        <h3 className="title"><span className="odometer" data-count={SITE_STATS.students.count}>0</span>{SITE_STATS.students.suffix}</h3>
                         <p>Students Onboarded</p>
                     </div>
                 </div>
@@ -169,7 +170,7 @@ export default async function AboutPage() {
                 <div className="col-lg-3 col-md-6">
                     <div className="counter-item item-4 white-content">
                         <span className="counter-ico"><i className="fa-solid fa-school"></i></span>
-                        <h3 className="title"><span className="odometer" data-count="200">0</span>+</h3>
+                        <h3 className="title"><span className="odometer" data-count={SITE_STATS.schools.count}>0</span>{SITE_STATS.schools.suffix}</h3>
                         <p>Partner Schools</p>
                     </div>
                 </div>

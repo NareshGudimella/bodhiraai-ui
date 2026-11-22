@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { SiteAnalytics } from "@/components/site/analytics";
 import { SiteFooter } from "@/components/site/footer";
+import { SiteEnhance } from "@/components/site/site-enhance";
 import { SiteHeader } from "@/components/site/header";
 import { ThemeScripts } from "@/components/site/theme-scripts";
 
@@ -33,6 +34,9 @@ const STYLES = [
   "main.css",
   "bodhira-theme.css",
   "site-layout.css",
+  // 2026 redesign (not in legacy): header/footer for every page, and the homepage (scoped to .bh-home).
+  "site-chrome.css",
+  "home.css",
 ];
 
 /**
@@ -48,14 +52,19 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         {STYLES.slice(0, 2).map((f) => <link key={f} rel="stylesheet" href={`/assets/css/${f}`} />)}
         {/* Newer Font Awesome 6.5 so modern brand glyphs (e.g. X / fa-x-twitter) render */}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+        {/* Plus Jakarta Sans for the redesigned header, footer and homepage (not in legacy). */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
         {STYLES.slice(2).map((f) => <link key={f} rel="stylesheet" href={`/assets/css/${f}`} />)}
       </head>
       <body>
         <SiteAnalytics />
         <SiteHeader />
-        {children}
+        <main id="main">{children}</main>
         <SiteFooter />
         <ThemeScripts />
+        <SiteEnhance />
       </body>
     </html>
   );

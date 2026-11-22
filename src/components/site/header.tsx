@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import { connection } from "next/server";
 import { assetResolver, settingResolver } from "@/lib/site";
 import { getChrome } from "@/lib/site-api";
+import { Icon } from "./icons";
+import { NavItems, NavList } from "./nav-items";
 
 /** Legacy fallback when the CMS header menu is empty. */
 const DEFAULT_NAV = [
@@ -15,75 +18,66 @@ const DEFAULT_NAV = [
   ["Contact Us", "/contact"],
 ].map(([label, url]) => ({ label, url, target: "_self" }));
 
-/** The marketing header (legacy layouts/app.blade.php): top bar, CMS menu, mobile side menu, preloader. */
+/**
+ * The marketing header (legacy layouts/app.blade.php): top bar, CMS menu,
+ * mobile side menu. Restyled with the 2026 homepage redesign (not in legacy):
+ * own `bh-*` classes (public/assets/css/site-chrome.css) instead of the theme's
+ * `.header`, a CSS-sticky nav bar and an active menu item. The theme's
+ * meanmenu still copies `.mobile-menu-items` into the side menu.
+ */
 export async function SiteHeader() {
   // Request time: building the app must not need the API (see the site layout).
   await connection();
   const [{ header_menu, social }, asset, setting] = await Promise.all([getChrome(), assetResolver(), settingResolver()]);
   const phone = setting("contact.phone", "+91 99852 52786");
   const address = setting("contact.address", "Pragathi Nagar, Hyderabad");
+  const email = setting("contact.email", "bodhira.ai.pvt.ltd@gmail.com");
+  const hours = setting("contact.hours", "Mon - Sat: 8:00 - 15:00");
+  const tel = `tel:${phone.replace(/[^0-9+]/g, "")}`;
   const nav = header_menu.length ? header_menu.map((i) => ({ label: i.label, url: i.url, target: i.target || "_self" })) : DEFAULT_NAV;
   const logo = asset("assets/img/logo/bodhira-logo-light.png");
   return (
     <>
-      <header className="header header-3 sticky-active">
-        <div className="top-bar">
-          <div className="container">
-            <div className="top-bar-inner">
-              <div className="top-bar-left">
-                <ul className="top-bar-list">
-                  <li><i className="fa-regular fa-phone"></i><a href={`tel:${phone.replace(/[^0-9+]/g, "")}`}>{phone}</a></li>
-                  <li><i className="fa-regular fa-location-dot"></i><span>{address}</span></li>
-                  <li><i className="fa-regular fa-clock"></i><span>Mon - Sat: 8:00 - 15:00</span></li>
+      <a href="#main" className="bh-skip">Skip to content</a>
+      <div className="bh-topbar">
+        <div className="bh-container bh-topbar__inner">
+          <ul className="bh-topbar__info">
+            <li><Icon name="phone" size={14} /><a href={tel}>{phone}</a></li>
+            <li className="bh-hide-sm"><Icon name="mapPin" size={14} /><span>{address}</span></li>
+            <li className="bh-hide-md"><Icon name="clock" size={14} /><span>{hours}</span></li>
+          </ul>
+          <div className="bh-topbar__right">
+            <a href="/login" className="bh-topbar__signin"><Icon name="user" size={14} />Sign In</a>
+            {social.length > 0 && (
+              <div className="bh-topbar__social">
+                <span className="bh-hide-sm">Follow Us</span>
+                <ul>
+                  {social.map((s) => (
+                    <li key={s.id}>
+                      <a href={s.url} target="_blank" rel="noopener" aria-label={s.platform}><i className={s.icon || `fab fa-${s.platform}`} aria-hidden="true"></i></a>
+                    </li>
+                  ))}
                 </ul>
               </div>
-              <div className="top-bar-right">
-                <div className="register-box">
-                  <div className="icon"><i className="fa-regular fa-user"></i></div>
-                  <a href="/login">Sign In</a>
-                </div>
-                {social.length > 0 && (
-                  <div className="top-social-wrap">
-                    <span>Follow Us</span>
-                    <ul className="social-list">
-                      {social.map((s) => (
-                        <li key={s.id}><a href={s.url} target="_blank" rel="noopener"><i className={s.icon || `fab fa-${s.platform}`}></i></a></li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
-        <div className="primary-header">
-          <div className="container">
-            <div className="primary-header-inner">
-              <div className="header-logo d-lg-block">
-                <a href="/"><img src={logo} alt="Logo" /></a>
-              </div>
-              <div className="header-menu-wrap">
-                <div className="mobile-menu-items">
-                  <ul className="sub-menu">
-                    {nav.map((it, i) => (
-                      <li key={i}><a href={it.url} target={it.target}>{it.label}</a></li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <div className="header-right-wrap">
-                <div className="header-right">
-                  <a href="/login" className="ed-primary-btn header-btn">Sign In</a>
-                  <div className="header-logo d-none d-lg-none">
-                    <a href="/"><img src={logo} alt="Logo" /></a>
-                  </div>
-                  <div className="header-right-item d-lg-none d-md-block">
-                    {/* Legacy href="javascript:void(0)": React blocks javascript: URLs; an <a> without href does nothing either. */}
-                    <a className="mobile-side-menu-toggle" role="button" tabIndex={0} aria-label="Open menu"><i className="fa-sharp fa-solid fa-bars"></i></a>
-                  </div>
-                </div>
-              </div>
-            </div>
+      </div>
+
+      <header className="bh-header">
+        <div className="bh-container bh-header__inner">
+          <a href="/" className="bh-header__logo"><img src={logo} alt={setting("general.site_name", "Bodhira.ai")} width={800} height={240} /></a>
+          <nav className="bh-header__nav mobile-menu-items" aria-label="Main">
+            <ul className="sub-menu">
+              <Suspense fallback={<NavList items={nav} />}>
+                <NavItems items={nav} />
+              </Suspense>
+            </ul>
+          </nav>
+          <div className="bh-header__actions">
+            <a href="/login" className="bh-btn bh-btn--gold bh-header__signin">Sign In <Icon name="arrowRight" size={16} /></a>
+            {/* Legacy href="javascript:void(0)": React blocks javascript: URLs; the theme's jQuery opens the side menu. */}
+            <button type="button" className="mobile-side-menu-toggle bh-header__burger" aria-label="Open menu"><Icon name="menu" size={22} /></button>
           </div>
         </div>
       </header>
@@ -104,10 +98,11 @@ export async function SiteHeader() {
             <button className="mobile-side-menu-close" aria-label="Close menu"><i className="fa-regular fa-xmark"></i></button>
           </div>
           <div className="side-menu-wrap"></div>
+          <a href="/login" className="bh-btn bh-btn--maroon bh-side-signin">Sign In</a>
           <ul className="side-menu-list">
-            <li><i className="fa-light fa-location-dot"></i>Address : <span>Pragathi Nagar, Hyderabad</span></li>
-            <li><i className="fa-light fa-phone"></i>Phone : <a href="tel:+919985252786">+91 99852 52786</a></li>
-            <li><i className="fa-light fa-envelope"></i>Email : <a href="mailto:bodhira.ai.pvt.ltd@gmail.com">bodhira.ai.pvt.ltd@gmail.com</a></li>
+            <li><i className="fa-light fa-location-dot"></i>Address : <span>{address}</span></li>
+            <li><i className="fa-light fa-phone"></i>Phone : <a href={tel}>{phone}</a></li>
+            <li><i className="fa-light fa-envelope"></i>Email : <a href={`mailto:${email}`}>{email}</a></li>
           </ul>
         </div>
       </div>

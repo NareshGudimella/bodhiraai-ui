@@ -5,6 +5,7 @@ import { getChrome } from "@/lib/site-api";
 import { newsletterSubscribe } from "@/lib/site-actions";
 import { getSiteFlash } from "@/lib/site-flash";
 import { FlashClear } from "./flash-clear";
+import { Icon } from "./icons";
 
 /** `session('newsletter_status')`. */
 async function NewsletterStatus() {
@@ -13,120 +14,129 @@ async function NewsletterStatus() {
   const msg = flash.messages?.newsletter_status;
   return msg ? (
     <>
-      <p className="mb-20" style={{ color: "#C49560" }}>{msg}</p>
+      <p className="bh-footer__status" role="status">{msg}</p>
       <FlashClear />
     </>
   ) : null;
 }
 
-/** The marketing footer (legacy layouts/app.blade.php): newsletter, about, social, CMS footer menu, recent posts. */
+const FALLBACK_MENU = [
+  ["About", "/about"],
+  ["Features", "/features"],
+  ["Pricing", "/pricing"],
+  ["Student Registration", "/student-registration"],
+  ["Contact", "/contact"],
+  ["Sign In", "/login"],
+];
+const USEFUL_LINKS = [
+  ["Home", "/"],
+  ["Plans & Pricing", "/pricing"],
+  ["Privacy Policy", "/privacy"],
+  ["Terms & Conditions", "/terms"],
+  ["Refund Policy", "/refund"],
+];
+
+/**
+ * The marketing footer (legacy layouts/app.blade.php): newsletter, about,
+ * social, CMS footer menu, contact details, recent posts. Restyled with the
+ * 2026 homepage redesign (not in legacy): own `bh-*` classes in
+ * public/assets/css/site-chrome.css, plus the contact column from the settings.
+ */
 export async function SiteFooter() {
   const [{ footer_menu, social, recent_posts }, asset, setting, year] = await Promise.all([getChrome(), assetResolver(), settingResolver(), currentYear()]);
+  const siteName = setting("general.site_name", "Bodhira.ai");
   const email = setting("contact.email");
+  const phone = setting("contact.phone", "+91 99852 52786");
+  const address = setting("contact.address", "Pragathi Nagar, Hyderabad");
+  const hours = setting("contact.hours", "Mon - Sat: 8:00 - 15:00");
   return (
     <>
-      <footer className="footer-section pt-120" data-background={asset("assets/img/bg-img/footer-bg.png")}>
-        <div className="footer-top-wrap">
-          <div className="container">
-            <div className="footer-top text-center">
-              <h2 className="title">Stay Updated on {setting("general.site_name", "Bodhira.ai")} <br />News &amp; Releases</h2>
+      <footer className="bh-footer">
+        <div className="bh-container">
+          <div className="bh-footer__news">
+            <div>
+              <h2 className="bh-footer__news-title">Stay Updated on {siteName} News &amp; Releases</h2>
+              <p className="bh-footer__news-text">Product updates, teaching ideas and new subjects. No spam.</p>
               <NewsletterStatus />
-              <div className="footer-form-wrap">
-                <form action={newsletterSubscribe} className="footer-form">
-                  <div className="form-item">
-                    <input type="email" id="email-2" name="email" className="form-control" required placeholder="Enter Your E-mail" />
-                  </div>
-                  <button className="ed-primary-btn">sign up</button>
-                </form>
-              </div>
             </div>
-            <div className="row footer-wrap">
-              <div className="col-lg-3 col-md-6">
-                <div className="footer-widget">
-                  <h3 className="widget-header">Get in touch!</h3>
-                  <p className="mb-30">{setting("footer.about", "A modern learning platform built around the way your school already teaches.")}</p>
-                  {email && <p className="mb-20"><a href={`mailto:${email}`} style={{ color: "#C49560" }}>{email}</a></p>}
-                  <ul className="footer-social">
-                    {social.length ? (
-                      social.map((s) => <li key={s.id}><a href={s.url} target="_blank" rel="noopener"><i className={s.icon || `fab fa-${s.platform}`}></i></a></li>)
-                    ) : (
-                      <>
-                        <li><a href="#"><i className="fab fa-facebook-f"></i></a></li>
-                        <li><a href="#"><i className="fab fa-instagram"></i></a></li>
-                        <li><a href="#"><i className="fab fa-youtube"></i></a></li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6">
-                <div className="footer-widget widget-2">
-                  <h3 className="widget-header">Company Info</h3>
-                  <ul className="footer-list">
-                    {footer_menu.length ? (
-                      footer_menu.map((item) => <li key={item.id}><a href={item.url} target={item.target}>{item.label}</a></li>)
-                    ) : (
-                      <>
-                        <li><a href="/about">About</a></li>
-                        <li><a href="/features">Features</a></li>
-                        <li><a href="/pricing">Pricing</a></li>
-                        <li><a href="/student-registration">Student Registration</a></li>
-                        <li><a href="/contact">Contact</a></li>
-                        <li><a href="/login">Sign In</a></li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6">
-                <div className="footer-widget widget-2">
-                  <h3 className="widget-header">Useful Links</h3>
-                  <ul className="footer-list">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/pricing">Plans &amp; Pricing</a></li>
-                    <li><a href="/privacy">Privacy Policy</a></li>
-                    <li><a href="/terms">Terms &amp; Conditions</a></li>
-                    <li><a href="/refund">Refund Policy</a></li>
-                  </ul>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6">
-                <div className="footer-widget">
-                  <h3 className="widget-header">Recent Post</h3>
-                  {recent_posts.length ? (
-                    recent_posts.map((post) => (
-                      <div key={post.id} className="sidebar-post mb-20">
-                        <img src={mediaUrl(post.cover_image_url) ?? asset("assets/img/images/footer-post-1.png")} alt="post" />
-                        <div className="post-content">
-                          <h3 className="title"><a href={`/blog/${post.slug}`}>{strLimit(post.title, 34)}</a></h3>
-                          <ul className="post-meta">
-                            <li><i className="fa-light fa-calendar"></i>{fmtDate(post.published_at, "d M, Y")}</li>
-                          </ul>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="sidebar-post mb-20">
-                      <img src={asset("assets/img/images/footer-post-1.png")} alt="post" />
-                      <div className="post-content">
-                        <h3 className="title"><a href="/blog">Read our latest articles</a></h3>
-                      </div>
+            <form action={newsletterSubscribe} className="bh-footer__form">
+              <label htmlFor="email-2" className="bh-sr-only">Email address</label>
+              <input type="email" id="email-2" name="email" required placeholder="Enter your e-mail" autoComplete="email" />
+              <button className="bh-btn bh-btn--gold" type="submit">Sign Up <Icon name="send" size={16} /></button>
+            </form>
+          </div>
+
+          <div className="bh-footer__grid">
+            <div className="bh-footer__brand">
+              <a href="/" className="bh-footer__logo"><img src={asset("assets/img/logo/bodhira-logo-light.png")} alt={siteName} width={800} height={240} loading="lazy" /></a>
+              <p className="bh-footer__tagline">Learn. Visualize. Understand. Excel.</p>
+              <p>{setting("footer.about", "A modern learning platform built around the way your school already teaches.")}</p>
+              <ul className="bh-social" aria-label="Follow us">
+                {social.length ? (
+                  social.map((s) => (
+                    <li key={s.id}><a href={s.url} target="_blank" rel="noopener" aria-label={s.platform}><i className={s.icon || `fab fa-${s.platform}`} aria-hidden="true"></i></a></li>
+                  ))
+                ) : (
+                  <>
+                    <li><a href="#" aria-label="facebook"><i className="fab fa-facebook-f" aria-hidden="true"></i></a></li>
+                    <li><a href="#" aria-label="instagram"><i className="fab fa-instagram" aria-hidden="true"></i></a></li>
+                    <li><a href="#" aria-label="youtube"><i className="fab fa-youtube" aria-hidden="true"></i></a></li>
+                  </>
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="bh-footer__head">Company Info</h3>
+              <ul className="bh-footer__links">
+                {footer_menu.length
+                  ? footer_menu.map((item) => <li key={item.id}><a href={item.url} target={item.target}>{item.label}</a></li>)
+                  : FALLBACK_MENU.map(([label, url]) => <li key={url}><a href={url}>{label}</a></li>)}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="bh-footer__head">Useful Links</h3>
+              <ul className="bh-footer__links">
+                {USEFUL_LINKS.map(([label, url]) => <li key={url}><a href={url}>{label}</a></li>)}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="bh-footer__head">Contact Us</h3>
+              <ul className="bh-footer__contact">
+                <li><Icon name="phone" size={16} /><a href={`tel:${phone.replace(/[^0-9+]/g, "")}`}>{phone}</a></li>
+                <li><Icon name="mapPin" size={16} /><span>{address}</span></li>
+                {email && <li><Icon name="mail" size={16} /><a href={`mailto:${email}`}>{email}</a></li>}
+                <li><Icon name="clock" size={16} /><span>{hours}</span></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="bh-footer__head">Recent Posts</h3>
+              {recent_posts.length ? (
+                recent_posts.map((post) => (
+                  <div key={post.id} className="bh-footer__post">
+                    <img src={mediaUrl(post.cover_image_url) ?? asset("assets/img/images/footer-post-1.png")} alt="" width={64} height={64} loading="lazy" />
+                    <div>
+                      <a href={`/blog/${post.slug}`}>{strLimit(post.title, 34)}</a>
+                      <span><Icon name="calendar" size={13} />{fmtDate(post.published_at, "d M, Y")}</span>
                     </div>
-                  )}
+                  </div>
+                ))
+              ) : (
+                <div className="bh-footer__post">
+                  <img src={asset("assets/img/images/footer-post-1.png")} alt="" width={64} height={64} loading="lazy" />
+                  <div><a href="/blog">Read our latest articles</a></div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
-        <div className="copyright-area">
-          <div className="container">
-            <div className="copyright-content">
-              <p>
-                {setting("footer.copyright", `Copyright © ${year} Bodhira.ai. All Rights Reserved.`)}
-                &nbsp;|&nbsp; <a href="/privacy">Privacy Policy</a>
-                &nbsp;|&nbsp; <a href="/terms">Terms &amp; Conditions</a>
-              </p>
-            </div>
+        <div className="bh-footer__bar">
+          <div className="bh-container bh-footer__bar-inner">
+            <p>{setting("footer.copyright", `Copyright © ${year} ${siteName}. All Rights Reserved.`)}</p>
+            <p><a href="/privacy">Privacy Policy</a><span aria-hidden="true">|</span><a href="/terms">Terms &amp; Conditions</a></p>
           </div>
         </div>
       </footer>
