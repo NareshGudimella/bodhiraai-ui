@@ -28,8 +28,11 @@ const FALLBACK_MENU = [
   ["Contact", "/contact"],
   ["Sign In", "/login"],
 ];
+// Blogs & Articles and FAQ moved here from the header menu (not in legacy).
 const USEFUL_LINKS = [
   ["Home", "/"],
+  ["Blogs & Articles", "/blog"],
+  ["FAQ", "/faq"],
   ["Plans & Pricing", "/pricing"],
   ["Privacy Policy", "/privacy"],
   ["Terms & Conditions", "/terms"],

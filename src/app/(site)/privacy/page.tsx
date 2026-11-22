@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/privacy", 'Privacy Policy · Bodhira.ai');
 }
 
-/** Legacy resources/views/legal/privacy.blade.php. */
+/** Legacy resources/views/legal/privacy.blade.php. Same text; the 2026 design-kit layout (contents list, prose) comes from `LegalPage` (not in legacy). */
 export default function PrivacyPage() {
   return (
     <>

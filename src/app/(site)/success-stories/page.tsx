@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { KitPagination, StoryCard } from "@/components/site/kit-content-cards";
+import { CIcon } from "@/components/site/kit-content-icons";
+import { CtaBand } from "@/components/site/page-kit";
+import { PageHero } from "@/components/site/page-hero";
 import { SeoSchema } from "@/components/site/seo-schema";
-import { PostCard } from "@/components/site/post-card";
-import { SitePagination } from "@/components/site/site-pagination";
-import { assetResolver, siteMetadata } from "@/lib/site";
+import { RevealOnScroll } from "@/components/site/site-enhance";
+import { imageResolver, siteMetadata } from "@/lib/site";
 import { getSuccessStories } from "@/lib/site-api";
+import { SITE_STATS } from "@/lib/site-stats";
 
 /** Renders per request and may block, like the site layout (see its note). */
 export const instant = false;
@@ -13,51 +17,68 @@ export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/success-stories", 'Success Stories · Bodhira.ai');
 }
 
-/** Legacy resources/views/success-stories.blade.php. */
+/**
+ * Legacy resources/views/success-stories.blade.php, redesigned in 2026 with
+ * the page design kit (not in legacy; docs/site-design-kit.md). Same CMS
+ * stories (GET success stories, `?page=N`), same empty-state text, card links
+ * (/blog/{slug}) and the /contact button. Cards and pagination use the kit
+ * (kit-content-cards.tsx; post-card.tsx and site-pagination.tsx stay for the
+ * pages still on the theme). Added: hero photo (public/assets/img/pages/content,
+ * CREDITS.md there) with a partner-schools badge from SITE_STATS, and the
+ * /contact button now also sits in a closing card.
+ */
 export default async function SuccessStoriesPage({ searchParams }: PageProps<"/success-stories">) {
   await connection();
-  const asset = await assetResolver();
+  const img = await imageResolver();
   return (
-    <>
+    <div className="bh-page">
       <SeoSchema path="success-stories" />
-      <section className="page-header">
-        <div className="bg-item">
-            <div className="bg-img" data-background={asset("assets/img/bg-img/page-header-bg.png")}></div>
-            <div className="overlay"></div>
-            <div className="shapes">
-                <div className="shape shape-1"><img src={asset("assets/img/shapes/page-header-shape-1.png")} alt="shape" /></div>
-                <div className="shape shape-2"><img src={asset("assets/img/shapes/page-header-shape-2.png")} alt="shape" /></div>
-                <div className="shape shape-3"><img src={asset("assets/img/shapes/page-header-shape-3.png")} alt="shape" /></div>
-            </div>
-        </div>
-        <div className="container">
-            <div className="page-header-content">
-                <h1 className="title">Success Stories</h1>
-                <h4 className="sub-title"><a className="home" href="/">Home </a><span className="icon">/</span><a className="inner-page" href="/success-stories"> Success Stories</a></h4>
-            </div>
-        </div>
-    </section>
-    
 
-    <section className="pt-120 pb-120">
-        <div className="container">
-            <div className="section-heading text-center">
-                <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>Real Schools. Real Results.</h4>
-                <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">How Schools Grow with Bodhira.ai</h2>
-                <p className="mt-20 wow fade-in-bottom" data-wow-delay="500ms">Stories from schools, teachers and parents who made learning visual,
-                    measurable and engaging with Bodhira.ai.</p>
-            </div>
+      <PageHero
+        eyebrow="Real Schools. Real Results."
+        title="How Schools Grow with"
+        highlight="Bodhira.ai"
+        lead="Stories from schools, teachers and parents who made learning visual, measurable and engaging with Bodhira.ai."
+        breadcrumbs={[{ label: "Success Stories" }]}
+        image={{ src: img(null, "assets/img/pages/content/success-hero.jpg"), alt: "A crowd of smiling students celebrating together in shirts covered in friends' signatures", width: 1200, height: 1000 }}
+        actions={
+          <>
+            <a href="#stories" className="bh-btn bh-btn--maroon bh-btn--lg">Read the Stories <CIcon name="arrowRight" size={18} /></a>
+            <a href="/contact" className="bh-btn bh-btn--ghost bh-btn--lg">Bring Bodhira.ai to Your School</a>
+          </>
+        }
+        badge={
+          <span className="bp-glass">
+            <span className="bp-tile bp-tile--sm bp-tile--solid"><CIcon name="school" size={20} /></span>
+            <span><strong>{SITE_STATS.schools.label}</strong><span>Partner schools</span></span>
+          </span>
+        }
+      />
 
-            <div className="row gy-4 mt-40">
-                <Stories searchParams={searchParams} />
-            </div>
-
-            <div className="text-center mt-30">
-                <a href="/contact" className="ed-primary-btn">Bring Bodhira.ai to Your School</a>
-            </div>
+      <section className="bp-section bp-section--cream" id="stories" aria-labelledby="stories-title" style={{ scrollMarginTop: 80 }}>
+        <div className="bh-container">
+          <h2 id="stories-title" className="bh-sr-only">Success stories</h2>
+          <Stories searchParams={searchParams} />
         </div>
-    </section>
-    </>
+      </section>
+
+      <section className="bp-section bp-section--cream bp-section--flush-top" aria-label="Get started">
+        <div className="bh-container">
+          <CtaBand
+            image={img(null, "assets/img/pages/content/features-cta.jpg")}
+            title="Bring Bodhira.ai to Your School"
+            text="Join Bodhira.ai and give your students, teachers and parents one connected place to learn, teach and track progress."
+            actions={
+              <>
+                <a href="/contact" className="bh-btn bh-btn--gold bh-btn--lg">Bring Bodhira.ai to Your School <CIcon name="arrowRight" size={18} /></a>
+              </>
+            }
+          />
+        </div>
+      </section>
+
+      <RevealOnScroll />
+    </div>
   );
 }
 
@@ -69,11 +90,18 @@ async function Stories({ searchParams }: Pick<PageProps<"/success-stories">, "se
   const { stories, meta } = await getSuccessStories(page);
   return (
     <>
-      {stories.length ? stories.map((post) => <PostCard key={post.id} post={post} label="story" />) : (
-        <div className="col-12 text-center pt-50 pb-50"><p style={{ color: "#9b8674" }}>Success stories are coming soon. Check back shortly.</p></div>
+      {stories.length ? (
+        <ul className="bp-grid bp-grid--3">
+          {stories.map((post) => <StoryCard key={post.id} post={post} />)}
+        </ul>
+      ) : (
+        <div className="bpc-empty">
+          <span className="bp-tile"><CIcon name="award" size={24} /></span>
+          <p>Success stories are coming soon. Check back shortly.</p>
+        </div>
       )}
-      <div className="col-12 mt-50 d-flex justify-content-center">
-        <SitePagination base="/success-stories" params={{}} page={meta.current_page} lastPage={meta.last_page} />
+      <div className="bpc-pager">
+        <KitPagination base="/success-stories" params={{}} page={meta.current_page} lastPage={meta.last_page} />
       </div>
     </>
   );

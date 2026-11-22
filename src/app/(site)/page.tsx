@@ -43,10 +43,14 @@ const COUNTERS: [IconName, string, string][] = [
   ["smile", "97.55%", "Satisfaction Rate"],
   ["school", SITE_STATS.schools.label, SITE_STATS.schools.noun],
 ];
+/** One question each for schools, teachers and parents first; the full list lives on /faq (CMS). */
 const FAQS = [
-  ["Does Bodhira.ai work on a mobile phone?", "Yes. Bodhira.ai is mobile-first. Students watch lessons, take quizzes, and ask the AI on a phone, tablet or laptop — videos resume where they paused, even on a different device."],
-  ["How does the “Ask AI” feature work?", "While watching a lesson, a student can click “Ask AI”, type a question, and get a clear explanation in plain words. The AI uses only that lesson’s content, so the answer always matches what the student is studying."],
-  ["Do parents get their own login?", "Yes. Each parent gets a separate login linked to their child. They see lessons watched, quiz scores, weak subjects, attendance and teacher notes — in real time."],
+  ["How does our school get started?", "Request a walkthrough below. We set up your school and its School Admin account, and the admin then adds teachers, students and parents, creates classes and chooses which Bodhira.ai curricula the school uses. Teachers and parents can also sign up with your school code and join once the admin approves them."],
+  ["What will our teachers use it for day to day?", "Teachers take attendance, schedule live classes, set and grade assignments, and see quiz results for each class. A class-wise view shows which students have watched each lesson and where they are struggling, so teachers can step in early."],
+  ["What can parents see?", "Each parent gets their own login, linked to their child by the school. They see lessons watched, quiz scores, attendance, assignments and upcoming live classes, and can message the child's teachers. A parent with more than one child switches between them in the same account."],
+  ["How does “Ask AI” help students?", "While studying a lesson, a student can ask a question in their own words and get a short, clear explanation based on that lesson, so the answer matches what they are learning. Chapter quizzes then show instantly what they have understood."],
+  ["Are our lessons and students' files protected?", "Yes. Lesson videos are encrypted and can't be downloaded; each viewer's name is watermarked on the video, and the Android app blocks screenshots and screen recording. Assignments, photos and other student files are private and open only through short-lived secure links."],
+  ["Which devices and languages are supported?", "Bodhira.ai works in any modern browser on a phone, tablet or laptop, and in the Bodhira mobile app for students, teachers, parents and School Admins. The app is available in English, Hindi and Telugu."],
 ];
 const IMPACT: [IconName, string, string][] = [
   ["users", SITE_STATS.students.label, SITE_STATS.students.noun],
@@ -229,7 +233,7 @@ export default async function HomePage() {
             <div className="bh-subjects__media" data-reveal>
               <img
                 src={img("assets/img/images/subjects-student.webp", "assets/img/home/subjects-student.jpg")}
-                alt="A smiling schoolgirl in uniform with her school bag"
+                alt="A science student in a lab coat examining a flask in the school laboratory"
                 width={600}
                 height={760}
                 loading="lazy"
@@ -290,7 +294,7 @@ export default async function HomePage() {
               <div className="bh-bento__text">
                 <span className="bh-bento__ic"><Icon name="listChecks" size={20} /></span>
                 <h3>Quizzes, Notes &amp; Discussions</h3>
-                <p>Auto-graded quizzes after every lesson, with notes and class discussions in the same place.</p>
+                <p>Auto-graded chapter quizzes, with notes and class discussions in the same place.</p>
               </div>
               <img src={img("assets/img/images/promo-img-2.png", "assets/img/home/why-quizzes.jpg")} alt="" width={800} height={560} loading="lazy" decoding="async" />
             </article>
@@ -327,7 +331,7 @@ export default async function HomePage() {
           <div className="bh-faq__media" data-reveal>
             <img
               src={img("assets/img/images/faq-img.png", "assets/img/home/faq-students.jpg")}
-              alt="School children in uniform at an outdoor assembly"
+              alt="A teacher answering a student's question at his desk in a bright classroom"
               width={720}
               height={960}
               loading="lazy"
@@ -455,16 +459,16 @@ export default async function HomePage() {
       <section className="bh-section bh-content" aria-labelledby="bh-content-title">
         <div className="bh-container bh-content__grid">
           <div className="bh-content__collage" data-reveal>
-            <img className="bh-content__img1" src={img("assets/img/images/content-img-1.png", "assets/img/home/content-tablet.jpg")} alt="A student attending an online lesson on a laptop at home" width={800} height={600} loading="lazy" decoding="async" />
-            <img className="bh-content__img2" src={img("assets/img/images/content-img-2.png", "assets/img/home/content-student.jpg")} alt="A schoolboy in uniform" width={600} height={600} loading="lazy" decoding="async" />
-            <img className="bh-content__img3" src={img("assets/img/images/content-img-3.png", "assets/img/home/content-classroom.jpg")} alt="A student presenting the map of India in class" width={600} height={750} loading="lazy" decoding="async" />
+            <img className="bh-content__img1" src={img("assets/img/images/content-img-1.png", "assets/img/home/content-tablet.jpg")} alt="A smiling student with a headset watching a video lesson on a laptop" width={800} height={600} loading="lazy" decoding="async" />
+            <img className="bh-content__img2" src={img("assets/img/images/content-img-2.png", "assets/img/home/content-student.jpg")} alt="Two students in uniform writing answers during a class quiz" width={800} height={600} loading="lazy" decoding="async" />
+            <img className="bh-content__img3" src={img("assets/img/images/content-img-3.png", "assets/img/home/content-classroom.jpg")} alt="A teacher reviewing a student's progress and making notes beside a laptop" width={600} height={1000} loading="lazy" decoding="async" />
             <span className="bh-glass bh-content__badge"><Icon name="award" size={18} /> Badges for every milestone</span>
           </div>
           <div data-reveal>
             <Eyebrow>What every student gets</Eyebrow>
             <h2 id="bh-content-title" className="bh-h2">Lessons, Quizzes and Progress <span>All in One Place</span></h2>
             <p className="bh-lead">
-              Students unlock the subjects they study, watch curriculum-aligned lessons by topic, finish short quizzes after each lesson,
+              Students unlock the subjects they study, watch curriculum-aligned lessons by topic, finish a short quiz at the end of each chapter,
               and earn badges as they progress. Parents and teachers see all of it.
             </p>
             <ul className="bh-feature-list">
@@ -474,7 +478,7 @@ export default async function HomePage() {
               </li>
               <li>
                 <span className="bh-feature-list__ic"><Icon name="check" size={20} /></span>
-                <span><strong>Every Lesson Has a Quiz</strong><span>Auto-graded quizzes after every lesson. Scores go straight to the teacher and parent.</span></span>
+                <span><strong>Every Chapter Has a Quiz</strong><span>Auto-graded quizzes at the end of each chapter. Scores go straight to the teacher and parent.</span></span>
               </li>
             </ul>
           </div>

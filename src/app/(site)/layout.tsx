@@ -34,9 +34,15 @@ const STYLES = [
   "main.css",
   "bodhira-theme.css",
   "site-layout.css",
-  // 2026 redesign (not in legacy): header/footer for every page, and the homepage (scoped to .bh-home).
+  // 2026 redesign (not in legacy): header/footer for every page, the homepage (scoped to .bh-home)
+  // and the design kit for migrated pages (scoped to .bh-page, see docs/site-design-kit.md).
   "site-chrome.css",
   "home.css",
+  "site-ui.css",
+  // Per-group additions to the kit, one file per page group so they can be edited independently.
+  "site-ui-content.css",
+  "site-ui-blog.css",
+  "site-ui-forms.css",
 ];
 
 /**

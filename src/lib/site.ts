@@ -23,6 +23,17 @@ export async function assetResolver() {
   };
 }
 
+/**
+ * For redesigned pages that swapped a legacy theme image for a new photo
+ * (not in legacy): `img(legacyKey, newPath)` returns a Site Image Manager
+ * replacement saved under the legacy key (same role) first, else
+ * `asset(newPath)`, which is itself replaceable under its own key.
+ */
+export async function imageResolver() {
+  const [asset, { images }] = await Promise.all([assetResolver(), getChrome()]);
+  return (legacyKey: string | null, path: string) => (legacyKey ? images[legacyKey.replace(/^\/+/, '')] : undefined) ?? asset(path);
+}
+
 /** cms_setting('group.key', default). */
 export async function settingResolver() {
   await connection();

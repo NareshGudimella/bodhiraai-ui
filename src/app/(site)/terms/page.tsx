@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/terms", 'Terms of Service · Bodhira.ai');
 }
 
-/** Legacy resources/views/legal/terms.blade.php. */
+/** Legacy resources/views/legal/terms.blade.php. Same text; the 2026 design-kit layout (contents list, prose) comes from `LegalPage` (not in legacy). */
 export default function TermsPage() {
   return (
     <>

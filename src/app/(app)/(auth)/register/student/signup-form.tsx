@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { Field, inputClass } from "@/components/form";
+import { AuthAlert, AuthField, PasswordInput, Spinner } from "@/components/auth/auth-fields";
+import { authButton, authInput } from "@/components/auth/auth-styles";
 import { registerStudent } from "@/lib/billing-actions";
 import type { SignupOptions } from "@/lib/billing-api";
 
@@ -24,53 +25,90 @@ export function SignupForm({
   const e = state?.errors;
   const first = e && Object.values(e)[0]?.[0];
   return (
-    <form action={action} className="mt-6 space-y-4">
-      {first && (
-        <p role="alert" className="rounded-lg bg-danger-light px-3 py-2 text-sm text-danger">{first}</p>
-      )}
-      {!first && state?.message && state.ok === false && (
-        <p role="alert" className="rounded-lg bg-danger-light px-3 py-2 text-sm text-danger">{state.message}</p>
-      )}
+    <form action={action} className="mt-7 space-y-5">
+      {first && <AuthAlert tone="error">{first}</AuthAlert>}
+      {!first && state?.message && state.ok === false && <AuthAlert tone="error">{state.message}</AuthAlert>}
       {planKey && (
         <>
           <input type="hidden" name="plan_key" value={planKey} />
           <input type="hidden" name="cycle" value={cycle} />
         </>
       )}
-      <Field label="Full name" error={e?.name}>
-        <input key={`n${v?.name}`} name="name" defaultValue={v?.name} autoComplete="name" required maxLength={120} autoFocus className={inputClass} />
-      </Field>
-      <Field label="Email" error={e?.email}>
-        <input key={`e${v?.email}`} name="email" type="email" defaultValue={v?.email} autoComplete="email" required maxLength={160} className={inputClass} />
-      </Field>
-      <Field label="Phone (optional)" error={e?.phone}>
-        <input key={`p${v?.phone}`} name="phone" defaultValue={v?.phone} autoComplete="tel" maxLength={20} placeholder="+91…" className={inputClass} />
-      </Field>
-      <Field label="Board & grade" error={e?.syllabus_id}>
-        <select key={`s${v?.syllabus_id}`} name="syllabus_id" defaultValue={v?.syllabus_id ?? ""} required className={inputClass}>
-          <option value="">— Select your board &amp; grade —</option>
-          {syllabi.map((g) => (
-            <optgroup key={g.board} label={boardLabel(g.board)}>
-              {g.syllabi.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </optgroup>
-          ))}
-        </select>
-      </Field>
-      <Field label="Password" error={e?.password}>
-        <input name="password" type="password" required minLength={6} autoComplete="new-password" className={inputClass} />
-      </Field>
-      <Field label="Confirm password">
-        <input name="password_confirmation" type="password" required autoComplete="new-password" className={inputClass} />
-      </Field>
-      <label className="flex items-start gap-2 text-sm text-ink-2">
-        <input type="checkbox" name="accept" value="1" required className="mt-1" />
+      <AuthField label="Full name" error={e?.name}>
+        {(c) => (
+          <input key={`n${v?.name}`} {...c} name="name" defaultValue={v?.name} autoComplete="name" required maxLength={120} autoFocus className={authInput} />
+        )}
+      </AuthField>
+      <div className="grid gap-5 sm:grid-cols-2 [&>*]:min-w-0">
+        <AuthField label="Email" error={e?.email}>
+          {(c) => (
+            <input
+              key={`e${v?.email}`}
+              {...c}
+              name="email"
+              type="email"
+              defaultValue={v?.email}
+              autoComplete="email"
+              spellCheck={false}
+              required
+              maxLength={160}
+              className={authInput}
+            />
+          )}
+        </AuthField>
+        <AuthField label="Phone (optional)" error={e?.phone}>
+          {(c) => (
+            <input
+              key={`p${v?.phone}`}
+              {...c}
+              name="phone"
+              type="tel"
+              defaultValue={v?.phone}
+              autoComplete="tel"
+              maxLength={20}
+              placeholder="+91…"
+              className={authInput}
+            />
+          )}
+        </AuthField>
+      </div>
+      <AuthField label="Board & grade" error={e?.syllabus_id}>
+        {(c) => (
+          <select key={`s${v?.syllabus_id}`} {...c} name="syllabus_id" defaultValue={v?.syllabus_id ?? ""} required className={`${authInput} auth-select`}>
+            <option value="">— Select your board &amp; grade —</option>
+            {syllabi.map((g) => (
+              <optgroup key={g.board} label={boardLabel(g.board)}>
+                {g.syllabi.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        )}
+      </AuthField>
+      <div className="grid gap-5 sm:grid-cols-2 [&>*]:min-w-0">
+        <AuthField label="Password" error={e?.password}>
+          {(c) => <PasswordInput {...c} name="password" required minLength={6} autoComplete="new-password" />}
+        </AuthField>
+        <AuthField label="Confirm password">
+          {(c) => <PasswordInput {...c} name="password_confirmation" required autoComplete="new-password" />}
+        </AuthField>
+      </div>
+      <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-ink-2">
+        <input
+          type="checkbox"
+          name="accept"
+          value="1"
+          required
+          aria-invalid={e?.accept ? true : undefined}
+          className="mt-0.5 size-[18px] shrink-0 cursor-pointer rounded accent-(--auth-wine) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--auth-wine)"
+        />
         I agree to the Terms of Service and Privacy Policy.
       </label>
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-lg bg-brand py-2.5 font-semibold text-primary-light transition hover:bg-brand-mid disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className={authButton}>
+        {pending && <Spinner />}
         {pending ? "Creating your account…" : paid ? "Create account · Continue to payment →" : "Start 7-day free trial →"}
       </button>
     </form>

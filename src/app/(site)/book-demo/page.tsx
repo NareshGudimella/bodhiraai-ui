@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import { connection } from "next/server";
 import { FlashClear } from "@/components/site/flash-clear";
-import { SitePageHeader } from "@/components/site/page-header";
+import { Icon } from "@/components/site/icons";
+import { KfFocusResult } from "@/components/site/kit-forms-focus";
+import { KfAlert, KfPhoto } from "@/components/site/kit-forms-fields";
+import { CheckList, Eyebrow } from "@/components/site/page-kit";
+import { PageHero } from "@/components/site/page-hero";
 import { SeoSchema } from "@/components/site/seo-schema";
-import { siteMetadata } from "@/lib/site";
+import { RevealOnScroll } from "@/components/site/site-enhance";
+import { imageResolver, settingResolver, siteMetadata } from "@/lib/site";
 import { getSiteFlash } from "@/lib/site-flash";
+import { SITE_STATS } from "@/lib/site-stats";
 import { DemoForm } from "./demo-form";
 
 /** Renders per request and may block, like the site layout (see its note). */
@@ -14,48 +21,91 @@ export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/book-demo", "Book a Demo · Bodhira.ai");
 }
 
-/** Legacy DemoController::form (book-demo.blade.php); ?as=school|student preselects the tab. */
+/** What the walkthrough covers: the homepage FAQ's answers, shortened. not in legacy */
+const COVERS = [
+  "How we set up your school and its School Admin account",
+  "Attendance, live classes, assignments and quiz results for teachers",
+  "What parents see: lessons watched, quiz scores and attendance",
+  "“Ask AI” explanations based on the lesson a student is studying",
+  "Encrypted lesson videos that can't be downloaded",
+  "Works in any browser and the Bodhira mobile app, in English, Hindi and Telugu",
+];
+
+/**
+ * Legacy DemoController::form (book-demo.blade.php); ?as=school|student
+ * preselects the tab. Redesigned in 2026 with the page design kit (not in
+ * legacy; docs/site-design-kit.md): same form, action, fields, toggle and
+ * `demo_success` flash; new split layout with a photo
+ * (public/assets/img/pages/forms/CREDITS.md), a "what we'll show you" list
+ * (homepage FAQ copy), the support phone from the `contact.phone` setting, and
+ * the school / student counts from SITE_STATS. The inline <style> block is
+ * gone (styles in site-ui-forms.css).
+ */
 export default function BookDemoPage({ searchParams }: PageProps<"/book-demo">) {
   return (
-    <>
+    <div className="bh-page kf-page">
       <SeoSchema path="book-demo" />
-      <SitePageHeader title="Book a Demo" crumb="Book a Demo" />
-      <section className="contact-section pt-120 pb-120">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="blog-contact-form contact-form">
-                <h2 className="title mb-0">See Bodhira.ai in Action</h2>
-                <p className="mb-30 mt-10">Tell us who you are and we&apos;ll set up a personalised walkthrough.</p>
-                <Form searchParams={searchParams} />
-              </div>
+      <PageHero
+        eyebrow="Book a Demo"
+        title="See Bodhira.ai in"
+        highlight="Action"
+        lead="Tell us who you are and we'll set up a personalised walkthrough."
+        breadcrumbs={[{ label: "Book a Demo" }]}
+      >
+        <ul className="bp-chips kf-hero-chips" aria-label="Bodhira.ai in numbers">
+          <li><span className="bp-chip"><Icon name="school" size={16} />{SITE_STATS.schools.label} partner schools</span></li>
+          <li><span className="bp-chip"><Icon name="users" size={16} />{SITE_STATS.students.label} students</span></li>
+          <li><span className="bp-chip"><Icon name="bookOpen" size={16} />{SITE_STATS.subjects.label} subjects</span></li>
+        </ul>
+      </PageHero>
+
+      <section className="bp-section kf-section" aria-labelledby="demo-form-title">
+        <div className="bh-container kf-layout">
+          <div className="bp-form-card kf-card" id="book-demo-form" data-reveal>
+            <div className="kf-card__head">
+              <Eyebrow>Book a Demo</Eyebrow>
+              <h2 id="demo-form-title" className="kf-card__title">Request your walkthrough</h2>
+              <p>Choose who you are, then fill in a few details.</p>
             </div>
+            <Form searchParams={searchParams} />
           </div>
+          <Aside />
         </div>
       </section>
-      <style dangerouslySetInnerHTML={{ __html: `
-        .bd-alert { border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 22px; display: flex; align-items: center; gap: 10px; }
-        .bd-alert--ok { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
-        .bd-alert--err { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
-        .bd-err { color: #DC2626; font-size: 12.5px; margin-top: 6px; }
+      <RevealOnScroll />
+    </div>
+  );
+}
 
-        .bd-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 26px; }
-        @media (max-width: 575px) { .bd-toggle { grid-template-columns: 1fr; } }
-        .bd-toggle__btn { display: flex; align-items: center; gap: 14px; text-align: left; padding: 16px 18px; border-radius: 14px;
-            border: 1.5px solid #E6DED3; background: #FBF7F1; color: #5C1A26; cursor: pointer; transition: .18s; width: 100%; }
-        .bd-toggle__btn:hover { border-color: #C49560; }
-        .bd-toggle__btn i { font-size: 22px; width: 30px; text-align: center; color: #A87840; transition: .18s; }
-        .bd-toggle__btn span { display: flex; flex-direction: column; line-height: 1.25; }
-        .bd-toggle__btn strong { font-size: 15px; }
-        .bd-toggle__btn small { font-size: 12px; opacity: .7; }
-        .bd-toggle__btn.is-active { background: linear-gradient(135deg, #5C1A26, #2A0E13); border-color: #2A0E13; color: #fff; box-shadow: 0 12px 26px -14px rgba(92, 26, 38, .8); }
-        .bd-toggle__btn.is-active i, .bd-toggle__btn.is-active small { color: #E2B873; }
-
-        .bd-fields { display: none; }
-        .bd-fields.is-active { display: block; }
-        fieldset.bd-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
-      ` }} />
-    </>
+async function Aside() {
+  await connection();
+  const [img, setting] = await Promise.all([imageResolver(), settingResolver()]);
+  const phone = setting("contact.phone", "+91 99852 52786");
+  return (
+    <aside className="kf-aside" aria-labelledby="demo-covers">
+      <KfPhoto
+        src={img(null, "assets/img/pages/forms/demo-smartboard.jpg")}
+        alt="A teacher standing in front of an interactive smart board during a lesson"
+        chip={
+          <span className="bp-glass kf-photo__chip">
+            <span className="bp-tile bp-tile--sm bp-tile--solid"><Icon name="presentation" size={20} /></span>
+            <span><strong>Personalised</strong><span>Walkthrough for your school</span></span>
+          </span>
+        }
+      />
+      <div className="bp-card kf-benefits" data-reveal>
+        <h2 id="demo-covers" className="kf-side-title">What we&apos;ll show you</h2>
+        <p>One walkthrough of the whole platform, for your school or your child.</p>
+        <CheckList items={COVERS} />
+      </div>
+      <div className="kf-help bp-on-dark" data-reveal>
+        <span className="bp-tile bp-tile--sm bp-tile--light"><Icon name="phone" size={20} /></span>
+        <div>
+          <span className="kf-help__label">Prefer to talk?</span>
+          <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`}>{phone}</a>
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -68,15 +118,17 @@ async function Form({ searchParams }: Pick<PageProps<"/book-demo">, "searchParam
   // old('type', $preselect)
   const type = old.type === "student" || old.type === "school" ? old.type : as;
   const success = flash.messages?.demo_success;
+  const ids: Record<string, string> = {
+    name: "demo-name", email: "demo-email", phone: "demo-phone", city: "demo-city",
+    organization: type === "school" ? "demo-organization" : "demo-current-school",
+    designation: "demo-designation", student_count: "demo-student-count", grade: "demo-grade",
+    board: "demo-board", message: "demo-message",
+  };
   return (
     <>
-      {(success || flash.errors) && <FlashClear />}
-      {success && <div className="bd-alert bd-alert--ok"><i className="fa-solid fa-circle-check"></i> {success}</div>}
-      {Object.keys(errors).length > 0 && (
-        <div className="bd-alert bd-alert--err">
-          <i className="fa-solid fa-triangle-exclamation"></i> Please check the highlighted fields and try again.
-        </div>
-      )}
+      {/* key: a new flash remounts these, so each one is cleared and focused */}
+      {(success || flash.errors) && <Fragment key={JSON.stringify(flash)}><FlashClear /><KfFocusResult /></Fragment>}
+      <KfAlert status={success} errors={errors} fieldIds={ids} />
       <DemoForm key={JSON.stringify(old)} initialType={type} old={old} errors={errors} />
     </>
   );

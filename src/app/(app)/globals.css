@@ -102,3 +102,40 @@ body {
   background: var(--bg);
   color: var(--text);
 }
+
+/* Sign-in pages (components/auth/auth-shell.tsx): the marketing site's
+   palette, always light, whatever Settings → Appearance says (scoped tokens
+   override the dashboard ones above). not in legacy */
+.auth-scope {
+  color-scheme: light;
+  --bg: #fefaf6;
+  --card: #ffffff;
+  --page-bg: #fbf6ef;
+  --text: #1f0b10;
+  --text-2: #5a4a46;
+  --text-3: #75645e;
+  --border: rgba(42, 14, 19, 0.12);
+  --primary-light: #fdf4e8;
+  --success: #0f7a4f;
+  --danger: #b42318;
+  --danger-light: #fdecea;
+  --auth-wine: #7a2437;
+  --auth-maroon: #5c1a26;
+  --auth-deep: #2a0e13;
+  --auth-gold: #c49560;
+  --auth-gold-bright: #e2b873;
+  --auth-grad: linear-gradient(135deg, #7a2437 0%, #5c1a26 55%, #3f1019 100%);
+  background: var(--page-bg);
+  color: var(--text);
+}
+.auth-scope ::selection {
+  background: var(--auth-maroon);
+  color: #fff;
+}
+.auth-scope select.auth-select {
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235c1a26' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+}

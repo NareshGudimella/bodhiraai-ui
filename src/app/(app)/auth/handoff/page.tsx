@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { AuthAlert } from "@/components/auth/auth-fields";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { authButton, authLink } from "@/components/auth/auth-styles";
 import { ApiError, api } from "@/lib/api";
 import { confirmHandoff } from "@/lib/auth-actions";
 import { safeNextPath } from "@/lib/safe-path";
@@ -14,16 +17,15 @@ export const metadata: Metadata = { title: "Continue to Bodhira.ai", referrer: "
  * page only shows who the code is for (the API's peek endpoint spends nothing);
  * signing in happens when the user presses the button (a Server Action POST),
  * so a link in someone else's hands can't sign a victim in to the attacker's account.
+ * Layout: AuthShell (2026 sign-in redesign).
  */
 export default function HandoffPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return (
-    <main className="flex flex-1 items-center justify-center bg-page px-4 py-12">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-8 shadow-lg ring-1 ring-line">
-        <Suspense>
-          <Confirm searchParams={searchParams} />
-        </Suspense>
-      </div>
-    </main>
+    <AuthShell eyebrow="Sign in" title="Continue to Bodhira.ai">
+      <Suspense fallback={<div aria-busy="true" className="mt-7 h-12 animate-pulse rounded-full bg-[rgba(42,14,19,.06)]" />}>
+        <Confirm searchParams={searchParams} />
+      </Suspense>
+    </AuthShell>
   );
 }
 
@@ -54,27 +56,23 @@ async function Confirm({ searchParams }: { searchParams: Promise<Record<string, 
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-brand">Continue to Bodhira.ai</h1>
-      <p className="mt-2 text-sm text-ink-2">
-        The app asked to open the website as <strong className="text-ink">{who.name}</strong>.
+      <p className="mt-2 text-[15px] leading-relaxed text-ink-2">
+        The app asked to open the website as <strong className="font-bold text-ink">{who.name}</strong>.
       </p>
       {current && (
-        <p className="mt-3 rounded-lg bg-danger-light px-3 py-2 text-sm text-danger" role="alert">
-          You are signed in as {current}. Continuing signs you out of that account.
-        </p>
+        <div className="mt-5">
+          <AuthAlert tone="error">You are signed in as {current}. Continuing signs you out of that account.</AuthAlert>
+        </div>
       )}
-      <form action={confirmHandoff} className="mt-6">
+      <form action={confirmHandoff} className="mt-7">
         <input type="hidden" name="code" value={code} />
         <input type="hidden" name="next" value={next ?? ""} />
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-brand py-2.5 font-semibold text-primary-light transition hover:bg-brand-mid"
-        >
+        <button type="submit" className={authButton}>
           Continue as {who.name}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-ink-2">
-        <a href="/login" className="font-semibold text-brand hover:underline">Not you? Sign in instead</a>
+      <p className="mt-5 text-center text-sm">
+        <a href="/login" className={authLink}>Not you? Sign in instead</a>
       </p>
     </>
   );

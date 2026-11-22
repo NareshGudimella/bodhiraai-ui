@@ -1,50 +1,116 @@
 import { connection } from "next/server";
-import type { ReactNode } from "react";
-import { assetResolver, todayLong } from "@/lib/site";
+import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
+import { todayLong } from "@/lib/site";
+import { Icon } from "./icons";
+import { TocEnhance } from "./kit-blog-toc";
+import { PageHero } from "./page-hero";
+import { RevealOnScroll } from "./site-enhance";
 
-/** Legacy legal/layout.blade.php: page header plus the document column. */
+/** The three legal pages, for the "Other policies" links (the footer links the same URLs). */
+const POLICIES = [
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms of Service" },
+  { href: "/refund", label: "Refund & Cancellation Policy" },
+];
+
+/** Plain text of a heading's children ("1. Data We Collect"). */
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
+
+/** "1. Data We Collect" → "data-we-collect". */
+const slugOf = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/^\s*\d+\.\s*/, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/**
+ * Legacy legal/layout.blade.php (page header plus the document column),
+ * redesigned in 2026 with the page design kit (not in legacy;
+ * docs/site-design-kit.md): `PageHero` with the same heading, breadcrumb and
+ * "Last updated" date, the document in `bp-prose`, and a table of contents
+ * built from the document's `<h2>`s (each gets an `id` anchor; sticky beside
+ * the text on desktop, a collapsible box above it on phones; `TocEnhance`
+ * highlights the section being read). Also new: links to the other two
+ * policies under the contents. The document itself (`children`) is unchanged.
+ */
 export async function LegalPage({ heading, path, children }: { heading: string; path: string; children: ReactNode }) {
   // Request time: building the app must not need the API (see the site layout).
   await connection();
-  const [asset, today] = await Promise.all([assetResolver(), todayLong()]);
+  const today = await todayLong();
+
+  const toc: { id: string; num: string | null; label: string }[] = [];
+  const used = new Set<string>();
+  const body = Children.map(children, (child) => {
+    if (!isValidElement(child) || child.type !== "h2") return child;
+    const h2 = child as ReactElement<{ id?: string; children?: ReactNode }>;
+    const text = textOf(h2.props.children).trim();
+    let id = h2.props.id ?? (slugOf(text) || `section-${toc.length + 1}`);
+    while (used.has(id)) id = `${id}-${toc.length + 1}`;
+    used.add(id);
+    const m = /^(\d+)\.\s*(.*)$/.exec(text);
+    toc.push({ id, num: m ? m[1] : null, label: m ? m[2] : text });
+    return cloneElement(h2, { id });
+  });
+  const others = POLICIES.filter((p) => p.href !== path);
+
   return (
-    <>
-      <section className="page-header">
-        <div className="bg-item">
-          <div className="bg-img" data-background={asset("assets/img/bg-img/page-header-bg.png")}></div>
-          <div className="overlay"></div>
-          <div className="shapes">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className={`shape shape-${n}`}><img src={asset(`assets/img/shapes/page-header-shape-${n}.png`)} alt="shape" /></div>
-            ))}
-          </div>
-        </div>
-        <div className="container">
-          <div className="page-header-content">
-            <h1 className="title">{heading}</h1>
-            <h4 className="sub-title"><a className="home" href="/">Home </a><span className="icon">/</span><a className="inner-page" href={path}> {heading}</a></h4>
-          </div>
+    <div className="bh-page">
+      <PageHero
+        eyebrow="Legal"
+        title={heading}
+        lead={<>Last updated: {today}</>}
+        breadcrumbs={[{ label: heading }]}
+      />
+      <section className="bp-section bpb-legal-section" aria-label={heading}>
+        <div className={`bh-container bpb-legal${toc.length ? "" : " bpb-legal--plain"}`}>
+          {toc.length > 0 && (
+            <aside className="bpb-legal__aside">
+              <nav id="bpb-legal-toc" className="bpb-toc" aria-label="On this page">
+                <details>
+                  <summary>
+                    <Icon name="listChecks" size={18} />
+                    <span>On this page</span>
+                    <Icon name="chevronDown" size={18} className="bpb-toc__chev" />
+                  </summary>
+                  <p className="bpb-toc__title" aria-hidden="true">On this page</p>
+                  <ol>
+                    {toc.map((t) => (
+                      <li key={t.id}>
+                        <a href={`#${t.id}`}>
+                          {t.num && <span className="bpb-toc__num">{t.num.padStart(2, "0")}</span>}
+                          <span>{t.label}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              </nav>
+              <TocEnhance id="bpb-legal-toc" />
+              <div className="bpb-legal__others">
+                <p className="bpb-legal__others-title">Other policies</p>
+                <ul>
+                  {others.map((p) => (
+                    <li key={p.href}>
+                      <a className="bp-link" href={p.href}>{p.label} <Icon name="arrowRight" size={16} /></a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
+          )}
+          <article className="bpb-legal__doc">
+            <div className="bp-prose">{body}</div>
+          </article>
         </div>
       </section>
-      <section className="pt-120 pb-120">
-        <div className="container">
-          <div className="legal-doc">
-            <p className="legal-updated">Last updated: {today}</p>
-            {children}
-          </div>
-        </div>
-      </section>
-      <style dangerouslySetInnerHTML={{ __html: `
-        .legal-doc { max-width: 880px; margin: 0 auto; }
-        .legal-doc .legal-updated { color:#9b8674; font-size:13px; letter-spacing:.2px; margin-bottom:30px; }
-        .legal-doc h2 { font-family:'Poppins',sans-serif; font-size:21px; font-weight:700; color:var(--brand-maroon-dark,#3E0F16); margin-top:34px; margin-bottom:12px; }
-        .legal-doc p, .legal-doc li { font-size:15.5px; color:#5b4a3d; line-height:1.78; margin-bottom:10px; }
-        .legal-doc ul, .legal-doc ol { padding-left:22px; margin-bottom:16px; }
-        .legal-doc li { margin-bottom:8px; }
-        .legal-doc a { color:var(--brand-gold-2,#9a6b2f); font-weight:600; }
-        .legal-doc a:hover { text-decoration:underline; }
-        .legal-doc b, .legal-doc strong { color:var(--brand-maroon-dark,#3E0F16); }
-      ` }} />
-    </>
+      <RevealOnScroll />
+    </div>
   );
 }

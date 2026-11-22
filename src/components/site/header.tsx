@@ -12,9 +12,7 @@ const DEFAULT_NAV = [
   ["Courses", "/courses"],
   ["LMS Platform", "/features"],
   ["Success Stories", "/success-stories"],
-  ["Blogs & Articles", "/blog"],
   ["Pricing", "/pricing"],
-  ["FAQ", "/faq"],
   ["Contact Us", "/contact"],
 ].map(([label, url]) => ({ label, url, target: "_self" }));
 

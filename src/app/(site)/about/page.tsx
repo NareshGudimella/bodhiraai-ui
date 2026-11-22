@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Icon, type IconName } from "@/components/site/icons";
+import { initials } from "@/components/site/initials";
+import { CtaBand, Eyebrow, SectionHead } from "@/components/site/page-kit";
+import { PageHero } from "@/components/site/page-hero";
 import { SeoSchema } from "@/components/site/seo-schema";
+import { RevealOnScroll } from "@/components/site/site-enhance";
+import { Testimonials, type Testimonial } from "@/components/site/testimonials";
 import { mediaUrl } from "@/lib/media";
-import { assetResolver, siteMetadata, strLimit } from "@/lib/site";
-import { getCollections } from "@/lib/site-api";
+import { imageResolver, settingResolver, siteMetadata, strLimit } from "@/lib/site";
+import { getChrome, getCollections } from "@/lib/site-api";
 import { SITE_STATS } from "@/lib/site-stats";
 
 /** Renders per request and may block, like the site layout (see its note). */
@@ -13,375 +19,282 @@ export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/about", 'About Bodhira.ai — Built for Schools, Students & Parents');
 }
 
-/** Legacy resources/views/about.blade.php. */
+const VIDEO = "https://youtu.be/JwC-Qx1lJso";
+
+const VALUES: [IconName, string, string][] = [
+  ["eye", "Our Vision", "To create a world where every child can understand, enjoy, and excel in learning through technology-driven, visual, and accessible education."],
+  ["target", "Our Mission", "To empower schools, teachers, students and parents with a unified platform that turns complex concepts into engaging experiences through visual content, AI assistance and personalized learning pathways."],
+  ["lightbulb", "Understood, Not Memorized", "Students learn better when they can see, experience and interact with concepts. We turn lessons into visual experiences that improve comprehension, retention and confidence."],
+];
+
+const COUNTERS: [IconName, string, string][] = [
+  ["users", SITE_STATS.students.label, "Students Onboarded"],
+  ["presentation", "15,485+", "Lessons Delivered"],
+  ["smile", "97.55%", "School Satisfaction"],
+  ["school", SITE_STATS.schools.label, "Partner Schools"],
+];
+
+/** Shown when the CMS has no team: the four dashboards (legacy team-men-N.png keys still override the photos). */
+const ROLES: [string, string, string][] = [
+  ["Student", "assets/img/pages/role-student.jpg", "A schoolgirl in uniform reading a textbook in the school library"],
+  ["Teacher", "assets/img/pages/role-teacher.jpg", "A teacher explaining something to a group of schoolboys"],
+  ["Parent", "assets/img/pages/role-parent.jpg", "A mother singing with her children at the harmonium at home"],
+  ["School Admin", "assets/img/pages/role-admin.jpg", "A school administrator at her desk in the school office"],
+];
+
+const VIDEOS: [string, string, string, string, string][] = [
+  [
+    "assets/img/images/video-img-1.png",
+    "assets/img/pages/video-lessons.jpg",
+    "Students in uniform watching a lesson together on a laptop",
+    "Watch Lessons by Topic",
+    "Every subject is broken down into lessons and topics — students pick a topic, watch the video, and finish a short quiz right after.",
+  ],
+  [
+    "assets/img/images/video-img-2.png",
+    "assets/img/pages/video-feedback.jpg",
+    "A teacher going over a student's answers with him at his desk",
+    "Take a Quiz, Get Feedback",
+    // not in legacy: legacy repeated the first card's text here.
+    "Each lesson ends with a short, auto-graded quiz, so students see straight away what they have understood, and the scores reach their teacher and parents.",
+  ],
+];
+
+/**
+ * Legacy resources/views/about.blade.php, redesigned in 2026 with the page
+ * design kit (not in legacy; docs/site-design-kit.md). Same sections, copy,
+ * links, CMS team and testimonials, and YouTube pop-ups (theme VenoBox on
+ * `.video-popup`); new layout and photos (public/assets/img/pages, credits in
+ * CREDITS.md). A replacement saved in the Site Image Manager under a legacy
+ * image key still wins over the new photo. Differences from legacy: counts
+ * come from SITE_STATS and are not animated; the support number comes from the
+ * `contact.phone` setting (legacy hard-coded a placeholder, kept as fallback);
+ * the second video card no longer repeats the first card's text.
+ */
 export default async function AboutPage() {
   await connection();
-  const [asset, { team, testimonials }] = await Promise.all([assetResolver(), getCollections()]);
+  const [img, setting, { images }, { team, testimonials }] = await Promise.all([imageResolver(), settingResolver(), getChrome(), getCollections()]);
+  const phone = setting("contact.phone", "+91 80000 00000");
+  const tel = `tel:${phone.replace(/[^0-9+]/g, "")}`;
+  const quotes: Testimonial[] = testimonials
+    .filter((t) => t.quote)
+    .map((t) => ({ id: t.id, name: t.name, role: t.role, company: t.company || null, quote: t.quote ?? "", avatar: mediaUrl(t.avatar_url ?? null) ?? null, rating: Math.max(1, Math.min(5, t.rating ?? 5)) }));
+
   return (
-    <>
+    <div className="bh-page">
       <SeoSchema path="about" />
-      <section className="page-header">
-        <div className="bg-item">
-            <div className="bg-img" data-background={asset("assets/img/bg-img/page-header-bg.png")}></div>
-            <div className="overlay"></div>
-            <div className="shapes">
-                <div className="shape shape-1"><img src={asset("assets/img/shapes/page-header-shape-1.png")} alt="shape" /></div>
-                <div className="shape shape-2"><img src={asset("assets/img/shapes/page-header-shape-2.png")} alt="shape" /></div>
-                <div className="shape shape-3"><img src={asset("assets/img/shapes/page-header-shape-3.png")} alt="shape" /></div>
-            </div>
-        </div>
-        <div className="container">
-            <div className="page-header-content">
-                <h1 className="title">About Us</h1>
-                <h4 className="sub-title"><a className="home" href="/">Home </a><span className="icon">/</span><a className="inner-page" href="/about"> About Us</a></h4>
-            </div>
-        </div>
-    </section>
-    
 
-    <section className="about-section pt-120 pb-120">
-        <div className="container">
-            <div className="row">
-                <div className="col-xl-6 col-lg-12">
-                    <div className="about-img-wrap wow fade-in-left" data-wow-delay="400ms">
-                        <div className="about-img-1">
-                            <img src={asset("assets/img/images/about-img-1.jpg")} alt="about" />
-                            <div className="video-btn">
-                                <a className="video-popup venobox" data-autoplay="true" data-vbtype="video" href="https://youtu.be/JwC-Qx1lJso">
-                                    <div className="play-btn">
-                                        <i className="fa-sharp fa-solid fa-play"></i>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                        <div className="about-img-2">
-                            <img src={asset("assets/img/images/about-img-2.jpg")} alt="about" />
-                        </div>
-                        <div className="about-contact">
-                            <div className="icon"><i className="fa-sharp fa-regular fa-phone-volume"></i></div>
-                            <div className="content">
-                                <span>Institutional Support</span>
-                                <a href="tel:+918000000000">+91 80000 00000</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-xl-6 col-lg-12">
-                    <div className="about-content">
-                        <div className="section-heading mb-40">
-                            <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>How Bodhira.ai Works</h4>
-                            <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">Made for Schools. Built Around<br />Students, Teachers &amp; <span>Parents.</span></h2>
-                            <p className="mt-20 wow fade-in-bottom" data-wow-delay="500ms">Bodhira.ai is not just another LMS platform — it is a complete digital learning infrastructure built
-                                for schools and educational institutions that want to modernize learning, streamline
-                                operations, and improve student engagement. The platform brings learning management,
-                                academic workflows, performance analytics, AI-powered tools, parent engagement, and
-                                institution administration together in one integrated environment.</p>
-                        </div>
-                        <div className="about-counter-items wow fade-in-bottom" data-wow-delay="600ms">
-                            <div className="about-counter-item">
-                                <div className="icon"><img src={asset("assets/img/icon/about-1.png")} alt="about" /></div>
-                                <div className="content">
-                                    <h3 className="title"><span className="odometer" data-count={SITE_STATS.students.count}>0</span><span className="number">{SITE_STATS.students.suffix}</span></h3>
-                                    <p>Students learning every day<br />across partner schools</p>
-                                </div>
-                            </div>
-                            <div className="about-counter-item">
-                                <div className="icon"><img src={asset("assets/img/icon/about-2.png")} alt="about" /></div>
-                                <div className="content">
-                                    <h3 className="title"><span className="odometer" data-count={SITE_STATS.parents.count}>0</span><span className="number">{SITE_STATS.parents.suffix}</span></h3>
-                                    <p>Parents following their<br />child&rsquo;s progress</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="about-btn wow fade-in-bottom" data-wow-delay="700ms">
-                            <a href="/login" className="ed-primary-btn">Sign In</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
+      <PageHero
+        eyebrow="About Us"
+        title="Made for Schools. Built Around Students, Teachers &"
+        highlight="Parents."
+        lead="Bodhira.ai is not just another LMS platform — it is a complete digital learning infrastructure built for schools and educational institutions that want to modernize learning, streamline operations, and improve student engagement."
+        breadcrumbs={[{ label: "About Us" }]}
+        image={{ src: img(null, "assets/img/pages/about-hero.jpg"), alt: "Two students in maroon school blazers reading together in a bright school library", width: 1200, height: 1000 }}
+        actions={
+          <>
+            <a href="/login" className="bh-btn bh-btn--maroon bh-btn--lg">Sign In <Icon name="arrowRight" size={18} /></a>
+            <a href="/book-demo" className="bh-btn bh-btn--ghost bh-btn--lg">Book a Demo</a>
+          </>
+        }
+        badge={
+          <span className="bp-glass">
+            <span className="bp-tile bp-tile--sm bp-tile--solid"><Icon name="school" size={20} /></span>
+            <span><strong>{SITE_STATS.schools.label}</strong><span>Partner schools</span></span>
+          </span>
+        }
+      />
 
-    <section className="about-feature pt-120 pb-120">
-        <div className="container">
-            <div className="section-heading text-center">
-                <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>What Drives Us</h4>
-                <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">Built on a Simple Belief About <span>Learning</span>
-                </h2>
+      {/* How Bodhira.ai works, with the overview video */}
+      <section className="bp-section" aria-labelledby="about-how">
+        <div className="bh-container bp-split bp-split--media-wide">
+          <div className="bp-collage" data-reveal>
+            <div className="bp-photo bp-collage__main">
+              <img src={img("assets/img/images/about-img-1.jpg", "assets/img/pages/about-classroom.jpg")} alt="Schoolgirls in uniform listening closely during a class" width={1200} height={840} loading="lazy" decoding="async" />
+              <a className="video-popup bp-play" data-autoplay="true" data-vbtype="video" href={VIDEO} aria-label="Play the Bodhira.ai overview video">
+                <Icon name="play" size={26} className="bh-icon--fill" />
+              </a>
             </div>
-            <div className="row gy-lg-0 gy-5">
-                <div className="col-lg-4 col-md-6">
-                    <div className="about-feature-card">
-                        <div className="icon"><i className="fa-solid fa-eye"></i></div>
-                        <div className="content">
-                            <h3 className="title">Our Vision</h3>
-                            <p>To create a world where every child can understand, enjoy, and excel in learning through technology-driven, visual, and accessible education.</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-lg-4 col-md-6">
-                    <div className="about-feature-card">
-                        <div className="icon"><i className="fa-solid fa-bullseye"></i></div>
-                        <div className="content">
-                            <h3 className="title">Our Mission</h3>
-                            <p>To empower schools, teachers, students and parents with a unified platform that turns complex concepts into engaging experiences through visual content, AI assistance and personalized learning pathways.</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-lg-4 col-md-6">
-                    <div className="about-feature-card">
-                        <div className="icon"><i className="fa-solid fa-lightbulb"></i></div>
-                        <div className="content">
-                            <h3 className="title">Understood, Not Memorized</h3>
-                            <p>Students learn better when they can see, experience and interact with concepts. We turn lessons into visual experiences that improve comprehension, retention and confidence.</p>
-                        </div>
-                    </div>
-                </div>
+            <div className="bp-collage__second">
+              <img src={img("assets/img/images/about-img-2.jpg", "assets/img/pages/about-map.jpg")} alt="A young student pointing to a map of India during a geography lesson" width={640} height={480} loading="lazy" decoding="async" />
             </div>
+            <a className="bp-collage__chip bp-on-dark" href={tel}>
+              <span className="bp-tile bp-tile--sm bp-tile--light"><Icon name="phone" size={20} /></span>
+              <span>
+                <span className="bp-collage__label">Institutional Support</span>
+                <span className="bp-collage__num">{phone}</span>
+              </span>
+            </a>
+          </div>
+          <div data-reveal>
+            <Eyebrow>How Bodhira.ai works</Eyebrow>
+            <h2 id="about-how" className="bp-h2">One Integrated Environment for <span>Your Whole School</span></h2>
+            <p className="bp-lead">
+              The platform brings learning management, academic workflows, performance analytics, AI-powered tools, parent engagement, and
+              institution administration together in one integrated environment.
+            </p>
+            <div className="bp-stats">
+              <div className="bp-stat">
+                <span className="bp-tile bp-tile--sm bp-tile--white"><Icon name="users" size={22} /></span>
+                <span><strong>{SITE_STATS.students.label}</strong><span>Students learning every day across partner schools</span></span>
+              </div>
+              <div className="bp-stat">
+                <span className="bp-tile bp-tile--sm bp-tile--white"><Icon name="heart" size={22} /></span>
+                <span><strong>{SITE_STATS.parents.label}</strong><span>Parents following their child&rsquo;s progress</span></span>
+              </div>
+            </div>
+            <a href="/login" className="bh-btn bh-btn--maroon">Sign In <Icon name="arrowRight" size={18} /></a>
+          </div>
         </div>
-    </section>
-    
+      </section>
 
-    <section className="counter-section">
-        <div className="container">
-            <div className="row counter-wrap gy-lg-0 gy-5">
-                <div className="col-lg-3 col-md-6">
-                    <div className="counter-item item-1 white-content">
-                        <span className="counter-ico"><i className="fa-solid fa-user-graduate"></i></span>
-                        <h3 className="title"><span className="odometer" data-count={SITE_STATS.students.count}>0</span>{SITE_STATS.students.suffix}</h3>
-                        <p>Students Onboarded</p>
-                    </div>
-                </div>
-                <div className="col-lg-3 col-md-6">
-                    <div className="counter-item white-content">
-                        <span className="counter-ico"><i className="fa-solid fa-chalkboard-user"></i></span>
-                        <h3 className="title"><span className="odometer" data-count="15,485">0</span>+</h3>
-                        <p>Lessons Delivered</p>
-                    </div>
-                </div>
-                <div className="col-lg-3 col-md-6">
-                    <div className="counter-item white-content">
-                        <span className="counter-ico"><i className="fa-solid fa-face-smile"></i></span>
-                        <h3 className="title"><span className="odometer" data-count="97.55">0</span>%</h3>
-                        <p>School Satisfaction</p>
-                    </div>
-                </div>
-                <div className="col-lg-3 col-md-6">
-                    <div className="counter-item item-4 white-content">
-                        <span className="counter-ico"><i className="fa-solid fa-school"></i></span>
-                        <h3 className="title"><span className="odometer" data-count={SITE_STATS.schools.count}>0</span>{SITE_STATS.schools.suffix}</h3>
-                        <p>Partner Schools</p>
-                    </div>
-                </div>
-            </div>
+      {/* What drives us */}
+      <section className="bp-section bp-section--cream" aria-labelledby="about-values">
+        <div className="bh-container">
+          <SectionHead id="about-values" eyebrow="What drives us" title="Built on a Simple Belief About" highlight="Learning" align="center" />
+          <ul className="bp-grid bp-grid--3">
+            {VALUES.map(([icon, title, text]) => (
+              <li key={title} className="bp-card bp-card--hover" data-reveal>
+                <span className="bp-tile"><Icon name={icon} size={24} /></span>
+                <h3 className="bp-h3">{title}</h3>
+                <p>{text}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-    </section>
-    
+      </section>
 
-    <section className="team-section pt-120 pb-120">
-        <div className="container">
-            <div className="section-heading text-center">
-                {team.length ? (<>
-                    <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>The People Behind Bodhira.ai</h4>
-                    <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">Meet the Team</h2>
-                </>) : (<>
-                    <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>Dashboards Built for Each Role</h4>
-                    <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">Designed Around the People Who Use It Every Day</h2>
-                </>)}
-            </div>
-            <div className="row gy-lg-0 gy-4 justify-content-center">
-                {team.length ? team.map((m, i) => (
-                    <div key={m.id} className="col-lg-3 col-md-6">
-                        <div className="team-item-3 team-item-5">
-                            <div className="team-thumb">
-                                <div className="shape"><img src={asset("assets/img/shapes/team-shape-3.png")} alt="team" /></div>
-                                <div className="team-men">
-                                    <img src={mediaUrl(m.photo_url) ?? asset(`assets/img/team/team-men-${(i % 4) + 1}.png`)} alt={m.name} />
-                                </div>
-                            </div>
-                            <div className="team-content">
-                                <h3 className="title">{m.name}</h3>
-                                {m.role && <span>{m.role}</span>}
-                                {m.bio && <p className="team-bio mt-2 mb-0" style={{ fontSize: "13px", lineHeight: "1.6", opacity: ".85" }}>{strLimit(m.bio, 110)}</p>}
-                            </div>
-                        </div>
-                    </div>
-                )) : (<>
-                    <div className="col-lg-3 col-md-6">
-                        <div className="team-item-3 team-item-5">
-                            <div className="team-thumb">
-                                <div className="shape"><img src={asset("assets/img/shapes/team-shape-3.png")} alt="team" /></div>
-                                <div className="team-men">
-                                    <img src={asset("assets/img/team/team-men-1.png")} alt="team" />
-                                </div>
-                            </div>
-                            <div className="team-content">
-                                <h3 className="title">Student</h3>
-                                <span>See Their View</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-lg-3 col-md-6">
-                        <div className="team-item-3 team-item-5">
-                            <div className="team-thumb">
-                                <div className="shape"><img src={asset("assets/img/shapes/team-shape-3.png")} alt="team" /></div>
-                                <div className="team-men">
-                                    <img src={asset("assets/img/team/team-men-2.png")} alt="team" />
-                                </div>
-                            </div>
-                            <div className="team-content">
-                                <h3 className="title">Teacher</h3>
-                                <span>See Their View</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-lg-3 col-md-6">
-                        <div className="team-item-3 team-item-5">
-                            <div className="team-thumb">
-                                <div className="shape"><img src={asset("assets/img/shapes/team-shape-3.png")} alt="team" /></div>
-                                <div className="team-men">
-                                    <img src={asset("assets/img/team/team-men-3.png")} alt="team" />
-                                </div>
-                            </div>
-                            <div className="team-content">
-                                <h3 className="title">Parent</h3>
-                                <span>See Their View</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-lg-3 col-md-6">
-                        <div className="team-item-3 team-item-5">
-                            <div className="team-thumb">
-                                <div className="shape"><img src={asset("assets/img/shapes/team-shape-3.png")} alt="team" /></div>
-                                <div className="team-men">
-                                    <img src={asset("assets/img/team/team-men-4.png")} alt="team" />
-                                </div>
-                            </div>
-                            <div className="team-content">
-                                <h3 className="title">School Admin</h3>
-                                <span>See Their View</span>
-                            </div>
-                        </div>
-                    </div>
-                </>)}
-            </div>
+      {/* Counters */}
+      <section className="bp-section bp-section--tight bp-section--cream bp-section--flush-top" aria-label="Bodhira.ai in numbers">
+        <div className="bh-container">
+          <ul className="bp-counters" data-reveal>
+            {COUNTERS.map(([icon, num, label]) => (
+              <li key={label}>
+                <span className="bp-tile bp-tile--light"><Icon name={icon} size={24} /></span>
+                <strong>{num}</strong>
+                <span>{label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-    </section>
-    
+      </section>
 
-    <section className="testimonial-section-3 pt-120 pb-120">
-        <div className="shapes">
-            <div className="shape shape-1"><img src={asset("assets/img/shapes/testi-shape-3.png")} alt="shape" /></div>
-            <div className="shape shape-2"><img src={asset("assets/img/shapes/testi-shape-4.png")} alt="shape" /></div>
-        </div>
-        <div className="container">
-            <div className="row gy-xl-0 gy-5 align-items-center">
-                <div className="col-xl-5 col-lg-12">
-                    <div className="testi-left-content white-content">
-                        <div className="section-heading mb-20 white-content">
-                            <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>Why Bodhira.ai</h4>
-                            <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">What Schools<br />Say About Bodhira.ai</h2>
-                        </div>
-                        <p className="mb-0 wow fade-in-bottom" data-wow-delay="500ms">A platform our students enjoy using, our teachers actually adopt, and our parents finally feel connected to — that is what Bodhira.ai delivered for us.</p>
+      {/* Team (CMS), or the four dashboards when there is no team */}
+      <section className="bp-section" aria-labelledby="about-team">
+        <div className="bh-container">
+          {team.length ? (
+            <SectionHead id="about-team" eyebrow="The people behind Bodhira.ai" title="Meet the" highlight="Team" align="center" />
+          ) : (
+            <SectionHead id="about-team" eyebrow="Dashboards built for each role" title="Designed Around the People Who" highlight="Use It Every Day" align="center" />
+          )}
+          <ul className="bp-grid bp-grid--people">
+            {team.length
+              ? team.map((m, i) => {
+                  const photo = mediaUrl(m.photo_url ?? null) ?? images[`assets/img/team/team-men-${(i % 4) + 1}.png`] ?? null;
+                  return (
+                    <li key={m.id} className="bp-person" data-reveal>
+                      <div className="bp-person__photo">
+                        {photo ? (
+                          <img src={photo} alt={m.name} width={600} height={720} loading="lazy" decoding="async" />
+                        ) : (
+                          <span className="bp-person__placeholder" aria-hidden="true"><span>{initials(m.name)}</span></span>
+                        )}
+                      </div>
+                      <div className="bp-person__body">
+                        <h3 className="bp-person__name">{m.name}</h3>
+                        {m.role && <span className="bp-person__role">{m.role}</span>}
+                        {m.bio && <p className="bp-person__bio">{strLimit(m.bio, 110)}</p>}
+                      </div>
+                    </li>
+                  );
+                })
+              : ROLES.map(([name, src, alt], i) => (
+                  <li key={name} className="bp-person" data-reveal>
+                    <div className="bp-person__photo">
+                      <img src={img(`assets/img/team/team-men-${i + 1}.png`, src)} alt={alt} width={600} height={720} loading="lazy" decoding="async" />
                     </div>
-                </div>
-                <div className="col-xl-7 col-lg-12">
-                    <div className="testi-carousel-wrap-2">
-                        <div className="testi-carousel-2 swiper">
-                            <div className="swiper-wrapper">
-                                {testimonials.length ? testimonials.map((t) => (
-                                    <div key={t.id} className="swiper-slide">
-                                        <div className="testi-item-3">
-                                            {!!t.rating && (
-                                                <div className="testi-rating" style={{ color: "#E2B873", fontSize: "14px", marginBottom: "12px", letterSpacing: "2px" }}>
-                                                    {Array.from({ length: t.rating }, (_, i) => <i key={i} className="fa-solid fa-star"></i>)}
-                                                </div>
-                                            )}
-                                            <p>"{t.quote}"</p>
-                                            <div className="testi-author">
-                                                <div className="testi-author-img">
-                                                    <img src={mediaUrl(t.avatar_url) ?? asset("assets/img/images/testi-author-3.png")} alt={t.name} />
-                                                </div>
-                                                <h4 className="name">{t.name} <span>{[t.role, t.company].filter(Boolean).join(", ")}</span></h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )) : (<>
-                                    <div className="swiper-slide">
-                                        <div className="testi-item-3">
-                                            <h3 className="title">From the Principal's Office</h3>
-                                            <p>"In two months, our students stopped asking for video tutorials elsewhere and parents stopped asking us 'is my child studying?' Bodhira.ai gave both sides answers."</p>
-                                            <div className="testi-author">
-                                                <div className="testi-author-img">
-                                                    <img src={asset("assets/img/images/testi-author-3.png")} alt="testi" />
-                                                </div>
-                                                <h4 className="name">Mrs. Sharma <span>Principal, Partner School</span></h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>)}
-                            </div>
-                        </div>
-                        <div className="swiper-arrow">
-                            <div className="swiper-nav swiper-next"><i className="fa-regular fa-arrow-left"></i></div>
-                            <div className="swiper-nav swiper-prev"><i className="fa-regular fa-arrow-right"></i></div>
-                        </div>
+                    <div className="bp-person__body">
+                      <h3 className="bp-person__name">{name}</h3>
+                      <span className="bp-person__role">See Their View</span>
                     </div>
-                </div>
-            </div>
+                  </li>
+                ))}
+          </ul>
         </div>
-    </section>
-    
+      </section>
 
-    <section className="video-feature-section pt-120 pb-120">
-        <div className="container">
-            <div className="section-heading text-center">
-                <h4 className="sub-heading wow fade-in-bottom" data-wow-delay="200ms"><span className="heading-icon"><i className="fa-sharp fa-solid fa-bolt"></i></span>Our Features</h4>
-                <h2 className="section-title wow fade-in-bottom" data-wow-delay="400ms">How Learning Happens on Bodhira.ai</h2>
-            </div>
-            <div className="row gy-md-0 gy-4">
-                <div className="col-md-6">
-                    <div className="video-feature text-center">
-                        <div className="video-thumb">
-                            <img src={asset("assets/img/images/video-img-1.png")} alt="video" />
-                            <div className="video-btn">
-                                <a className="video-popup venobox" data-autoplay="true" data-vbtype="video" href="https://youtu.be/JwC-Qx1lJso?feature=shared">
-                                    <div className="play-btn">
-                                        <i className="fa-sharp fa-solid fa-play"></i>
-                                    </div>
-                                    <div className="ripple"></div>
-                                </a>
-                            </div>
-                        </div>
-                        <div className="video-content">
-                            <h3 className="title">Watch Lessons by Topic</h3>
-                            <p>Every subject is broken down into lessons and<br /> topics — students pick a topic, watch the video,<br /> and finish a short quiz right after.</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-6">
-                    <div className="video-feature text-center">
-                        <div className="video-thumb">
-                            <img src={asset("assets/img/images/video-img-2.png")} alt="video" />
-                            <div className="video-btn">
-                                <a className="video-popup venobox" data-autoplay="true" data-vbtype="video" href="https://youtu.be/JwC-Qx1lJso?feature=shared">
-                                    <div className="play-btn">
-                                        <i className="fa-sharp fa-solid fa-play"></i>
-                                    </div>
-                                    <div className="ripple"></div>
-                                </a>
-                            </div>
-                        </div>
-                        <div className="video-content">
-                            <h3 className="title">Take a Quiz, Get Feedback</h3>
-                            <p>Every subject is broken down into lessons and<br /> topics — students pick a topic, watch the video,<br /> and finish a short quiz right after.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      {/* What schools say */}
+      <section className="bp-section bp-section--dark bp-on-dark" aria-labelledby="about-quotes">
+        <div className="bh-container bp-split">
+          <div data-reveal>
+            <Eyebrow light>Why Bodhira.ai</Eyebrow>
+            <h2 id="about-quotes" className="bp-h2">What Schools <span>Say About Bodhira.ai</span></h2>
+            <p className="bp-lead">
+              A platform our students enjoy using, our teachers actually adopt, and our parents finally feel connected to — that is what
+              Bodhira.ai delivered for us.
+            </p>
+          </div>
+          <div data-reveal>
+            {quotes.length ? (
+              <Testimonials items={quotes} />
+            ) : (
+              <figure className="bp-quote">
+                <Icon name="quote" size={34} className="bp-quote__mark" />
+                <h3 className="bp-quote__title">From the Principal&rsquo;s Office</h3>
+                <blockquote>
+                  <p>&ldquo;In two months, our students stopped asking for video tutorials elsewhere and parents stopped asking us &lsquo;is my child studying?&rsquo; Bodhira.ai gave both sides answers.&rdquo;</p>
+                </blockquote>
+                <figcaption>
+                  <span className="bp-avatar">
+                    {images["assets/img/images/testi-author-3.png"] ? <img src={images["assets/img/images/testi-author-3.png"]} alt="" width={52} height={52} /> : <span aria-hidden="true">MS</span>}
+                  </span>
+                  <span><strong>Mrs. Sharma</strong><span>Principal, Partner School</span></span>
+                </figcaption>
+              </figure>
+            )}
+          </div>
         </div>
-    </section>
-    </>
+      </section>
+
+      {/* How learning happens (videos) */}
+      <section className="bp-section bp-section--cream" aria-labelledby="about-videos">
+        <div className="bh-container">
+          <SectionHead id="about-videos" eyebrow="Our features" title="How Learning Happens on" highlight="Bodhira.ai" align="center" />
+          <ul className="bp-grid bp-grid--2">
+            {VIDEOS.map(([legacyKey, src, alt, title, text]) => (
+              <li key={title} className="bp-media-card" data-reveal>
+                <div className="bp-media-card__thumb">
+                  <img src={img(legacyKey, src)} alt={alt} width={1200} height={750} loading="lazy" decoding="async" />
+                  <a className="video-popup bp-play" data-autoplay="true" data-vbtype="video" href={`${VIDEO}?feature=shared`} aria-label={`Play video: ${title}`}>
+                    <Icon name="play" size={24} className="bh-icon--fill" />
+                  </a>
+                </div>
+                <div className="bp-media-card__body">
+                  <h3 className="bp-h3">{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="bp-section bp-section--flush-top bp-section--cream" aria-label="Get started">
+        <div className="bh-container">
+          <CtaBand
+            title="See Bodhira.ai in Your School"
+            text="Book a walkthrough for your school, or talk to our team about getting your students, teachers and parents started."
+            actions={
+              <>
+                <a href="/book-demo" className="bh-btn bh-btn--gold bh-btn--lg">Book a Demo <Icon name="arrowRight" size={18} /></a>
+                <a href="/contact" className="bh-btn bh-btn--glass bh-btn--lg">Contact Us</a>
+              </>
+            }
+          />
+        </div>
+      </section>
+
+      <RevealOnScroll />
+    </div>
   );
 }

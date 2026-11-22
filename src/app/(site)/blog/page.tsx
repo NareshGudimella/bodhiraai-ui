@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Icon } from "@/components/site/icons";
+import { postFallback } from "@/components/site/kit-blog-covers";
+import { CtaBand, SectionHead } from "@/components/site/page-kit";
+import { PageHero } from "@/components/site/page-hero";
 import { PostCard } from "@/components/site/post-card";
 import { SeoSchema } from "@/components/site/seo-schema";
+import { RevealOnScroll } from "@/components/site/site-enhance";
 import { SitePagination } from "@/components/site/site-pagination";
 import { mediaUrl } from "@/lib/media";
-import { settingResolver, siteMetadata, strLimit } from "@/lib/site";
+import { assetResolver, fmtDate, imageResolver, settingResolver, siteMetadata, strLimit } from "@/lib/site";
 import { getBlog } from "@/lib/site-api";
 
 /** Renders per request and may block, like the site layout (see its note). */
@@ -15,27 +20,47 @@ export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata("/blog", `Blog — ${setting("general.site_name", "Bodhira.ai")}`);
 }
 
-/** The "All" / other-category chip: legacy restyles the inactive ones white. */
-const INACTIVE = "bi-chip-off";
-
-/** Legacy PageController::blogIndex (cms/blog/index.blade.php). */
-export default function BlogPage({ searchParams }: PageProps<"/blog">) {
+/**
+ * Legacy PageController::blogIndex (cms/blog/index.blade.php), redesigned in
+ * 2026 with the page design kit (not in legacy; docs/site-design-kit.md).
+ * Same data (`getBlog`: ?category and ?page, featured post on the unfiltered
+ * list, categories with post counts), links and copy; new layout: `PageHero`
+ * with a photo, category chips, the featured post as a wide card, kit post
+ * cards (`PostCard variant="kit"`, a fallback photo when a post has no cover),
+ * kit pagination and a closing call-to-action (copy and links from /about).
+ * The "Latest articles" / category-name heading over the grid is new.
+ */
+export default async function BlogPage({ searchParams }: PageProps<"/blog">) {
+  await connection();
+  const [img, setting] = await Promise.all([imageResolver(), settingResolver()]);
   return (
-    <>
+    <div className="bh-page">
       <SeoSchema path="blog" />
-      <style dangerouslySetInnerHTML={{ __html: `.${INACTIVE}{background:#fff !important;color:#2A0E13 !important;border:1px solid #e6ded3 !important;}` }} />
-      <section className="page-hero pt-100 pb-80" style={{ background: "linear-gradient(120deg,#2A0E13,#5C1A26)" }}>
-        <div className="container text-center white-content">
-          <h1 className="section-title" style={{ color: "#fff" }}>Blog</h1>
-          <p style={{ color: "rgba(255,255,255,.8)", maxWidth: "620px", margin: "12px auto 0" }}>Ideas on teaching, learning and EdTech.</p>
+      <PageHero
+        eyebrow="Blog"
+        title={setting("general.site_name", "Bodhira.ai")}
+        highlight="Blog"
+        lead="Ideas on teaching, learning and EdTech."
+        breadcrumbs={[{ label: "Blog" }]}
+        image={{ src: img(null, "assets/img/pages/blog/blog-hero.jpg"), alt: "A young boy smiling over his workbook under a desk lamp at home", width: 1200, height: 1000 }}
+      />
+      <Posts searchParams={searchParams} />
+      <section className="bp-section bp-section--flush-top" aria-label="Get started">
+        <div className="bh-container">
+          <CtaBand
+            title="See Bodhira.ai in Your School"
+            text="Book a walkthrough for your school, or talk to our team about getting your students, teachers and parents started."
+            actions={
+              <>
+                <a href="/book-demo" className="bh-btn bh-btn--gold bh-btn--lg">Book a Demo <Icon name="arrowRight" size={18} /></a>
+                <a href="/contact" className="bh-btn bh-btn--glass bh-btn--lg">Contact Us</a>
+              </>
+            }
+          />
         </div>
       </section>
-      <section className="blog-section pt-100 pb-120">
-        <div className="container">
-          <Posts searchParams={searchParams} />
-        </div>
-      </section>
-    </>
+      <RevealOnScroll />
+    </div>
   );
 }
 
@@ -44,44 +69,83 @@ async function Posts({ searchParams }: Pick<PageProps<"/blog">, "searchParams">)
   const q = await searchParams;
   const category = typeof q.category === "string" ? q.category : "";
   const page = typeof q.page === "string" && /^\d+$/.test(q.page) && Number(q.page) >= 1 ? Number(q.page) : 1;
-  const { posts, featured, categories, meta } = await getBlog(category, page);
-  const cover = featured ? mediaUrl(featured.cover_image_url) : null;
+  const [asset, { posts, featured, categories, meta }] = await Promise.all([assetResolver(), getBlog(category, page)]);
+  const current = categories.find((c) => c.slug === category);
+  const showFeatured = featured && !category;
+  const featuredCover = featured ? mediaUrl(featured.cover_image_url) : null;
   return (
-    <>
-      {categories.length > 0 && (
-        <div className="text-center mb-50" style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/blog" className={`ed-primary-btn${category ? ` ${INACTIVE}` : ""}`} style={{ padding: "8px 20px" }}>All</a>
-          {categories.map((cat) => (
-            <a key={cat.id} href={`/blog?category=${encodeURIComponent(cat.slug)}`} className={`ed-primary-btn${category === cat.slug ? "" : ` ${INACTIVE}`}`} style={{ padding: "8px 20px" }}>
-              {cat.name} ({cat.posts_count})
-            </a>
-          ))}
-        </div>
-      )}
-      {featured && !category && (
-        <a
-          href={`/blog/${featured.slug}`}
-          className="d-block mb-50"
-          style={{
-            borderRadius: "22px", overflow: "hidden", position: "relative", minHeight: "340px", background: "#2A0E13",
-            ...(cover ? { backgroundImage: `linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.2)),url('${cover}')`, backgroundSize: "cover", backgroundPosition: "center" } : {}),
-          }}
-        >
-          <div style={{ position: "absolute", bottom: 0, padding: "40px", color: "#fff" }}>
-            <span className="ed-primary-btn" style={{ padding: "4px 14px", fontSize: "12px" }}>Featured</span>
-            <h2 style={{ color: "#fff", marginTop: "16px", maxWidth: "680px" }}>{featured.title}</h2>
-            <p style={{ color: "rgba(255,255,255,.85)", maxWidth: "600px" }}>{strLimit(featured.excerpt ?? "", 150)}</p>
-          </div>
-        </a>
-      )}
-      <div className="row gy-4">
-        {posts.length ? posts.map((post) => <PostCard key={post.id} post={post} />) : (
-          <div className="col-12 text-center pt-50 pb-50"><p style={{ color: "#9b8674" }}>No articles published yet. Check back soon.</p></div>
+    <section className="bp-section bpb-blog" aria-labelledby="blog-posts">
+      <div className="bh-container">
+        {categories.length > 0 && (
+          <nav className="bpb-blog__filters" aria-label="Blog categories" data-reveal>
+            <ul className="bp-chips">
+              <li>
+                <a href="/blog" className={`bp-chip bpb-filter${category ? "" : " is-active"}`} aria-current={category ? undefined : "page"}>All</a>
+              </li>
+              {categories.map((cat) => (
+                <li key={cat.id}>
+                  <a
+                    href={`/blog?category=${encodeURIComponent(cat.slug)}`}
+                    className={`bp-chip bpb-filter${category === cat.slug ? " is-active" : ""}`}
+                    aria-current={category === cat.slug ? "page" : undefined}
+                  >
+                    {cat.name} <span className="bpb-filter__count">({cat.posts_count})</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         )}
+
+        {showFeatured && (
+          <article className="bpb-featured" data-reveal>
+            <div className="bpb-featured__media">
+              <img
+                src={featuredCover ?? postFallback(asset, featured.id)}
+                alt={featuredCover ? featured.title : ""}
+                width={1200}
+                height={750}
+                fetchPriority="high"
+              />
+            </div>
+            <div className="bpb-featured__body">
+              <div className="bpb-featured__tags">
+                <span className="bp-badge bp-badge--gold"><Icon name="star" size={14} />Featured</span>
+                {featured.category && <span className="bp-badge">{featured.category.name}</span>}
+              </div>
+              <h2 className="bpb-featured__title"><a href={`/blog/${featured.slug}`}>{featured.title}</a></h2>
+              {featured.excerpt && <p className="bpb-featured__excerpt">{strLimit(featured.excerpt, 150)}</p>}
+              <div className="bpb-post__meta bpb-featured__meta">
+                <span><Icon name="calendar" size={16} />{fmtDate(featured.published_at, "d M Y")}</span>
+                {featured.reading_minutes > 0 && <span><Icon name="clock" size={16} />{featured.reading_minutes} min read</span>}
+              </div>
+              <span className="bp-link bpb-featured__more" aria-hidden="true">Read article <Icon name="arrowRight" size={18} /></span>
+            </div>
+          </article>
+        )}
+
+        <SectionHead
+          id="blog-posts"
+          eyebrow={current ? "Category" : "Articles"}
+          title={current ? current.name : "Latest"}
+          highlight={current ? undefined : "articles"}
+        />
+        {posts.length ? (
+          <div className="bp-grid bp-grid--3 bpb-blog__grid">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} variant="kit" fallback={postFallback(asset, post.id)} />
+            ))}
+          </div>
+        ) : (
+          <div className="bpb-empty" data-reveal>
+            <span className="bp-tile"><Icon name="bookOpen" size={24} /></span>
+            <p>No articles published yet. Check back soon.</p>
+          </div>
+        )}
+        <div className="bpb-blog__pages">
+          <SitePagination base="/blog" params={category ? { category } : {}} page={meta.current_page} lastPage={meta.last_page} variant="kit" />
+        </div>
       </div>
-      <div className="mt-50 d-flex justify-content-center">
-        <SitePagination base="/blog" params={category ? { category } : {}} page={meta.current_page} lastPage={meta.last_page} />
-      </div>
-    </>
+    </section>
   );
 }

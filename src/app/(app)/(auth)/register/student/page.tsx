@@ -1,21 +1,36 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { authLink } from "@/components/auth/auth-styles";
+import { Icon, type IconName } from "@/components/site/icons";
 import { billingApi } from "@/lib/billing-api";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Sign up" };
 
-/** Legacy RegisterController::show: B2C student sign-up, optionally for a plan picked on /pricing. */
+const TITLE = "Create your student account";
+
+/**
+ * Legacy RegisterController::show: B2C student sign-up, optionally for a plan
+ * picked on /pricing (?plan=&cycle=). Layout: AuthShell (2026 redesign, not in
+ * legacy); the plan summary / "What you get" box sits in its brand panel.
+ */
 export default function RegisterStudentPage({ searchParams }: PageProps<"/register/student">) {
   return (
-    <main className="flex flex-1 items-center justify-center bg-page px-4 py-10">
-      <div className="grid w-full max-w-4xl overflow-hidden rounded-2xl bg-card shadow-lg ring-1 ring-line [&>*]:min-w-0 md:grid-cols-2">
-        <Suspense fallback={<div className="p-8 text-ink-3">Loading…</div>}>
-          <Body searchParams={searchParams} />
-        </Suspense>
-      </div>
-    </main>
+    <Suspense
+      fallback={
+        <AuthShell eyebrow="Sign up" title={TITLE} wide panel={null}>
+          <div aria-busy="true" className="mt-7 space-y-5">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-[rgba(42,14,19,.06)]" />
+            ))}
+          </div>
+        </AuthShell>
+      }
+    >
+      <Body searchParams={searchParams} />
+    </Suspense>
   );
 }
 
@@ -24,58 +39,106 @@ async function Body({ searchParams }: Pick<PageProps<"/register/student">, "sear
   const str = (v: string | string[] | undefined) => (typeof v === "string" ? v : "");
   const { syllabi, plan, cycle } = await billingApi.signupOptions(str(q.plan), str(q.cycle));
   const paid = !!plan && (plan.monthly_price > 0 || plan.yearly_price > 0);
-  const row = "flex justify-between gap-3 border-t border-white/10 py-2 text-sm";
   return (
-    <>
-      <section className="bg-brand p-8 text-primary-light">
-        <p className="inline-block rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wider">🧠 AI-POWERED EDTECH</p>
-        {plan ? (
+    <AuthShell
+      eyebrow="Sign up"
+      title={TITLE}
+      lead={
+        <p>
+          Already have one?{" "}
+          <Link href="/login" className={authLink}>
+            Sign in →
+          </Link>
+        </p>
+      }
+      wide
+      headline={
+        plan ? (
           <>
-            <h1 className="mt-6 text-2xl font-bold">
-              You&apos;re picking the <span className="text-primary">{plan.name}</span> plan.
-            </h1>
-            <p className="mt-2 text-sm opacity-80">{plan.tagline || "Pick your board and grade and you're set in 30 seconds."}</p>
-            <div className="mt-8 rounded-xl bg-white/5 p-4">
-              <p className="text-[11px] font-bold tracking-wider opacity-70">
-                {plan.name.toUpperCase()} · {cycle === "yearly" ? "YEARLY" : "MONTHLY"}
-              </p>
-              <p className={row}>
-                <span>Price</span>
-                <span>
-                  ₹{(cycle === "yearly" ? plan.yearly_price : plan.monthly_price).toLocaleString("en-US")} / {cycle === "yearly" ? "year" : "month"}
-                </span>
-              </p>
-              {plan.trial_days > 0 && <p className={row}><span>Free trial</span><span>{plan.trial_days} days</span></p>}
-              {(plan.features ?? []).map((f) => <p key={f} className={row}>✓ {f}</p>)}
-              <p className={`${row} text-xs`}>
-                <span className="opacity-60">Change plan?</span>
-                <Link href="/pricing" className="text-primary underline">Compare all →</Link>
-              </p>
-            </div>
+            You&apos;re picking the <span className="text-(--auth-gold-bright)">{plan.name}</span> plan.
           </>
         ) : (
           <>
-            <h1 className="mt-6 text-2xl font-bold">Try Bodhira.ai free for 7 days.</h1>
-            <p className="mt-2 text-sm opacity-80">
-              Pick your board and grade, get instant access to the full syllabus. No card needed for the trial.
-            </p>
-            <div className="mt-8 rounded-xl bg-white/5 p-4">
-              <p className="text-[11px] font-bold tracking-wider opacity-70">WHAT YOU GET</p>
-              <p className={row}><span>📚 Full chapter library</span><span>per syllabus</span></p>
-              <p className={row}><span>✏️ Quizzes &amp; progress</span><span>tracked</span></p>
-              <p className={row}><span>🤖 AI doubt solver</span><span>(Premium)</span></p>
-              <p className={row}><span>💳 No card needed</span><span>for trial</span></p>
-            </div>
+            Try Bodhira.ai <span className="text-(--auth-gold-bright)">free for 7 days.</span>
           </>
-        )}
-      </section>
-      <section className="p-8">
-        <h2 className="text-xl font-bold text-brand">Create your student account</h2>
-        <p className="mt-1 text-sm text-ink-2">
-          Already have one? <Link href="/login" className="font-semibold text-primary-dark">Sign in →</Link>
-        </p>
-        <SignupForm syllabi={syllabi} planKey={plan?.key ?? null} cycle={cycle} paid={paid} />
-      </section>
-    </>
+        )
+      }
+      intro={
+        plan
+          ? plan.tagline || "Pick your board and grade and you're set in 30 seconds."
+          : "Pick your board and grade, get instant access to the full syllabus. No card needed for the trial."
+      }
+      panel={
+        plan ? (
+          <PanelBox label={`${plan.name.toUpperCase()} · ${cycle === "yearly" ? "YEARLY" : "MONTHLY"}`}>
+            <Row>
+              <span>Price</span>
+              <strong className="text-white">
+                ₹{(cycle === "yearly" ? plan.yearly_price : plan.monthly_price).toLocaleString("en-US")} / {cycle === "yearly" ? "year" : "month"}
+              </strong>
+            </Row>
+            {plan.trial_days > 0 && (
+              <Row>
+                <span>Free trial</span>
+                <span>{plan.trial_days} days</span>
+              </Row>
+            )}
+            {(plan.features ?? []).map((f) => (
+              <Row key={f}>
+                <span className="flex items-start gap-2">
+                  <Icon name="check" size={16} className="mt-0.5 text-(--auth-gold-bright)" /> {f}
+                </span>
+              </Row>
+            ))}
+            <Row small>
+              <span className="opacity-70">Change plan?</span>
+              <Link
+                href="/pricing"
+                className="rounded font-semibold text-(--auth-gold-bright) underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-(--auth-gold-bright)"
+              >
+                Compare all →
+              </Link>
+            </Row>
+          </PanelBox>
+        ) : (
+          <PanelBox label="WHAT YOU GET">
+            <Item icon="bookOpen" text="Full chapter library" note="per syllabus" />
+            <Item icon="listChecks" text="Quizzes & progress" note="tracked" />
+            <Item icon="sparkles" text="AI doubt solver" note="(Premium)" />
+            <Item icon="shield" text="No card needed" note="for trial" />
+          </PanelBox>
+        )
+      }
+    >
+      <SignupForm syllabi={syllabi} planKey={plan?.key ?? null} cycle={cycle} paid={paid} />
+    </AuthShell>
+  );
+}
+
+function PanelBox({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="max-w-md rounded-2xl border border-white/15 bg-white/[.07] p-4 backdrop-blur-md sm:p-5">
+      <p className="text-[11px] font-bold tracking-[.14em] text-(--auth-gold-bright)">{label}</p>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
+
+function Row({ small, children }: { small?: boolean; children: ReactNode }) {
+  return (
+    <p className={`flex justify-between gap-3 border-t border-white/10 py-2.5 first:border-t-0 ${small ? "text-xs" : "text-sm"} text-[#fff4e6]/85`}>
+      {children}
+    </p>
+  );
+}
+
+function Item({ icon, text, note }: { icon: IconName; text: string; note: string }) {
+  return (
+    <Row>
+      <span className="flex items-center gap-2.5 font-semibold text-white">
+        <Icon name={icon} size={17} className="text-(--auth-gold-bright)" /> {text}
+      </span>
+      <span className="text-[#fff4e6]/70">{note}</span>
+    </Row>
   );
 }
