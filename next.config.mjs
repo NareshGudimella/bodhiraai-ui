@@ -1,5 +1,3 @@
-import type { NextConfig } from "next";
-
 /**
  * Legacy SecurityHeaders middleware, on every response. The CSP is legacy's
  * plus the VdoCipher lesson player (its iframe, and the player API script that
@@ -8,6 +6,10 @@ import type { NextConfig } from "next";
  * builds only, because `next dev` needs eval, which it blocks. HSTS likewise
  * (legacy: secure or non-local requests). Legacy's cdnjs entries (Font Awesome) are gone:
  * the marketing site draws its icons as inline SVG since the Tailwind migration (not in legacy).
+ *
+ * Plain JavaScript (.mjs) on purpose: hosts whose Linux is too old for Next's native compiler
+ * (glibc < 2.29) fall back to its WebAssembly build, which can't load a TypeScript config.
+ * Tailwind runs through PostCSS (postcss.config.mjs), which both webpack and Turbopack use.
  */
 const VDOCIPHER = "https://player.vdocipher.com";
 const LEGACY_CSP = [
@@ -40,7 +42,8 @@ const securityHeaders = [
     : []),
 ];
 
-const nextConfig: NextConfig = {
+/** @type {import("next").NextConfig} */
+const nextConfig = {
   // The container image (Dockerfile) runs the self-contained server; local runs keep `next start`.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   cacheComponents: true,
@@ -98,16 +101,8 @@ const nextConfig: NextConfig = {
         // Legacy edits pages and posts by id; the port addresses them by slug.
         ["/cms/pages/:id/edit", "/cms/pages"],
         ["/cms/posts/:id/edit", "/cms/posts"],
-      ].map(([source, destination]) => ({ source, destination, statusCode: 302 as const })),
+      ].map(([source, destination]) => ({ source, destination, statusCode: /** @type {302} */ (302) })),
     ];
-  },
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
   },
 };
 
