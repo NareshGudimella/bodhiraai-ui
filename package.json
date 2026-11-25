@@ -6,14 +6,21 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:worker": "node --test worker/test/",
+    "cf:build": "opennextjs-cloudflare build && node scripts/cf-assets-headers.mjs",
+    "cf:preview": "opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types worker/cloudflare-env.d.ts --env-interface CloudflareEnv --include-runtime false"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.20.18",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261125.1",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^22",
     "@types/react": "^19",
@@ -21,6 +28,7 @@
     "eslint": "^10",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
-    "typescript": "^6"
+    "typescript": "^6",
+    "wrangler": "^4.168.0"
   }
 }

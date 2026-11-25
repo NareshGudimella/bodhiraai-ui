@@ -1,5 +1,6 @@
-# Checks every push and pull request: the web app, its container image and the
-# edge Worker. GitHub's runners have Docker, so nobody needs it locally.
+# Checks every push and pull request: the Next.js app (plain `next build`, as
+# the Hostinger host runs it), the Worker's tests, and the OpenNext Cloudflare
+# build with a wrangler dry run for each target. Nothing here talks to Cloudflare.
 name: CI
 on:
   push:
@@ -16,40 +17,23 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
-      # The image's build (standalone output); it doesn't call the API.
-      - run: npx next build
-        env:
-          NEXT_OUTPUT: standalone
-  image:
+      # `npm run build` + `next start` hosting (Hostinger). It doesn't call the API.
+      - run: npm run build
+  worker:
     runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      # The image Cloudflare Containers runs: it must build and start. /health needs
-      # the API, so a static file is the check.
-      - run: docker build --platform linux/amd64 -t bodhira-web .
-      - run: docker run -d --name web -p 3000:3000 -e API_URL=http://127.0.0.1:9/api/v1 bodhira-web
-      - run: |
-          for i in $(seq 1 30); do
-            curl -fs -o /dev/null http://127.0.0.1:3000/robots.txt && exit 0
-            sleep 1
-          done
-          docker logs web
-          exit 1
-  edge:
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: edge
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: edge/package-lock.json
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test # signed /files/* links (node --test; Node 22.18+ strips the types)
-      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist --env= # no-route (top level)
-      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist --env production
-      - run: npx wrangler deploy --dry-run --containers-rollout=none --outdir dist -c wrangler.staging.jsonc
+      # Signed /files/* links (incl. the API's fixed vector), legacy keys, body limits.
+      # node --test; Node 22.18+ strips the types.
+      - run: npm run test:worker
+      - run: npm run cf:build
+      - run: npx tsc --noEmit -p worker
+      # Bundles the Worker exactly as a deploy would, without uploading. Prints the size.
+      - run: npx wrangler deploy --dry-run --outdir dist --env= # no-route (top level)
+      - run: npx wrangler deploy --dry-run --outdir dist --env production
+      - run: npx wrangler deploy --dry-run --outdir dist --env staging

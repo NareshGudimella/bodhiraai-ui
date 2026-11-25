@@ -42,7 +42,9 @@ yarn-error.log*
 next-env.d.ts
 !.env.example
 
-# Cloudflare edge Worker
-/edge/node_modules
-/edge/.wrangler
-/edge/dist
+# Cloudflare Worker (OpenNext build, wrangler state, local secrets)
+/.open-next/
+/.wrangler/
+/dist/
+.dev.vars*
+!.dev.vars.example

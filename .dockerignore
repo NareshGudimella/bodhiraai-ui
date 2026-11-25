@@ -1,7 +1,0 @@
-node_modules
-.next
-edge
-.env*
-*.log
-*.tsbuildinfo
-.DS_Store

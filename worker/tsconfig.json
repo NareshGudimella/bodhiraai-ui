@@ -1,0 +1,16 @@
+{
+  // The Worker entry and its tests (the Next app has ../tsconfig.json, which excludes this folder).
+  // Check: `npx tsc --noEmit -p worker`.
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "lib": ["es2022"],
+    "types": ["@cloudflare/workers-types", "node"],
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"]
+}

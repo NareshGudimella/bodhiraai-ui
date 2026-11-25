@@ -26,8 +26,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored marketing theme scripts.
     "public/**",
-    // Cloudflare edge Worker: its own package and tsconfig.
-    "edge/**",
+    // OpenNext / wrangler build output.
+    ".open-next/**",
+    ".wrangler/**",
   ]),
 ]);
 

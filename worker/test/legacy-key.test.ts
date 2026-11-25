@@ -1,7 +1,7 @@
-// Legacy file keys (src/legacy-key.ts). Run: `npm test`.
+// Legacy file keys (worker/legacy-key.ts). Run: `npm run test:worker`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { legacyFileKey } from '../src/legacy-key.ts';
+import { legacyFileKey } from '../legacy-key.ts';
 
 test('legacy paths map to their R2 keys', () => {
   assert.equal(legacyFileKey('/media/avatars/a%20b.png'), 'media/avatars/a b.png');

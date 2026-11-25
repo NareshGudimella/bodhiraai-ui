@@ -1,9 +1,9 @@
-// Signed /files/* links (src/file-sig.ts). Run: `npm test` (node --test, no Worker runtime needed).
+// Signed /files/* links (worker/file-sig.ts). Run: `npm run test:worker` (node --test, no Worker runtime needed).
 // security: not in legacy
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { keyFromPath, signFileKey, verifyFileLink } from '../src/file-sig.ts';
+import { keyFromPath, signFileKey, verifyFileLink } from '../file-sig.ts';
 
 // Fixed vector shared with the API (contract section 1): key `submissions/7/a b.pdf`,
 // exp 2000000000, secret `test-secret`.

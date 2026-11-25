@@ -1,0 +1,126 @@
+// The one Worker for https://bodhiraai.com: edge routing (worker/index.ts) and
+// the Next.js app (OpenNext, open-next.config.ts). See DEPLOY.md.
+// Build first: `npm run cf:build` (writes .open-next/, which `main` imports).
+// Secrets aren't kept here: `npx wrangler secret put PROXY_SECRET` and
+// `npx wrangler secret put FILE_URL_SECRET` (the same values as the API's).
+// Local preview reads .dev.vars (copy .dev.vars.example; never commit it).
+//
+// Three targets (Deploy workflow, `npm run cf:deploy -- --env <env>`):
+//   - top level (`no-route`, the default): NO route on bodhiraai.com, so it
+//     never takes production traffic; reachable only on its *.workers.dev URL
+//     for the pre-cut-over check (docs/cutover-runbook.md §5).
+//   - env `production`: the same Worker (`ba-ui`) plus the
+//     `bodhiraai.com/*` route. Run it first at cut-over step 7, and for every
+//     deploy after it. `www` gets a Redirect Rule to the apex, not a route
+//     (DEPLOY.md, "One canonical host").
+//   - env `staging`: its own Worker, route, API origin and buckets for the
+//     rehearsal. Replace the <placeholders> before the first staging deploy.
+// Wrangler doesn't inherit bindings or vars into an env, so every env repeats
+// them: change all three blocks together.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ba-ui",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-20",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // public/ and _next/static, served by Cloudflare before the Worker runs.
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // No routes here, on purpose: see above.
+  "workers_dev": true,
+  "preview_urls": false,
+  "r2_buckets": [
+    // Legacy uploads and site videos, copied before cut-over (docs/cutover-runbook.md).
+    { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy" },
+    // Private uploads behind signed /files/* links: the API's R2_PRIVATE_BUCKET. Never public.
+    // security: not in legacy
+    { "binding": "PRIVATE_FILES", "bucket_name": "bodhira-private" },
+    // Next's incremental cache ('use cache' entries, ISR). Never public.
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "bodhiraai-web-opennext-cache" }
+  ],
+  "durable_objects": {
+    "bindings": [
+      // Tag cache (cacheTag / updateTag / revalidateTag across isolates) and the
+      // revalidation queue; classes exported by worker/index.ts.
+      { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" },
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOShardedTagCache", "DOQueueHandler"] }],
+  // This Worker itself: cache revalidation and proxy.ts's 404 page (src/lib/self-fetch.ts).
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "ba-ui" }],
+  "vars": {
+    // The Elastic Beanstalk environment, through a proxied Cloudflare hostname.
+    // The Next server's API_URL is `${API_ORIGIN}/api/v1` and LEGACY_URL is
+    // SITE_URL (worker/index.ts, nextEnv); set them here only to override.
+    "API_ORIGIN": "https://api-origin.bodhiraai.com",
+    "SITE_URL": "https://bodhiraai.com"
+  },
+  // Secret names only (set with `wrangler secret put`); `wrangler dev` warns when one is missing.
+  "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } },
+
+  "env": {
+    // Cut-over step 7 onwards. Same Worker name, so the secrets, Durable
+    // Objects and cache set before cut-over carry over.
+    "production": {
+      "name": "ba-ui",
+      "routes": [{ "pattern": "bodhiraai.com/*", "zone_name": "bodhiraai.com" }],
+      "workers_dev": false,
+      "preview_urls": false,
+      "r2_buckets": [
+        { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy" },
+        // security: not in legacy
+        { "binding": "PRIVATE_FILES", "bucket_name": "bodhira-private" },
+        { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "bodhiraai-web-opennext-cache" }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" },
+          { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+        ]
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOShardedTagCache", "DOQueueHandler"] }],
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "ba-ui" }],
+      "vars": {
+        "API_ORIGIN": "https://api-origin.bodhiraai.com",
+        "SITE_URL": "https://bodhiraai.com"
+      },
+      "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } }
+    },
+
+    // The cut-over rehearsal (docs/cutover-runbook.md §4). Never point it at
+    // production: its own Worker, route, API origin and buckets. Secrets:
+    // `npx wrangler secret put PROXY_SECRET --env staging` (and FILE_URL_SECRET),
+    // the staging API's values, not production's.
+    "staging": {
+      "name": "ba-ui-staging",
+      "routes": [{ "pattern": "<staging-host>/*", "zone_name": "<staging-zone>" }],
+      "workers_dev": false,
+      "preview_urls": false,
+      "r2_buckets": [
+        // A copy of a production files snapshot (runbook §4 step 4).
+        { "binding": "LEGACY_FILES", "bucket_name": "bodhira-legacy-staging" },
+        // The staging API's R2_PRIVATE_BUCKET. Never public.
+        // security: not in legacy
+        { "binding": "PRIVATE_FILES", "bucket_name": "bodhira-private-staging" },
+        { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "bodhiraai-web-opennext-cache-staging" }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" },
+          { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+        ]
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOShardedTagCache", "DOQueueHandler"] }],
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "ba-ui-staging" }],
+      "vars": {
+        // The staging Beanstalk environment, through a proxied Cloudflare hostname.
+        "API_ORIGIN": "https://<staging-api-origin-host>",
+        "SITE_URL": "https://<staging-host>"
+      },
+      "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } }
+    }
+  }
+}

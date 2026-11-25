@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { areaRoles, GUEST_ONLY, homeFor, PROTECTED_PREFIXES, ROLE_HOME, type Role } from '@/lib/roles';
 import { proxySecretHeader } from './lib/proxy-secret';
+import { fetchSelf } from './lib/self-fetch';
 import { siteUrl } from './lib/site-url';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:4000/api/v1';
-/** This server, for rendering the 404 page (not the public URL, which may be behind a proxy). */
-const SELF = `http://127.0.0.1:${process.env.PORT ?? 3000}`;
 const BLOG_POST = /^\/blog\/([^/]+)$/;
 const LEGACY_SHARED = [/^\/account\/settings$/, /^\/notifications(\/[^/]+\/read)?$/, /^\/chat(\/\d+)?$/];
 
@@ -23,7 +22,8 @@ export async function proxy(req: NextRequest) {
   // Any other API answer leaves it to the page.
   const post = BLOG_POST.exec(path);
   if (post && (await postMissing(post[1]))) {
-    const page = await fetch(`${SELF}/site-404`, { headers: { Accept: 'text/html' } });
+    // This server's own /site-404 (not the public URL, which may be behind a proxy).
+    const page = await fetchSelf('/site-404', req.nextUrl.href, { headers: { Accept: 'text/html' } });
     return new Response(page.body, {
       status: 404,
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-cache, no-store, max-age=0, must-revalidate' },

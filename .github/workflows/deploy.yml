@@ -1,18 +1,21 @@
-# Deploys the edge Worker and the web container to Cloudflare. Manual only:
-# run it from the Actions tab once CI has passed on the commit. wrangler builds
-# ../Dockerfile on the runner and pushes it to Cloudflare's registry.
+# Deploys the web Worker (worker/index.ts + the OpenNext build of the Next.js
+# app) to Cloudflare. Manual only: run it from the Actions tab once CI has
+# passed on the commit. `npm run cf:deploy` (opennextjs-cloudflare deploy)
+# uploads the build's cache entries to the R2 cache bucket, then runs
+# `wrangler deploy`.
 #
-# Needs repository secrets CLOUDFLARE_API_TOKEN (Workers Scripts, Containers
-# and R2 edit) and CLOUDFLARE_ACCOUNT_ID, in the "production" (and "staging")
-# environment, so a reviewer can be required. PROXY_SECRET is set once with `wrangler secret
-# put`, not here. Draft: not yet run against Cloudflare.
+# Needs secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the
+# "production" (and "staging") environment, so a reviewer can be required.
+# Token permissions: Account > Workers Scripts edit, Workers R2 Storage edit;
+# Zone (bodhiraai.com) > Workers Routes edit. PROXY_SECRET and FILE_URL_SECRET
+# are set once with `wrangler secret put`, not here. Draft: not yet run against Cloudflare.
 #
-# Targets (edge/wrangler.jsonc):
-#   no-route   (default) the Worker and containers WITHOUT the bodhiraai.com route:
-#              takes no production traffic. Use before cut-over.
-#   production adds the bodhiraai.com/* route (`--env production`). Cut-over step 7
+# Targets (wrangler.jsonc):
+#   no-route   (default) top level: the Worker WITHOUT the bodhiraai.com route, so it
+#              takes no production traffic (*.workers.dev only). Use before cut-over.
+#   production env production: adds the bodhiraai.com/* route. Cut-over step 7
 #              (docs/cutover-runbook.md) and every deploy after it.
-#   staging    edge/wrangler.staging.jsonc (staging Worker, route and buckets).
+#   staging    env staging: the staging Worker, route and buckets.
 name: Deploy
 on:
   workflow_dispatch:
@@ -30,18 +33,16 @@ jobs:
     runs-on: ubuntu-24.04
     # no-route uses the production environment's secrets and reviewer too.
     environment: ${{ inputs.target == 'staging' && 'staging' || 'production' }}
-    defaults:
-      run:
-        working-directory: edge
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: edge/package-lock.json
       - run: npm ci
-      - run: npx wrangler deploy ${{ inputs.target == 'staging' && '-c wrangler.staging.jsonc' || inputs.target == 'production' && '-c wrangler.jsonc --env production' || '-c wrangler.jsonc --env=' }}
+      - run: npm run test:worker
+      - run: npm run cf:build
+      - run: npm run cf:deploy -- ${{ inputs.target == 'staging' && '--env staging' || inputs.target == 'production' && '--env production' || '--env=' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
