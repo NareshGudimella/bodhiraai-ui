@@ -1,8 +1,8 @@
 // The one Worker for https://bodhiraai.com: edge routing (worker/index.ts) and
 // the Next.js app (OpenNext, open-next.config.ts). See DEPLOY.md.
 // Build first: `npm run cf:build` (writes .open-next/, which `main` imports).
-// Secrets aren't kept here: `npx wrangler secret put PROXY_SECRET` and
-// `npx wrangler secret put FILE_URL_SECRET` (the same values as the API's).
+// Secrets aren't kept here: `npx wrangler secret put APP_SECRET` (the same value
+// as the API's APP_SECRET; the Worker derives the proxy and file-link keys from it).
 // Local preview reads .dev.vars (copy .dev.vars.example; never commit it).
 //
 // Three targets (Deploy workflow, `npm run cf:deploy -- --env <env>`):
@@ -56,7 +56,7 @@
     "SITE_URL": "https://bodhiraai.com"
   },
   // Secret names only (set with `wrangler secret put`); `wrangler dev` warns when one is missing.
-  "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+  "secrets": { "required": ["APP_SECRET"] },
   "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } },
 
   "env": {
@@ -85,14 +85,14 @@
         "API_ORIGIN": "https://api-origin.bodhiraai.com",
         "SITE_URL": "https://bodhiraai.com"
       },
-      "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+      "secrets": { "required": ["APP_SECRET"] },
       "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } }
     },
 
     // The cut-over rehearsal (docs/cutover-runbook.md §4). Never point it at
     // production: its own Worker, route, API origin and buckets. Secrets:
-    // `npx wrangler secret put PROXY_SECRET --env staging` (and FILE_URL_SECRET),
-    // the staging API's values, not production's.
+    // `npx wrangler secret put APP_SECRET --env staging`, the staging API's
+    // APP_SECRET, not production's.
     "staging": {
       "name": "ba-ui-staging",
       "routes": [{ "pattern": "<staging-host>/*", "zone_name": "<staging-zone>" }],
@@ -119,7 +119,7 @@
         "API_ORIGIN": "https://<staging-api-origin-host>",
         "SITE_URL": "https://<staging-host>"
       },
-      "secrets": { "required": ["PROXY_SECRET", "FILE_URL_SECRET"] },
+      "secrets": { "required": ["APP_SECRET"] },
       "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } }
     }
   }

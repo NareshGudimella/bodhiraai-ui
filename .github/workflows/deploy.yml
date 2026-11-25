@@ -7,8 +7,8 @@
 # Needs secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the
 # "production" (and "staging") environment, so a reviewer can be required.
 # Token permissions: Account > Workers Scripts edit, Workers R2 Storage edit;
-# Zone (bodhiraai.com) > Workers Routes edit. PROXY_SECRET and FILE_URL_SECRET
-# are set once with `wrangler secret put`, not here. Draft: not yet run against Cloudflare.
+# Zone (bodhiraai.com) > Workers Routes edit. APP_SECRET (the API's value)
+# is set once with `wrangler secret put APP_SECRET`, not here. Draft: not yet run against Cloudflare.
 #
 # Targets (wrangler.jsonc):
 #   no-route   (default) top level: the Worker WITHOUT the bodhiraai.com route, so it

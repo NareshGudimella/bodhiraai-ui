@@ -3,7 +3,7 @@
  * security: not in legacy
  *
  *   <site>/files/<key>?exp=<unix seconds>&sig=<sig>
- *   sig = base64url, no padding, of HMAC-SHA256(FILE_URL_SECRET, "<decoded key>\n<exp>")
+ *   sig = base64url, no padding, of HMAC-SHA256(<file-urls key derived from APP_SECRET>, "<decoded key>\n<exp>")
  *
  * WebCrypto only, so the same file runs in the Worker and under `node --test`
  * (test/file-sig.test.ts). The API signs with the same algorithm.

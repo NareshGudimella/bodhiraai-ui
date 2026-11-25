@@ -1,8 +1,7 @@
 # Local values for `npm run cf:preview` (wrangler dev). Copy to .dev.vars, which
 # is git-ignored; never put production secrets here. These override wrangler.jsonc's vars.
 NEXTJS_ENV=development
-# The local API (bodhiraai-api on :4000), started with the same PROXY_SECRET and FILE_URL_SECRET.
+# The local API (bodhiraai-api on :4000). APP_SECRET must be the API's APP_SECRET (placeholder here); with APP_SECRET unset in the API, signed links won't verify.
 API_ORIGIN=http://127.0.0.1:4000
 SITE_URL=http://localhost:8787
-PROXY_SECRET=local-test-secret-42
-FILE_URL_SECRET=local-file-secret-42
+APP_SECRET=replace-with-the-API-APP_SECRET

@@ -24,7 +24,7 @@ The same code also runs on a plain Node host (Hostinger) with `npm run build` an
 What the Worker does with each request ([worker/index.ts](worker/index.ts)):
 - **`/api/v1/*`, `/webhooks/*`:** passed to `API_ORIGIN` (Elastic Beanstalk), streamed, with `X-Client-IP` and `X-Proxy-Secret`. The mobile app and the gateway webhook URLs stay the same.
 - **`/media/*`, `/cloud/*`, `/assets/**.mp4`:** served from `LEGACY_FILES`, with byte ranges so videos can be seeked. `/media/invoices/…` (any letter case, also percent-encoded) answers 404: invoices live only in the private bucket, behind the authenticated invoice endpoints (security: not in legacy).
-- **`/files/<key>?exp&sig`:** private files from `PRIVATE_FILES`, only with a link the API signed ([worker/file-sig.ts](worker/file-sig.ts)): `sig` is base64url HMAC-SHA256 with `FILE_URL_SECRET` over `"<decoded key>\n<exp>"`. A missing or wrong signature, an expired link, `exp` more than 24 h ahead, or a forbidden key (`invoices/…`, `..`, `\`, empty segments) answers 403 `{"message":"Link expired or invalid."}`; a missing object 404. Byte ranges as for `/media`. Headers: `Content-Disposition: inline`, `nosniff`, `Referrer-Policy: no-referrer`, `Cache-Control: private, max-age=<seconds until exp, ≤ 3600>`. Locally the API serves `/files/*` itself on :4000. (security: not in legacy)
+- **`/files/<key>?exp&sig`:** private files from `PRIVATE_FILES`, only with a link the API signed ([worker/file-sig.ts](worker/file-sig.ts)): `sig` is base64url HMAC-SHA256 with the file-urls key derived from `APP_SECRET` over `"<decoded key>\n<exp>"`. A missing or wrong signature, an expired link, `exp` more than 24 h ahead, or a forbidden key (`invoices/…`, `..`, `\`, empty segments) answers 403 `{"message":"Link expired or invalid."}`; a missing object 404. Byte ranges as for `/media`. Headers: `Content-Disposition: inline`, `nosniff`, `Referrer-Policy: no-referrer`, `Cache-Control: private, max-age=<seconds until exp, ≤ 3600>`. Locally the API serves `/files/*` itself on :4000. (security: not in legacy)
 - **R2 responses** get `nosniff`, and anything that isn't a PDF, video or audio file also gets `Content-Security-Policy: default-src 'none'; sandbox`, so a stray HTML or SVG upload can't act as the site.
 - **Body limits:** non-API requests over their path's limit answer 413 (§7).
 - **Everything else:** the Next.js app, in the same Worker. The visitor's IP goes along as `X-Client-IP`, set by the Worker so a visitor can't supply their own; `api()` forwards it to the API with `X-Proxy-Secret`.
@@ -36,10 +36,9 @@ What the Worker does with each request ([worker/index.ts](worker/index.ts)):
 | `API_ORIGIN` | `wrangler.jsonc` vars | `https://api-origin.bodhiraai.com` |
 | `SITE_URL` | `wrangler.jsonc` vars | `https://bodhiraai.com` |
 | `API_URL`, `LEGACY_URL` | derived in `worker/index.ts` (`nextEnv`) | `${API_ORIGIN}/api/v1` and `SITE_URL` (the Worker serves the legacy files on the site's own domain). The Next server code reads them from `process.env`; OpenNext fills `process.env` from the Worker's string bindings. Set them as vars only to override |
-| `PROXY_SECRET` | `npx wrangler secret put PROXY_SECRET` | The same value as the API's. Sent by the Worker on proxied API calls and by the Next server code on its own calls (`lib/proxy-secret.ts`) |
-| `FILE_URL_SECRET` | `npx wrangler secret put FILE_URL_SECRET` | **Exactly the API's `FILE_URL_SECRET`**, or every signed link answers 403. At least 32 random bytes. Rotating it breaks links already handed out (they last 30 minutes, `FILE_URL_TTL`), so change both sides together |
+| `APP_SECRET` | `npx wrangler secret put APP_SECRET` | **The API's `APP_SECRET`, the same value.** The Worker and the Next server derive two keys from it with HKDF-SHA256: the proxy header `X-Proxy-Secret` (info `bodhira:proxy`; sent on proxied API calls and by the Next server on its own calls, `lib/proxy-secret.ts`) and the signed-file key (info `bodhira:file-urls`). A wrong value gets the API's calls refused and every signed link answered 403. Rotating it changes both keys, so change the API's and the Worker's together (links already handed out break; they last 30 minutes, `FILE_URL_TTL`) |
 
-Both secrets are listed under `secrets.required` in `wrangler.jsonc` (names only, no values). Locally they come from `.dev.vars` (copy `.dev.vars.example`; git-ignored).
+`APP_SECRET` is listed under `secrets.required` in `wrangler.jsonc` (name only, no value). Locally it comes from `.dev.vars` (copy `.dev.vars.example`; git-ignored).
 
 ## 3. Caching
 
@@ -81,13 +80,12 @@ Deploy the API first whenever a release changes both apps.
    npx wrangler r2 bucket create bodhira-legacy
    npx wrangler r2 bucket create bodhira-private     # leave public access off
    npx wrangler r2 bucket create bodhiraai-web-opennext-cache   # leave public access off
-   npx wrangler secret put PROXY_SECRET              # also on rotation
-   npx wrangler secret put FILE_URL_SECRET           # the API's value; also on rotation
+   npx wrangler secret put APP_SECRET                # the API's value; also on rotation
    ```
    The secrets belong to the Worker `ba-ui`, shared by `no-route` and `production`. `wrangler secret put` before the first deploy creates the Worker with no code yet; alternatively deploy `no-route` first and then set them (the site answers errors until they're set). The Durable Objects need no setup.
 4. **Legacy files:** copy them into `bodhira-legacy` under the same paths (runbook §3).
 5. **DNS:** `bodhiraai.com` must be proxied (orange cloud) before the `production` target is run. The route is `bodhiraai.com/*` in `env.production` only; `www` gets a 301 Redirect Rule to the apex instead (§5, "One canonical host"). `api-origin.bodhiraai.com` is a proxied record to the Beanstalk load balancer (runbook §5). No custom domain on the Worker: the route on the existing zone is enough.
-6. **Staging:** replace the `<placeholders>` in `env.staging` of `wrangler.jsonc` (host, zone, API origin), create `bodhira-legacy-staging`, `bodhira-private-staging` and `bodhiraai-web-opennext-cache-staging` (public access off), and set the staging secrets with `--env staging` (the staging API's values). Never point it at production buckets or the production API.
+6. **Staging:** replace the `<placeholders>` in `env.staging` of `wrangler.jsonc` (host, zone, API origin), create `bodhira-legacy-staging`, `bodhira-private-staging` and `bodhiraai-web-opennext-cache-staging` (public access off), and set the staging secret with `--env staging` (the staging API's `APP_SECRET`). Never point it at production buckets or the production API.
 
 ## 5. Behaviour behind Cloudflare
 
@@ -114,8 +112,8 @@ npx wrangler deploy --dry-run --outdir dist --env=   # also --env production, --
 npm run test:worker
 ```
 
-- Start the API on :4000 (locally it ignores `X-Proxy-Secret`; with `PROXY_SECRET=local-test-secret-42` it checks it like production).
-- Test files go into the local R2: `npx wrangler r2 object put bodhira-legacy/media/<path> --file <f> --content-type <type> --local`, and `"bodhira-private/<key>"` likewise. Sign a `/files` link with `FILE_URL_SECRET=local-file-secret-42` (`signFileKey` in `worker/file-sig.ts`, or the API's signer).
+- Start the API on :4000. Without `APP_SECRET` it ignores `X-Proxy-Secret` and uses its built-in development file key, so signed links won't verify here. With the same `APP_SECRET` as `.dev.vars`, it checks the proxy header like production.
+- Test files go into the local R2: `npx wrangler r2 object put bodhira-legacy/media/<path> --file <f> --content-type <type> --local`, and `"bodhira-private/<key>"` likewise. Sign a `/files` link with the same `APP_SECRET` (the file-urls key is derived from it; `signFileKey` in `worker/file-sig.ts`, or the API's signer).
 - Signed links: `npm run test:worker` checks the signature rules, including a fixed vector the API must match: key `submissions/7/a b.pdf`, exp `2000000000`, secret `test-secret` → `AfIQbpO7Ovsv3aJJc4JbnUv2jkiWW8DtIC4XTA8fWG8`.
 - `opennextjs-cloudflare preview` prints a warning that the internal Durable Objects "will not work in local development" while it fills the local cache; that comes from its cache step, not the dev server, where the tag cache and queue run (they're exported by `worker/index.ts`).
 

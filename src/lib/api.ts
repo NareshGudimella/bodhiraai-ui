@@ -26,7 +26,7 @@ const API_URL = process.env.API_URL ?? 'http://localhost:4000/api/v1';
  * The visitor as the API should see them. This server makes the call, so the
  * browser's address, user agent and page go along. Rate limits and lead
  * records then use the visitor's IP, not this server's. Behind Cloudflare the
- * edge Worker sets X-Client-IP and the API believes it with PROXY_SECRET;
+ * edge Worker sets X-Client-IP and the API believes it with the proxy key derived from APP_SECRET;
  * locally the API trusts X-Forwarded-For from this server (TRUST_PROXY).
  */
 export async function visitorHeaders(): Promise<Record<string, string>> {
