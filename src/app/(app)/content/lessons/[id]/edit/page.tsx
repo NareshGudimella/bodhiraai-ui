@@ -34,7 +34,12 @@ export default async function EditLessonPage({ params }: PageProps<"/content/les
         </Card>
         <section className="space-y-3 text-sm">
           <h2 className="font-semibold text-ink">Current media</h2>
-          {uploaded ? (
+          {lesson.playback === "processing" ? (
+            // not in legacy: the worker is sending the upload to VdoCipher.
+            <p className="rounded-xl bg-page p-3 text-ink-2 ring-1 ring-line">⏳ Video is processing. It will be ready to play in a few minutes.</p>
+          ) : lesson.video_status === "failed" ? (
+            <p className="rounded-xl bg-danger-light p-3 text-danger">The uploaded video could not be processed. Please upload it again.</p>
+          ) : uploaded ? (
             <p className="rounded-xl bg-page p-3 text-ink-2 ring-1 ring-line">🔒 Video uploaded; playback is limited to students and their teachers.</p>
           ) : (
             <>

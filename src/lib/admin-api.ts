@@ -38,7 +38,7 @@ export type AdminContentLesson = {
   title: string;
   type: string;
   duration_sec: number;
-  playback: 'vdocipher' | 'url' | null;
+  playback: 'vdocipher' | 'url' | 'processing' | null;
   /** Signed link (expires): plain `<img>`, never cached. */
   thumbnail: string | null;
 };

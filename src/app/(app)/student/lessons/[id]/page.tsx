@@ -24,7 +24,7 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
 
   // Legacy lesson.blade.php:108-170: the first question each "Ask AI" button sends.
   const where = [chapter?.subject?.name, chapter?.title].filter(Boolean).join(" → ");
-  const hasVideo = lesson.playback === "vdocipher" || !!lesson.content_url;
+  const hasVideo = lesson.playback === "vdocipher" || lesson.playback === "processing" || !!lesson.content_url;
   const prompt =
     lesson.type === "video" && hasVideo
       ? `I'm watching '${lesson.title}'${where ? ` from ${where}` : ""}. Can you explain the key concepts?`

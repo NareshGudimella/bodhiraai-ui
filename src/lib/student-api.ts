@@ -34,7 +34,7 @@ export type Lesson = {
   thumbnail: string | null;
   content_url: string | null;
   /** How the lesson plays: VdoCipher, its `content_url`, or nothing (security: not in legacy). */
-  playback?: 'vdocipher' | 'url' | null;
+  playback?: 'vdocipher' | 'url' | 'processing' | null;
   content_body?: string | null;
   duration_sec: number;
   duration_label: string;

@@ -32,8 +32,10 @@ export type ContentLesson = {
   type: 'video' | 'pdf' | 'text';
   thumbnail: string | null;
   content_url: string | null;
-  /** VdoCipher, `content_url`, or nothing (security: not in legacy). */
-  playback?: 'vdocipher' | 'url' | null;
+  /** VdoCipher, `content_url`, or nothing (security: not in legacy); `processing` while an upload is imported. */
+  playback?: 'vdocipher' | 'url' | 'processing' | null;
+  /** not in legacy: `failed` when an uploaded video couldn't be imported (upload it again). */
+  video_status?: 'processing' | 'failed' | null;
   content_body: string | null;
   duration_sec: number;
   sort_order: number;

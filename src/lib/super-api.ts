@@ -99,7 +99,7 @@ export type Enquiry = {
 
 /** not in legacy: the platform's outgoing-mail settings. The password is write-only. */
 export type MailSettings = {
-  source: 'database' | 'env';
+  source: 'database' | 'none';
   mailer: 'smtp' | 'log';
   host: string | null;
   port: number | null;
@@ -109,6 +109,15 @@ export type MailSettings = {
   from_address: string;
   from_name: string | null;
   updated_at: string | null;
+};
+
+/** not in legacy: provider credentials (/super/integrations). Secrets are write-only: only whether each is set. */
+export type IntegrationItem = {
+  provider: string;
+  configured: boolean;
+  updated_at: string | null;
+  values: Record<string, string | number | boolean | null>;
+  secrets: Record<string, boolean>;
 };
 
 export const ENQUIRY_STATUSES = ['new', 'contacted', 'enrolled', 'closed'] as const;
@@ -189,6 +198,7 @@ export const superApi = {
       chapters: { id: number; title: string; description: string | null; is_published: boolean; lessons_count: number }[];
     }>(`/super/syllabi/${idSeg(id)}/subjects/${idSeg(subjectId)}`),
   mailSettings: () => load<MailSettings>('/super/mail-settings'),
+  integrations: () => load<Record<string, IntegrationItem>>('/super/integrations'),
   plans: () => load<Plan[]>('/super/plans'),
   plan: (id: string) => load<Plan>(`/super/plans/${idSeg(id)}`),
   enquiries: async (params: URLSearchParams) => {

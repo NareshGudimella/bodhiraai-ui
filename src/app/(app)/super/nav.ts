@@ -13,5 +13,6 @@ export const SUPER_NAV = [
   { label: "AI usage", href: "/super/ai", icon: "🤖" },
   { label: "Health", href: "/super/health", icon: "🩺" },
   { label: "Mail settings", href: "/super/mail-settings", icon: "✉️" },
+  { label: "Integrations", href: "/super/integrations", icon: "🔌" },
   { label: "Settings", href: "/super/settings", icon: "⚙️" },
 ];

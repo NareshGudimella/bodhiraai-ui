@@ -20,6 +20,8 @@ type PlaybackData =
   | { provider: 'vdocipher'; otp: string; playback_info: string; expires_in: number }
   | { provider: 'url'; url: string };
 
+const PROCESSING_MESSAGE = 'This video is still processing. Please try again in a few minutes.';
+
 export async function lessonPlayback(lessonId: number): Promise<LessonPlayback> {
   try {
     const d = await api<PlaybackData>(`/lessons/${idSeg(lessonId)}/playback`);
@@ -31,6 +33,8 @@ export async function lessonPlayback(lessonId: number): Promise<LessonPlayback> 
     return { ok: false, status: 404, message: 'This video is not available.' };
   } catch (e) {
     const status = e instanceof ApiError ? e.status : 0;
+    // not in legacy: 409 `video_processing` while an upload is being imported.
+    if (status === 409) return { ok: false, status, message: PROCESSING_MESSAGE };
     const message =
       status === 403
         ? "You can't play this lesson."

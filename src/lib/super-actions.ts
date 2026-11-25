@@ -6,6 +6,8 @@ import { api, apiEnvelope } from './api';
 import { failure, forwardForm, type FormState } from './action-result';
 import { idSeg } from '@/lib/api-path';
 import { setFlash } from './flash';
+import { INTEGRATIONS, PROVIDERS, type ProviderKey } from './integrations-spec';
+import { seg } from './api-path';
 
 const SCHOOL_FIELDS = [
   'name', 'email', 'phone', 'city', 'state', 'country', 'plan', 'plan_expires_at',
@@ -184,5 +186,59 @@ export async function sendTestMail(_: FormState, form: FormData): Promise<FormSt
       : { ok: false, message: `The test email failed: ${r.error ?? 'unknown error'}`, values: { to } };
   } catch (e) {
     return failure(e, 'Could not send the test email.', form);
+  }
+}
+
+// not in legacy: provider credentials (/super/integrations/:provider).
+function providerOf(p: string): ProviderKey {
+  if (!(PROVIDERS as readonly string[]).includes(p)) throw new Error('Unknown provider');
+  return p as ProviderKey;
+}
+
+export async function saveIntegration(provider: string, _: FormState, form: FormData): Promise<FormState> {
+  const key = providerOf(provider);
+  const body: Record<string, unknown> = {};
+  for (const f of INTEGRATIONS[key].fields) {
+    const v = form.get(f.name);
+    if (typeof v !== 'string') continue; // not rendered (other payments gateway)
+    if (f.kind === 'secret') {
+      if (v !== '') body[f.name] = v; // empty keeps the stored secret
+    } else if (f.kind === 'bool') body[f.name] = v === '1';
+    else if (f.kind === 'int') body[f.name] = v.trim() === '' ? null : Number(v);
+    else body[f.name] = v.trim();
+  }
+  try {
+    await api(`/super/integrations/${seg(key)}`, { method: 'PUT', body });
+  } catch (e) {
+    const s = failure(e, 'Could not save the settings.', form);
+    for (const f of INTEGRATIONS[key].fields) if (f.kind === 'secret') delete s?.values?.[f.name];
+    return s;
+  }
+  refresh();
+  return { ok: true, message: 'Settings saved.' };
+}
+
+export async function clearIntegrationSecret(provider: string, field: string): Promise<FormState> {
+  const key = providerOf(provider);
+  if (!INTEGRATIONS[key].fields.some((f) => f.kind === 'secret' && f.name === field)) throw new Error('Unknown field');
+  try {
+    await api(`/super/integrations/${seg(key)}/secrets/${seg(field)}`, { method: 'DELETE' });
+  } catch (e) {
+    return failure(e, 'Could not clear the value.');
+  }
+  refresh();
+  return { ok: true, message: 'Cleared.' };
+}
+
+export async function testIntegration(provider: string, _: FormState, form: FormData): Promise<FormState> {
+  const key = providerOf(provider);
+  try {
+    const r = await api<{ ok: boolean; message: string }>(`/super/integrations/${seg(key)}/test`, {
+      method: 'POST',
+      body: key === 'sms' ? pick(form, ['phone']) : {},
+    });
+    return { ok: r.ok, message: r.message, values: { phone: String(form.get('phone') ?? '') } };
+  } catch (e) {
+    return failure(e, 'The test could not run.', form);
   }
 }

@@ -10,9 +10,9 @@ export default async function MailSettingsPage() {
   return (
     <>
       <PageHeader title="Mail settings" subtitle="Outgoing email for password resets and invoices." />
-      {s.source === "env" && (
+      {s.source === "none" && (
         <p className="mb-4 max-w-3xl rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink-2">
-          Nothing is saved here yet, so the server&apos;s environment settings are in use (shown below). Save to switch to these settings.
+          Nothing is saved yet, so no email is sent in production. Save SMTP settings below to turn email on.
         </p>
       )}
       <div className="grid max-w-3xl gap-4">

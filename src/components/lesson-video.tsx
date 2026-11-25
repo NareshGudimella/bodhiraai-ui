@@ -54,7 +54,8 @@ function loadVdoApi(): Promise<VdoPlayerApi> {
 
 export type LessonVideoProps = {
   lessonId: number;
-  playback: "vdocipher" | "url" | null | undefined;
+  /** `processing`: an upload still being imported into VdoCipher (not in legacy). */
+  playback: "vdocipher" | "url" | "processing" | null | undefined;
   /** The lesson's `content_url` (signed or external), for the `url` player; null fetches it via the playback action. */
   src: string | null;
   poster: string | null;
@@ -70,7 +71,9 @@ export function LessonVideo(props: LessonVideoProps) {
   return (
     <div className="relative aspect-video overflow-hidden rounded-2xl bg-black">
       {props.overlay && <div className="absolute right-3 top-3 z-10">{props.overlay}</div>}
-      {props.playback === "vdocipher" || (props.playback === "url" && !props.src) ? (
+      {props.playback === "processing" ? (
+        <ProcessingNotice />
+      ) : props.playback === "vdocipher" || (props.playback === "url" && !props.src) ? (
         // A `url` lesson without its link (the admin content list doesn't send one) fetches it too.
         <VdoLesson {...props} />
       ) : props.src ? (
@@ -254,6 +257,7 @@ function VdoLesson(props: LessonVideoProps) {
 
   if (!current) return <Notice title="Loading secure video…" />;
   if (!current.ok) {
+    if (current.status === 409) return <ProcessingNotice onRetry={() => setAttempt((n) => n + 1)} />;
     return (
       <Notice icon title={current.status === 403 || current.status === 404 ? "Video unavailable" : "Can't play this video"}>
         <p className="mt-1 text-sm text-white/80">{current.message}</p>
@@ -280,6 +284,20 @@ function VdoLesson(props: LessonVideoProps) {
       title={title}
       className="size-full border-0"
     />
+  );
+}
+
+/** not in legacy: the video was uploaded and is still being prepared (API 409 `video_processing`). */
+function ProcessingNotice({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <Notice title="Video is processing">
+      <p className="mt-1 text-sm text-white/80">This video is still processing. Please try again in a few minutes.</p>
+      {onRetry && (
+        <button type="button" onClick={onRetry} className="mt-3 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-brand">
+          Try again
+        </button>
+      )}
+    </Notice>
   );
 }
 
