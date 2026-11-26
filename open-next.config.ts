@@ -22,7 +22,7 @@ import { withRegionalCache } from "@opennextjs/cloudflare/overrides/incremental-
 import doQueue from "@opennextjs/cloudflare/overrides/queue/do-queue";
 import doShardedTagCache from "@opennextjs/cloudflare/overrides/tag-cache/do-sharded-tag-cache";
 
-export default {
+const config = {
   ...defineCloudflareConfig({
     incrementalCache: withRegionalCache(r2IncrementalCache, { mode: "short-lived" }),
     tagCache: doShardedTagCache({ baseShardSize: 4 }),
@@ -32,3 +32,5 @@ export default {
   // script runs this whole OpenNext build and would call itself.
   buildCommand: "npm run build:next",
 };
+
+export default config;
