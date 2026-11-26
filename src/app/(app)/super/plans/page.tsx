@@ -18,7 +18,7 @@ function PlanCard({ p, index }: { p: Plan; index: number }) {
   return (
     <Card className="ccard flex h-full flex-col gap-2 p-4" style={cardTone(index)}>
       <p className="flex items-start justify-between gap-2">
-        <span className="font-semibold text-brand">{p.is_featured && "★ "}{p.name}</span>
+        <span className="font-semibold text-ink">{p.is_featured && "★ "}{p.name}</span>
         <Pill tone={p.is_active ? "success" : "neutral"}>{p.is_active ? "Active" : "Hidden"}</Pill>
       </p>
       <p className="text-xs capitalize text-ink-3">{p.audience} · {p.key}</p>

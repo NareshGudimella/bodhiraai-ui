@@ -101,7 +101,7 @@ export default async function CookiesPage() {
 <p>Some features are provided by other companies, which may set their own cookies or similar storage under their own policies when you use that feature:</p>
 <ul>
   <li><b>Payments</b>: Razorpay and Stripe, on their checkout pages and windows, for security and fraud prevention.</li>
-  <li><b>Lesson videos</b>: VdoCipher&apos;s video player.</li>
+  <li><b>Lesson videos</b>: streamed from our own storage on Cloudflare R2.</li>
   <li><b>Overview videos</b>: YouTube, when you play a video on our About page.</li>
   <li><b>Security</b>: Cloudflare, which protects our website, may set a short-lived security cookie (for example to tell people from bots).</li>
 </ul>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Card, PageHeader } from "@/components/ui";
+import { FormSection } from "@/components/form";
+import { PageHeader } from "@/components/ui";
 import { superApi } from "@/lib/super-api";
 import { MailSettingsForm, TestMailForm } from "./mail-settings-form";
 
@@ -11,12 +12,12 @@ export default async function MailSettingsPage() {
     <>
       <PageHeader title="Mail settings" subtitle="Outgoing email for password resets and invoices." />
       {s.source === "none" && (
-        <p className="mb-4 max-w-3xl rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink-2">
+        <p role="status" className="mb-6 max-w-3xl rounded-lg bg-warning-light px-4 py-3 text-sm text-warning ring-1 ring-inset ring-warning/25">
           Nothing is saved yet, so no email is sent in production. Save SMTP settings below to turn email on.
         </p>
       )}
-      <div className="grid max-w-3xl gap-4">
-        <Card>
+      <div className="grid max-w-3xl gap-6">
+        <FormSection title="SMTP server" description="Where outgoing mail is sent from.">
           <MailSettingsForm
             initial={{
               mailer: s.mailer,
@@ -29,12 +30,10 @@ export default async function MailSettingsPage() {
             }}
             passwordSet={s.password_set}
           />
-        </Card>
-        <Card>
-          <h2 className="mb-2 font-semibold text-ink">Send a test email</h2>
-          <p className="mb-3 text-sm text-ink-3">Uses the saved settings (save your changes first).</p>
+        </FormSection>
+        <FormSection title="Send a test email" description="Uses the saved settings (save your changes first).">
           <TestMailForm />
-        </Card>
+        </FormSection>
       </div>
     </>
   );

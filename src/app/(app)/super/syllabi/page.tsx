@@ -21,7 +21,7 @@ export default async function SyllabiPage() {
               <Link href={`/super/syllabi/${s.id}`} className="block h-full">
                 <Card className="h-full p-4 transition hover:ring-primary">
                   <p className="flex items-start justify-between gap-2">
-                    <span className="font-semibold text-brand">{s.name}</span>
+                    <span className="font-semibold text-ink">{s.name}</span>
                     <Pill tone={s.is_active ? "success" : "neutral"}>{s.is_active ? "Active" : "Inactive"}</Pill>
                   </p>
                   <p className="text-xs text-ink-2">{s.board.replace(/_/g, " ")} · Grade {s.grade}</p>

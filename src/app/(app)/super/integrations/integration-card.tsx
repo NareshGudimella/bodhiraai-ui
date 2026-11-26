@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { Field, FormMessage, inputClass } from "@/components/form";
+import { Field, FormMessage, FormSection, inputClass } from "@/components/form";
 import { Pill, buttonClass, secondaryButtonClass } from "@/components/ui";
 import type { IntegrationField, INTEGRATIONS } from "@/lib/integrations-spec";
 import type { IntegrationItem } from "@/lib/super-api";
@@ -19,7 +19,7 @@ function SecretInput({ provider, f, isSet, error }: { provider: string; f: Integ
         <input name={f.name} type="password" maxLength={2000} autoComplete="new-password" className={inputClass} />
       </Field>
       <span className="mt-1 flex items-center gap-3 text-xs">
-        <span className={isSet ? "text-success" : "text-ink-3"}>{isSet ? "Saved" : "Not set"}</span>
+        <span className={`font-medium ${isSet ? "text-success" : "text-ink-3"}`}>{isSet ? "Saved" : "Not set"}</span>
         {isSet && (
           <button
             type="button"
@@ -49,21 +49,20 @@ export function IntegrationCard({ provider, spec, item }: { provider: string; sp
   const key = JSON.stringify([item.updated_at, state?.values]);
 
   return (
-    <>
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="font-semibold text-ink">{spec.title}</h2>
-          <p className="text-sm text-ink-3">{spec.blurb}</p>
-        </div>
-        <div className="text-right">
+    <FormSection
+      title={spec.title}
+      description={spec.blurb}
+      aside={
+        <div className="sm:text-right">
           <Pill tone={item.configured ? "success" : "neutral"}>{item.configured ? "Configured" : "Not configured"}</Pill>
           <p className="mt-1 text-xs text-ink-3">
             {item.updated_at ? `Updated ${new Date(item.updated_at).toLocaleString("en-IN")}` : "Never updated"}
           </p>
         </div>
-      </div>
-      <form action={action} className="space-y-3" key={key}>
-        <div className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
+      }
+    >
+      <form action={action} className="space-y-4" key={key}>
+        <div className="grid gap-4 sm:grid-cols-2 [&>*]:min-w-0">
           {fields.map((f) => {
             if (f.kind === "secret")
               return <SecretInput key={f.name} provider={provider} f={f} isSet={!!item.secrets[f.name]} error={e[f.name]} />;
@@ -108,12 +107,14 @@ export function IntegrationCard({ provider, spec, item }: { provider: string; sp
           })}
         </div>
         <FormMessage state={state} />
-        <button disabled={pending} className={buttonClass}>
-          {pending ? "Saving…" : "Save"}
-        </button>
+        <div className="flex justify-end border-t border-line pt-4">
+          <button disabled={pending} className={buttonClass}>
+            {pending ? "Saving…" : "Save"}
+          </button>
+        </div>
       </form>
       {spec.test && (
-        <form action={testAction} className="mt-4 space-y-3 border-t border-line pt-4">
+        <form action={testAction} className="mt-5 space-y-3 rounded-lg bg-page/60 p-4 ring-1 ring-line">
           {provider === "sms" && (
             <Field label="Phone number" error={test?.errors?.phone} hint="Uses the saved settings (save first)">
               <input name="phone" type="tel" required maxLength={20} defaultValue={test?.values?.phone} className={inputClass} />
@@ -125,6 +126,6 @@ export function IntegrationCard({ provider, spec, item }: { provider: string; sp
           </button>
         </form>
       )}
-    </>
+    </FormSection>
   );
 }

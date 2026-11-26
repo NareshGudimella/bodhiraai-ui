@@ -8,33 +8,38 @@ import { mediaUrl } from './media';
  * GET /lessons/{id}/playback for the lesson player (student, teachers of the
  * subject, and school admins for their curricula: not in legacy). The
  * API decides who may play; the token stays on this server and the browser
- * only gets the short-lived OTP (or a signed/external URL).
+ * only gets the short-lived HLS URL (or a signed/external URL).
  * security: not in legacy
  */
 export type LessonPlayback =
-  | { ok: true; provider: 'vdocipher'; otp: string; playbackInfo: string; expiresIn: number }
+  | { ok: true; provider: 'hls'; url: string; watermark: string; expiresAt: number }
   | { ok: true; provider: 'url'; url: string }
-  | { ok: false; status: number; message: string };
+  | { ok: false; status: number; message: string; code?: string };
 
-type PlaybackData =
-  | { provider: 'vdocipher'; otp: string; playback_info: string; expires_in: number }
-  | { provider: 'url'; url: string };
+// The HLS contract names the kind `type`; the `url` kind has so far used `provider`.
+type PlaybackData = { type?: 'hls' | 'url'; provider?: 'hls' | 'url'; url: string; watermark?: string; expires_at?: string };
 
 const PROCESSING_MESSAGE = 'This video is still processing. Please try again in a few minutes.';
+const FAILED_MESSAGE = 'This video could not be processed. Please ask your teacher to upload it again.';
 
 export async function lessonPlayback(lessonId: number): Promise<LessonPlayback> {
   try {
     const d = await api<PlaybackData>(`/lessons/${idSeg(lessonId)}/playback`);
-    if (d.provider === 'vdocipher' && d.otp && d.playback_info) {
-      return { ok: true, provider: 'vdocipher', otp: d.otp, playbackInfo: d.playback_info, expiresIn: d.expires_in };
+    const kind = d.type ?? d.provider;
+    if (kind === 'hls' && /^https?:\/\//i.test(d.url)) {
+      const expiresAt = Date.parse(d.expires_at ?? '');
+      if (!Number.isNaN(expiresAt)) return { ok: true, provider: 'hls', url: d.url, watermark: d.watermark ?? '', expiresAt };
     }
-    const url = d.provider === 'url' ? mediaUrl(d.url) : null;
+    const url = kind === 'url' ? mediaUrl(d.url) : null;
     if (url && /^https?:\/\//i.test(url)) return { ok: true, provider: 'url', url };
     return { ok: false, status: 404, message: 'This video is not available.' };
   } catch (e) {
     const status = e instanceof ApiError ? e.status : 0;
-    // not in legacy: 409 `video_processing` while an upload is being imported.
-    if (status === 409) return { ok: false, status, message: PROCESSING_MESSAGE };
+    // not in legacy: 409 `video_processing` while an upload is transcoded, `video_failed` when it couldn't be.
+    if (status === 409) {
+      const failed = e instanceof ApiError && e.code === 'video_failed';
+      return { ok: false, status, code: failed ? 'video_failed' : 'video_processing', message: failed ? FAILED_MESSAGE : PROCESSING_MESSAGE };
+    }
     const message =
       status === 403
         ? "You can't play this lesson."

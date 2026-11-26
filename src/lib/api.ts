@@ -7,7 +7,7 @@ import { assertSafeApiPath } from './api-path';
 /** Envelope returned by bodhiraai-api (same as the legacy Laravel ApiResponse). */
 export type ApiEnvelope<T> =
   | { success: true; message: string | null; data: T; meta?: Record<string, unknown> }
-  | { success: false; message: string; code?: string; errors?: Record<string, string[]> };
+  | { success: false; message: string; code?: string; error?: string; errors?: Record<string, string[]> };
 
 export class ApiError extends Error {
   constructor(
@@ -72,7 +72,7 @@ export async function apiEnvelope<T>(
 
   const json = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
   if (!json) throw new ApiError('Unexpected response from server.', res.status);
-  if (!json.success) throw new ApiError(json.message, res.status, json.code, json.errors);
+  if (!json.success) throw new ApiError(json.message, res.status, json.code ?? json.error, json.errors); // `error`: HLS contract 409 `video_processing` / `video_failed`
   return { data: json.data, meta: json.meta ?? {}, message: json.message };
 }
 

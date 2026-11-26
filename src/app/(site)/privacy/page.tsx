@@ -23,7 +23,7 @@ const UPDATED = "November 22, 2026";
  * launch): rewritten for the DPDP Act 2023 (purposes, consent, rights
  * including nomination, children's data, retention, processors and transfers
  * outside India, breach notice, Grievance Officer, withdrawal of consent);
- * matches what the product does today (the forms' fields, VdoCipher
+ * matches what the product does today (the forms' fields, video
  * watermarks, Cloudflare R2 / AWS hosting, analytics only with cookie
  * consent); drops claims the code doesn't back ("AES-256 at rest" for
  * everything, students deleting AI sessions themselves, "no third-party
@@ -97,9 +97,8 @@ export default async function PrivacyPage() {
   <li><b>Your school</b>, for users it has enrolled (its administrators and teachers), and <b>linked parents</b>, who see their child&apos;s progress.</li>
   <li><b>Service providers (Data Processors)</b> acting on our instructions under contract:
     <ul>
-      <li>Amazon Web Services (application servers and database) and Cloudflare (website delivery, security and file storage on Cloudflare R2);</li>
+      <li>Amazon Web Services (application servers and database) and Cloudflare (website delivery, security and file storage on Cloudflare R2; lesson videos are streamed from our own storage on Cloudflare R2, with the viewer&apos;s email shown as a watermark on the video);</li>
       <li>Anthropic (AI tutor, see section 6);</li>
-      <li>VdoCipher (encrypted lesson video; the viewer&apos;s name and email or phone are shown as a watermark on the video);</li>
       <li>Razorpay and Stripe (payments);</li>
       <li>our email delivery provider (account and service emails);</li>
       <li>only if you accept analytics cookies: Google (Google Analytics / Tag Manager) and, if we use it, Meta (Facebook Pixel). Our website&apos;s fonts and icons are served from our own servers, so no font or icon provider receives your IP address.</li>
@@ -140,7 +139,7 @@ export default async function PrivacyPage() {
   <li>Passwords are stored only as bcrypt hashes; sign-in cookies are HttpOnly, Secure and SameSite=Lax.</li>
   <li>Role-based access on every request: users see only their own, their school&apos;s or their linked child&apos;s data.</li>
   <li>Private files (assignments, submissions, photos) are stored on Cloudflare R2, which encrypts them at rest, and open only through short-lived signed links.</li>
-  <li>Lesson videos are encrypted and watermarked through VdoCipher.</li>
+  <li>Lesson videos are encrypted, watermarked and streamed from our own storage on Cloudflare R2.</li>
   <li>Rate limits and logging help us detect misuse.</li>
 </ul>
 <p>No system is perfectly secure. If a personal data breach occurs, we will inform the Data Protection Board of India and the affected users as the DPDP Act requires.</p>

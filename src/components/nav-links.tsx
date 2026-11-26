@@ -49,10 +49,10 @@ export function activeHref(items: NavItem[], path: string, search: URLSearchPara
 /** The same links without the current-page highlight (Suspense fallback / static shell). */
 export function NavList({ items, active }: { items: NavItem[]; active?: string }) {
   return (
-    <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col">
+    <nav aria-label="Main" className="flex flex-col gap-0.5 px-3 pb-6 pt-2">
       {items.map((item, i) => [
         item.group && item.group !== items[i - 1]?.group && (
-          <p key={`g-${item.group}`} className="mt-3 hidden px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-primary-light/50 first:mt-0 md:block">
+          <p key={`g-${item.group}`} className="mb-1 mt-5 px-3 text-[11px] font-semibold uppercase tracking-[.14em] text-primary-light/65 first:mt-1">
             {item.group}
           </p>
         ),
@@ -60,12 +60,44 @@ export function NavList({ items, active }: { items: NavItem[]; active?: string }
           key={item.href}
           href={item.href}
           aria-current={item.href === active ? "page" : undefined}
-          className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm hover:bg-brand-lift aria-[current=page]:bg-brand-lift aria-[current=page]:font-semibold aria-[current=page]:text-primary"
+          className="group relative flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-primary-light/85 transition-colors hover:bg-brand-lift hover:text-white aria-[current=page]:bg-brand-lift aria-[current=page]:font-semibold aria-[current=page]:text-white aria-[current=page]:before:absolute aria-[current=page]:before:inset-y-1.5 aria-[current=page]:before:-left-3 aria-[current=page]:before:w-1 aria-[current=page]:before:rounded-r aria-[current=page]:before:bg-primary focus-visible:outline-primary"
         >
-          {item.icon && <span aria-hidden>{item.icon}</span>}
+          {item.icon && <span aria-hidden className="w-5 shrink-0 text-center text-base leading-none">{item.icon}</span>}
           {item.label}
         </Link>,
       ])}
+    </nav>
+  );
+}
+
+/** Top-bar trail: section / current page (/ New, Edit or Details below it). Render inside <Suspense>. */
+export function Breadcrumbs({ items, section }: { items: NavItem[]; section: string }) {
+  const path = usePathname();
+  const search = useSearchParams();
+  const href = activeHref(items, path, search);
+  const item = items.find((i) => i.href === href);
+  const rest = item ? path.slice(item.href.split("?")[0].length).split("/").filter(Boolean) : [];
+  const last = rest.at(-1);
+  const tail = last ? (/^\d+$/.test(last) ? "Details" : last.replace(/[-_]/g, " ")) : undefined;
+  return (
+    <nav aria-label="Breadcrumb" className="min-w-0">
+      <ol className="flex min-w-0 items-center gap-1.5 text-sm text-ink-3">
+        <li className="hidden shrink-0 sm:block">{section}</li>
+        {item && (
+          <>
+            <li aria-hidden className="hidden sm:block">/</li>
+            <li className="min-w-0 truncate">
+              {tail ? <Link href={item.href} className="hover:text-ink hover:underline">{item.label}</Link> : <span aria-current="page" className="font-semibold text-ink">{item.label}</span>}
+            </li>
+          </>
+        )}
+        {tail && (
+          <>
+            <li aria-hidden>/</li>
+            <li aria-current="page" className="truncate font-semibold capitalize text-ink">{tail}</li>
+          </>
+        )}
+      </ol>
     </nav>
   );
 }

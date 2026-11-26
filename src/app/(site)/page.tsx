@@ -9,7 +9,7 @@ import { SiteStatus } from "@/components/site/site-status";
 import { initials } from "@/components/site/initials";
 import { QuoteCard, Testimonials, type Testimonial } from "@/components/site/testimonials";
 import { GLASS, btn, cx, eyebrowClass, h2Class, lead, textLink } from "@/components/site/ui";
-import { VdoPlayer } from "@/components/site/vdo-player";
+import { HomeVideo } from "@/components/site/home-video";
 import { mediaUrl } from "@/lib/media";
 import { assetResolver, fmtDate, settingResolver, siteMetadata } from "@/lib/site";
 import { getBlog, getChrome, getCollections, getPricing, type PostCard } from "@/lib/site-api";
@@ -236,6 +236,7 @@ export default async function HomePage() {
     latestPosts(),
     studentTrialDays(),
   ]);
+  const homeVideo = setting("home.video_url");
   /** A Site Image Manager replacement under the legacy key, else the new default (through asset()). */
   const img = (legacyKey: string, fallback: string) => images[legacyKey] ?? asset(fallback);
   const team = allTeam.slice(0, 3);
@@ -281,20 +282,21 @@ export default async function HomePage() {
                 decoding="async"
                 className={COVER}
               />
-              {/* `vdo-play` + data-vdo-video: VdoPlayer opens the video. */}
+              {/* `home-video-play`: HomeVideo opens `home.video_url`; no URL, no button. */}
+              {homeVideo && (
               <button
                 type="button"
                 className={cx(
-                  "vdo-play absolute top-1/2 left-1/2 z-2 grid h-20 w-20 cursor-pointer place-items-center rounded-full bg-[rgba(255,255,255,.92)] p-0 pl-1 text-maroon [transform:translate(-50%,-50%)] max-sm:h-16 max-sm:w-16",
+                  "home-video-play absolute top-1/2 left-1/2 z-2 grid h-20 w-20 cursor-pointer place-items-center rounded-full bg-[rgba(255,255,255,.92)] p-0 pl-1 text-maroon [transform:translate(-50%,-50%)] max-sm:h-16 max-sm:w-16",
                   "shadow-[0_0_0_10px_rgba(255,255,255,.25),0_20px_40px_-12px_rgba(0,0,0,.5)] transition-[transform] duration-250 ease-bh hover:[transform:translate(-50%,-50%)_scale(1.07)]",
                   "before:absolute before:-inset-2.5 before:animate-pulse-ring before:rounded-full before:border-2 before:border-[rgba(255,255,255,.7)] before:content-[''] motion-reduce:before:animate-none!",
                   FOCUS,
                 )}
-                data-vdo-video={setting("media.home_video_id", "a69b203eb0fe4c5196ecf06e6261c66c")}
                 aria-label="Play the Bodhira.ai overview video"
               >
                 <Icon name="play" size={26} className="fill-current" />
               </button>
+              )}
             </div>
             <div className="absolute right-0 bottom-0 aspect-[4/3] w-[46%] overflow-hidden rounded-[20px] border-[6px] border-white shadow-lg max-sm:w-[52%]">
               <img
@@ -715,7 +717,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      <VdoPlayer />
+      {homeVideo && <HomeVideo url={homeVideo} />}
       <RevealOnScroll />
     </div>
   );

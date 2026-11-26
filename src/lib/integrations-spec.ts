@@ -13,7 +13,7 @@ export type IntegrationField = {
   gateway?: string;
 };
 
-export const PROVIDERS = ['storage', 'sms', 'payments', 'ai', 'vdocipher'] as const;
+export const PROVIDERS = ['storage', 'sms', 'payments', 'ai'] as const;
 export type ProviderKey = (typeof PROVIDERS)[number];
 
 export const INTEGRATIONS: Record<ProviderKey, { title: string; blurb: string; fields: IntegrationField[]; test?: string }> = {
@@ -27,7 +27,7 @@ export const INTEGRATIONS: Record<ProviderKey, { title: string; blurb: string; f
       { name: 'bucket', label: 'Bucket' },
       { name: 'public_url', label: 'Public URL' },
       { name: 'private_bucket', label: 'Private bucket', hint: 'Signed links only: submissions, photos, invoices, lesson files' },
-      { name: 'video_bucket', label: 'Video bucket', hint: 'Optional, private: lesson videos waiting for VdoCipher (else the private bucket)' },
+      { name: 'video_bucket', label: 'Video bucket', hint: 'Optional, private: lesson videos waiting to be transcoded (else the private bucket)' },
       { name: 'legacy_bucket', label: 'Legacy bucket' },
     ],
     test: 'Test connection',
@@ -71,17 +71,6 @@ export const INTEGRATIONS: Record<ProviderKey, { title: string; blurb: string; f
       { name: 'model', label: 'Model', placeholder: 'claude-opus-5-5' },
       { name: 'max_tokens', label: 'Max tokens', kind: 'int', min: 1 },
       { name: 'daily_token_limit', label: 'Daily token limit', kind: 'int', min: 0 },
-    ],
-    test: 'Test key',
-  },
-  vdocipher: {
-    title: 'VdoCipher',
-    blurb: 'Protected lesson video playback.',
-    fields: [
-      { name: 'api_secret', label: 'API secret', kind: 'secret' },
-      { name: 'marketing_video_id', label: 'Marketing video ID', maxLength: 32, hint: '32 hex characters' },
-      { name: 'public_video_ids', label: 'Public video IDs', hint: 'Comma-separated 32-character hex IDs' },
-      { name: 'otp_ttl', label: 'OTP lifetime (seconds)', kind: 'int', min: 30, max: 86400, hint: '30 to 86400' },
     ],
     test: 'Test key',
   },

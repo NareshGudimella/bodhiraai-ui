@@ -26,8 +26,8 @@ export function LessonPlayer({
 }: {
   lessonId: number;
   type: string;
-  /** API `playback`: "vdocipher" plays through VdoCipher (security: not in legacy). */
-  playback?: "vdocipher" | "url" | "processing" | null;
+  /** API `playback`: "hls" plays our encrypted HLS (security: not in legacy). */
+  playback?: "hls" | "url" | "processing" | null;
   title: string;
   src: string | null;
   poster: string | null;
@@ -70,7 +70,7 @@ export function LessonPlayer({
     void saveProgress(lessonId, current).then(apply);
   }
 
-  const isVideo = type === "video" && (playback === "vdocipher" || playback === "processing" || !!src);
+  const isVideo = type === "video" && (playback === "hls" || playback === "processing" || !!src);
 
   function markComplete() {
     const { current, duration } = position.current;

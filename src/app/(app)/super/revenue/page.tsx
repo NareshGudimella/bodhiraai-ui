@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Card, Empty, PageHeader, Pill, ProgressBar, SectionTitle, Stat } from "@/components/ui";
+import { Empty, PageHeader, Pill, ProgressBar, SectionTitle, Stat, TableCard } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
 import { superApi } from "@/lib/super-api";
 import { inr } from "../format";
@@ -16,7 +16,7 @@ export default async function SuperRevenuePage() {
   return (
     <>
       <PageHeader title="Revenue" subtitle="Subscription billing snapshot across the platform. Counts every school's plan, whatever its status." />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="MRR" value={inr(r.mrr)} />
         <Stat label="ARR" value={inr(r.arr)} />
         <Stat label="Active" value={r.by_status.active} hint="schools" />
@@ -27,27 +27,27 @@ export default async function SuperRevenuePage() {
       <div className="mt-8 grid gap-8 [&>*]:min-w-0 lg:grid-cols-2">
         <section>
           <SectionTitle>By plan</SectionTitle>
-          <Card className="overflow-x-auto p-0">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-ink-3">
-                <tr><th className="px-4 py-2">Plan</th><th className="px-4 py-2">Schools</th><th className="px-4 py-2">Price / month</th><th className="px-4 py-2">MRR</th><th className="px-4 py-2">Share</th></tr>
+          <TableCard>
+            <table className="data-table">
+              <thead>
+                <tr><th>Plan</th><th className="num">Schools</th><th className="num">Price / month</th><th className="num">MRR</th><th className="min-w-28">Share</th></tr>
               </thead>
               <tbody>
                 {r.by_plan.map((p) => (
                   <tr key={p.plan} className="border-t border-line">
-                    <td className="px-4 py-2 font-medium capitalize text-ink">{p.plan}</td>
-                    <td className="px-4 py-2 text-ink-2">{p.count}</td>
-                    <td className="px-4 py-2 text-ink-2">{inr(p.price)}</td>
-                    <td className="px-4 py-2 text-ink-2">{inr(p.mrr_contribution)}</td>
-                    <td className="min-w-24 px-4 py-2 text-ink-2">
-                      <span className="mb-1 block text-xs font-bold text-ink-3">{share(p.mrr_contribution)}%</span>
+                    <td className="font-medium capitalize">{p.plan}</td>
+                    <td className="num">{p.count}</td>
+                    <td className="num">{inr(p.price)}</td>
+                    <td className="num">{inr(p.mrr_contribution)}</td>
+                    <td>
+                      <span className="mb-1 block text-xs font-semibold tabular-nums text-ink-2">{share(p.mrr_contribution)}%</span>
                       <ProgressBar value={share(p.mrr_contribution)} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </Card>
+          </TableCard>
         </section>
         <section>
           <SectionTitle>Plans expiring in 30 days</SectionTitle>

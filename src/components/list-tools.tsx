@@ -7,16 +7,17 @@ import { secondaryButtonClass } from "@/components/ui";
 /** GET filter form: submits as search params with a client-side navigation. */
 export function FilterBar({ action, children }: { action: string; children: ReactNode }) {
   return (
-    <Form action={action} className="mb-4 flex flex-wrap items-end gap-2">
+    <Form action={action} className="mb-4 flex flex-wrap items-end gap-3 rounded-card bg-card p-3 shadow-card ring-1 ring-line">
       {children}
       <button className={secondaryButtonClass}>Apply</button>
+      <Link href={action} className="px-1 py-2 text-sm text-ink-3 hover:text-ink hover:underline">Reset</Link>
     </Form>
   );
 }
 
 export function FilterInput({ name, label, defaultValue, placeholder }: { name: string; label: string; defaultValue?: string; placeholder?: string }) {
   return (
-    <label className="text-xs text-ink-3">
+    <label className="text-xs font-medium text-ink-2">
       <span className="mb-1 block">{label}</span>
       <input name={name} defaultValue={defaultValue} placeholder={placeholder} className={`${inputClass} py-1.5 text-sm`} />
     </label>
@@ -25,7 +26,7 @@ export function FilterInput({ name, label, defaultValue, placeholder }: { name: 
 
 export function FilterSelect({ name, label, defaultValue, options }: { name: string; label: string; defaultValue?: string; options: [string, string][] }) {
   return (
-    <label className="text-xs text-ink-3">
+    <label className="text-xs font-medium text-ink-2">
       <span className="mb-1 block">{label}</span>
       <select name={name} defaultValue={defaultValue ?? ""} className={`${inputClass} py-1.5 text-sm`}>
         <option value="">All</option>
@@ -43,7 +44,7 @@ export function Pagination({ base, params, page, lastPage, total }: { base: stri
     return `${base}?${q}`;
   };
   return (
-    <nav aria-label="Pages" className="mt-4 flex items-center justify-between gap-2 text-sm text-ink-3">
+    <nav aria-label="Pages" className="mt-4 flex items-center justify-between gap-2 text-sm tabular-nums text-ink-3">
       {page > 1 ? <Link className={secondaryButtonClass} href={href(page - 1)}>← Previous</Link> : <span />}
       <span>Page {page} of {lastPage} · {total} total</span>
       {page < lastPage ? <Link className={secondaryButtonClass} href={href(page + 1)}>Next →</Link> : <span />}

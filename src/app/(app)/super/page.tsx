@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, Empty, PageHeader, Pill, SectionTitle, Stat } from "@/components/ui";
+import { Card, Empty, PageHeader, Pill, SectionTitle, Stat, TableCard } from "@/components/ui";
 import { superApi } from "@/lib/super-api";
 import { inr, tone } from "./format";
 
@@ -10,28 +10,30 @@ export default async function SuperAdminHome() {
   return (
     <>
       <PageHeader title="Platform" subtitle={`${p.schools_active} of ${p.schools_total} schools active`} />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label="Key metrics" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Users" value={p.users_total} hint={`${p.signups_7d} new this week`} />
+        <Stat label="MRR" value={inr(p.mrr)} hint={`ARR ${inr(p.arr_projection)} · active schools`} />
+        <Stat label="AI sessions" value={p.ai_sessions} hint={`${p.ai_messages} messages`} />
+        <Stat label="Lesson views" value={p.lesson_views} />
+      </section>
+      <section aria-label="People and classes" className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label="Students" value={p.students} />
         <Stat label="Teachers" value={p.teachers} />
         <Stat label="Parents" value={p.parents} />
         <Stat label="Classes" value={p.classes} />
-        <Stat label="MRR" value={inr(p.mrr)} hint={`ARR ${inr(p.arr_projection)} · active schools`} />
-        <Stat label="AI sessions" value={p.ai_sessions} hint={`${p.ai_messages} messages`} />
-        <Stat label="Lesson views" value={p.lesson_views} />
-      </div>
+      </section>
       <div className="mt-8 grid gap-8 [&>*]:min-w-0 lg:grid-cols-2">
         <section>
           <SectionTitle>Platform growth, last 7 days</SectionTitle>
           <Card>
-            <ol className="flex h-36 items-end gap-2" aria-label="New users and quiz attempts by day">
+            <ol className="flex h-36 items-end gap-2 border-b border-line" aria-label="New users and quiz attempts by day">
               {growth.map((d) => (
                 <li key={d.date} className="flex flex-1 flex-col items-center gap-1" title={`${d.date}: ${d.users} new users, ${d.attempts} quiz attempts`}>
                   <span className="flex h-28 w-full items-end gap-0.5">
                     <span className="w-1/2 rounded-t bg-primary" style={{ height: bar(d.users) }} aria-hidden />
                     <span className="w-1/2 rounded-t bg-brand" style={{ height: bar(d.attempts) }} aria-hidden />
                   </span>
-                  <span className="text-[10px] text-ink-3">{d.date}</span>
+                  <span className="text-[10px] tabular-nums text-ink-3">{d.date}</span>
                 </li>
               ))}
             </ol>
@@ -44,16 +46,26 @@ export default async function SuperAdminHome() {
         <section>
           <SectionTitle>Largest schools</SectionTitle>
           {top_schools.length ? (
-            <ul className="space-y-1 text-sm">
-              {top_schools.map((s) => (
-                <li key={s.id}>
-                  <Link href={`/super/schools/${s.id}`} className="flex items-center justify-between gap-2 rounded-lg bg-card px-3 py-2 ring-1 ring-line hover:ring-primary">
-                    <span className="min-w-0 truncate text-ink">{s.name} <span className="text-xs text-ink-3">· {s.code} · {s.plan}</span></span>
-                    <span className="flex shrink-0 items-center gap-2 text-xs text-ink-3">{s.users_count} users · {s.classes_count} classes <Pill tone={tone(s.status)}>{s.status}</Pill></span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <TableCard>
+              <table className="data-table">
+                <thead>
+                  <tr><th>School</th><th className="num">Users</th><th className="num">Classes</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {top_schools.map((s) => (
+                    <tr key={s.id}>
+                      <td>
+                        <Link href={`/super/schools/${s.id}`} className="font-medium text-ink hover:underline">{s.name}</Link>
+                        <span className="block text-xs capitalize text-ink-3">{s.code} · {s.plan}</span>
+                      </td>
+                      <td className="num">{s.users_count}</td>
+                      <td className="num">{s.classes_count}</td>
+                      <td><Pill tone={tone(s.status)}>{s.status}</Pill></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableCard>
           ) : <Empty>No schools yet.</Empty>}
         </section>
       </div>

@@ -3,59 +3,24 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { lessonPlayback, type LessonPlayback } from "@/lib/playback-actions";
+import { HlsPlayer } from "@/components/hls-player";
 import { isSignedFileUrl, signedFileExpiry } from "@/lib/signed-file";
 
 /**
- * A lesson's video. `playback === "vdocipher"`: asks the API for a one-time
- * OTP (Server Action, so the token stays on the server) and embeds VdoCipher's
- * DRM player, whose moving watermark names the viewer; its player API reports
- * time and the end. Otherwise the plain `<video>` with downloads, picture in
+ * A lesson's video. `playback === "hls"`: asks the API for a short-lived
+ * playlist URL (Server Action, so the token stays on the server) and plays our
+ * encrypted HLS in `HlsPlayer`, with a moving watermark naming the viewer.
+ * Otherwise the plain `<video>` with downloads, picture in
  * picture and the context menu turned off. Shared by every role that may play
  * lessons (students, teachers of the subject, and school admins for
  * their curricula; not in legacy).
  * security: not in legacy
  */
 
-const VDO_PLAYER = "https://player.vdocipher.com/v2/";
-const VDO_API = "https://player.vdocipher.com/v2/api.js";
-
-type VdoVideo = {
-  currentTime: number;
-  duration: number;
-  addEventListener(type: string, fn: () => void): void;
-  removeEventListener?(type: string, fn: () => void): void;
-};
-type VdoPlayerApi = { getInstance(iframe: HTMLIFrameElement): { video: VdoVideo } };
-declare global {
-  interface Window {
-    VdoPlayer?: VdoPlayerApi;
-  }
-}
-
-let vdoApi: Promise<VdoPlayerApi> | null = null;
-
-/** Loads the player API script once per page. */
-function loadVdoApi(): Promise<VdoPlayerApi> {
-  if (window.VdoPlayer) return Promise.resolve(window.VdoPlayer);
-  vdoApi ??= new Promise<VdoPlayerApi>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = VDO_API;
-    s.async = true;
-    s.onload = () => (window.VdoPlayer ? resolve(window.VdoPlayer) : reject(new Error("VdoPlayer missing")));
-    s.onerror = () => {
-      vdoApi = null;
-      s.remove();
-      reject(new Error("VdoPlayer API failed to load"));
-    };
-    document.head.appendChild(s);
-  });
-  return vdoApi;
-}
-
 export type LessonVideoProps = {
   lessonId: number;
-  /** `processing`: an upload still being imported into VdoCipher (not in legacy). */
-  playback: "vdocipher" | "url" | "processing" | null | undefined;
+  /** `processing`: an upload still being transcoded (not in legacy). */
+  playback: "hls" | "url" | "processing" | null | undefined;
   /** The lesson's `content_url` (signed or external), for the `url` player; null fetches it via the playback action. */
   src: string | null;
   poster: string | null;
@@ -73,9 +38,9 @@ export function LessonVideo(props: LessonVideoProps) {
       {props.overlay && <div className="absolute right-3 top-3 z-10">{props.overlay}</div>}
       {props.playback === "processing" ? (
         <ProcessingNotice />
-      ) : props.playback === "vdocipher" || (props.playback === "url" && !props.src) ? (
+      ) : props.playback === "hls" || (props.playback === "url" && !props.src) ? (
         // A `url` lesson without its link (the admin content list doesn't send one) fetches it too.
-        <VdoLesson {...props} />
+        <HlsLesson {...props} />
       ) : props.src ? (
         <UrlVideo {...props} src={props.src} />
       ) : (
@@ -208,16 +173,10 @@ function UrlVideo({ lessonId, src: initialSrc, poster, onTime, onEnded }: Lesson
   );
 }
 
-function VdoLesson(props: LessonVideoProps) {
-  const { lessonId, title, onTime, onEnded } = props;
+function HlsLesson(props: LessonVideoProps) {
+  const { lessonId } = props;
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{ attempt: number; playback: LessonPlayback } | null>(null);
-  const frame = useRef<HTMLIFrameElement>(null);
-  // Latest callbacks, so the player listeners needn't be re-attached.
-  const handlers = useRef({ onTime, onEnded });
-  useEffect(() => {
-    handlers.current = { onTime, onEnded };
-  });
 
   useEffect(() => {
     let live = true;
@@ -231,32 +190,10 @@ function VdoLesson(props: LessonVideoProps) {
   }, [lessonId, attempt]);
 
   const current = result?.attempt === attempt ? result.playback : null;
-  const otp = current?.ok && current.provider === "vdocipher" ? current.otp : null;
-
-  useEffect(() => {
-    const iframe = frame.current;
-    if (!otp || !iframe) return;
-    let video: VdoVideo | null = null;
-    let live = true;
-    const time = () => video && handlers.current.onTime?.(video.currentTime, video.duration || 0);
-    const ended = () => video && handlers.current.onEnded?.(video.currentTime, video.duration || 0);
-    loadVdoApi()
-      .then((api) => {
-        if (!live) return;
-        video = api.getInstance(iframe).video;
-        video.addEventListener("timeupdate", time);
-        video.addEventListener("ended", ended);
-      })
-      .catch(() => undefined); // The player still plays; only progress tracking is lost.
-    return () => {
-      live = false;
-      video?.removeEventListener?.("timeupdate", time);
-      video?.removeEventListener?.("ended", ended);
-    };
-  }, [otp]);
 
   if (!current) return <Notice title="Loading secure video…" />;
   if (!current.ok) {
+    if (current.code === "video_failed") return <Notice icon title="Video unavailable"><p className="mt-1 text-sm text-white/80">{current.message}</p></Notice>;
     if (current.status === 409) return <ProcessingNotice onRetry={() => setAttempt((n) => n + 1)} />;
     return (
       <Notice icon title={current.status === 403 || current.status === 404 ? "Video unavailable" : "Can't play this video"}>
@@ -274,17 +211,7 @@ function VdoLesson(props: LessonVideoProps) {
     );
   }
   if (current.provider === "url") return <UrlVideo {...props} src={current.url} />;
-  return (
-    <iframe
-      ref={frame}
-      key={current.otp}
-      src={`${VDO_PLAYER}?otp=${encodeURIComponent(current.otp)}&playbackInfo=${encodeURIComponent(current.playbackInfo)}`}
-      allow="encrypted-media; fullscreen; autoplay"
-      allowFullScreen
-      title={title}
-      className="size-full border-0"
-    />
-  );
+  return <HlsPlayer key={current.url} lessonId={lessonId} initial={current} poster={props.poster} onTime={props.onTime} onEnded={props.onEnded} />;
 }
 
 /** not in legacy: the video was uploaded and is still being prepared (API 409 `video_processing`). */

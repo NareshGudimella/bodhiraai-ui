@@ -12,7 +12,7 @@ export default async function SuperAiPage() {
   return (
     <>
       <PageHeader title="AI usage" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Tutor sessions" value={totals.sessions} />
         <Stat label="Messages" value={totals.messages} />
         <Stat label="Tokens" value={totals.tokens.toLocaleString("en-IN")} />

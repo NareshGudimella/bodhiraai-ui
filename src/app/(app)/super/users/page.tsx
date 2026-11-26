@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { FilterBar, FilterInput, FilterSelect, Pagination, toParams } from "@/components/list-tools";
-import { Card, Empty, PageHeader, Pill } from "@/components/ui";
+import { Empty, PageHeader, Pill, TableCard } from "@/components/ui";
 import { superApi } from "@/lib/super-api";
 import { tone } from "../format";
 
@@ -26,28 +26,28 @@ export default async function SuperUsersPage({ searchParams }: PageProps<"/super
         <FilterSelect name="school_id" label="School" defaultValue={params.get("school_id") ?? ""} options={schools.map((s) => [String(s.id), s.name])} />
       </FilterBar>
       {users.length ? (
-        <Card className="overflow-x-auto p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-ink-3">
-              <tr><th className="px-4 py-2">Name</th><th className="px-4 py-2">Role</th><th className="px-4 py-2">School</th><th className="px-4 py-2">Contact</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Joined</th></tr>
+        <TableCard>
+          <table className="data-table">
+            <thead>
+              <tr><th>Name</th><th>Role</th><th>School</th><th>Contact</th><th>Status</th><th className="num">Joined</th></tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id} className="border-t border-line">
-                  <td className="px-4 py-2 font-medium text-ink">{u.name}</td>
-                  <td className="px-4 py-2 capitalize text-ink-2">{u.role.replace("_", " ")}</td>
-                  <td className="px-4 py-2 text-ink-2">{u.school ?? "—"}</td>
-                  <td className="px-4 py-2 text-ink-2">
+                  <td className="font-medium">{u.name}</td>
+                  <td className="capitalize">{u.role.replace("_", " ")}</td>
+                  <td>{u.school ?? "—"}</td>
+                  <td>
                     {u.email ?? "—"}
                     {u.phone && <span className="block text-xs text-ink-3">{u.phone}</span>}
                   </td>
-                  <td className="px-4 py-2"><Pill tone={tone(u.status)}>{u.status}</Pill></td>
-                  <td className="px-4 py-2 text-xs text-ink-3">{u.created_at ? new Date(u.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}</td>
+                  <td><Pill tone={tone(u.status)}>{u.status}</Pill></td>
+                  <td className="num whitespace-nowrap text-xs text-ink-3">{u.created_at ? new Date(u.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </Card>
+        </TableCard>
       ) : <Empty>No users match.</Empty>}
       <Pagination base="/super/users" params={params} page={meta.current_page} lastPage={meta.last_page} total={meta.total} />
     </>

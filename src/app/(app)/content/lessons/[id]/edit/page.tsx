@@ -11,11 +11,11 @@ export default async function EditLessonPage({ params }: PageProps<"/content/les
   const { lesson } = await contentApi.lesson(id);
   const media = mediaUrl(lesson.content_url);
   // Editors manage uploaded lesson videos but may not play them: only enrolled students
-  // and their teachers can (VdoCipher, our signed file, or a legacy upload not moved yet).
+  // and their teachers can (our encrypted HLS, our signed file, or a legacy upload not moved yet).
   // An external link the editor typed keeps its preview. security: not in legacy
   const uploaded =
     lesson.type === "video" &&
-    (lesson.playback === "vdocipher" || isSignedFileUrl(media) || (!!lesson.content_url && !/^https?:\/\//i.test(lesson.content_url)));
+    (lesson.playback === "hls" || isSignedFileUrl(media) || (!!lesson.content_url && !/^https?:\/\//i.test(lesson.content_url)));
   return (
     <>
       <PageHeader
@@ -35,7 +35,7 @@ export default async function EditLessonPage({ params }: PageProps<"/content/les
         <section className="space-y-3 text-sm">
           <h2 className="font-semibold text-ink">Current media</h2>
           {lesson.playback === "processing" ? (
-            // not in legacy: the worker is sending the upload to VdoCipher.
+            // not in legacy: the worker is transcoding the upload to encrypted HLS.
             <p className="rounded-xl bg-page p-3 text-ink-2 ring-1 ring-line">⏳ Video is processing. It will be ready to play in a few minutes.</p>
           ) : lesson.video_status === "failed" ? (
             <p className="rounded-xl bg-danger-light p-3 text-danger">The uploaded video could not be processed. Please upload it again.</p>
