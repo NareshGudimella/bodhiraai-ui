@@ -15,12 +15,14 @@ export const LEGACY_CSP = [
   "media-src 'self' blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
-  `script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net`,
+  `script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://static.cloudflareinsights.com`,
   // GA4 also reports to regional *.analytics.google.com hosts; the Pixel posts to facebook.com
   // (both load only after cookie consent, components/site/consent-analytics.tsx; not in legacy).
   // api.bodhiraai.com: the browser PUTs lesson videos straight to the API's own host (DNS-only, no Cloudflare
   // body cap). Hard-coded: this plain .mjs has no config for the API origin (not in legacy).
-  "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://api.bodhiraai.com",
+  // Cloudflare Web Analytics: Cloudflare injects its cookieless beacon (static.cloudflareinsights.com)
+  // and it reports to cloudflareinsights.com.
+  "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://api.bodhiraai.com https://cloudflareinsights.com",
   `frame-src 'self' https: https://api.razorpay.com`,
   "object-src 'none'",
   "base-uri 'self'",
