@@ -34,7 +34,7 @@ export interface Env {
   NEXT_CACHE_DO_QUEUE: DurableObjectNamespace;
   /** This Worker, for the Next cache's revalidation and proxy.ts (lib/self-fetch.ts). */
   WORKER_SELF_REFERENCE: Fetcher;
-  /** The API's origin, without a path (https://api-origin.bodhiraai.com). */
+  /** The API's origin, without a path (https://api.bodhiraai.com). */
   API_ORIGIN: string;
   SITE_URL: string;
   /** Read by the Next server code; derived below when not set. */
