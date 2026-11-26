@@ -7,7 +7,8 @@ import { HlsPlayer } from "@/components/hls-player";
 import { isSignedFileUrl, signedFileExpiry } from "@/lib/signed-file";
 
 /**
- * A lesson's video. `playback === "hls"`: asks the API for a short-lived
+ * A lesson's video. `playback === "hls"`: shows the poster until the user
+ * presses play, then asks the API for a short-lived
  * playlist URL (Server Action, so the token stays on the server) and plays our
  * encrypted HLS in `HlsPlayer`, with a moving watermark naming the viewer.
  * Otherwise the plain `<video>` with downloads, picture in
@@ -40,7 +41,7 @@ export function LessonVideo(props: LessonVideoProps) {
         <ProcessingNotice />
       ) : props.playback === "hls" || (props.playback === "url" && !props.src) ? (
         // A `url` lesson without its link (the admin content list doesn't send one) fetches it too.
-        <HlsLesson {...props} />
+        <HlsLesson key={props.lessonId} {...props} />
       ) : props.src ? (
         <UrlVideo {...props} src={props.src} />
       ) : (
@@ -126,8 +127,9 @@ function UrlVideo({ lessonId, src: initialSrc, poster, onTime, onEnded }: Lesson
         src={src}
         controls
         playsInline
-        controlsList="nodownload"
+        controlsList="nodownload noplaybackrate"
         disablePictureInPicture
+        disableRemotePlayback
         onContextMenu={(e) => e.preventDefault()}
         preload="metadata"
         poster={poster ?? undefined}
@@ -173,28 +175,39 @@ function UrlVideo({ lessonId, src: initialSrc, poster, onTime, onEnded }: Lesson
   );
 }
 
+/** Nothing is requested until the user presses play (each playback is a counted session). */
 function HlsLesson(props: LessonVideoProps) {
-  const { lessonId } = props;
-  const [attempt, setAttempt] = useState(0);
-  const [result, setResult] = useState<{ attempt: number; playback: LessonPlayback } | null>(null);
+  const { lessonId, poster, title } = props;
+  const [state, setState] = useState<{ kind: "idle" } | { kind: "loading" } | { kind: "done"; playback: LessonPlayback }>({ kind: "idle" });
 
-  useEffect(() => {
-    let live = true;
+  function start() {
+    setState({ kind: "loading" });
     lessonPlayback(lessonId).then(
-      (playback) => live && setResult({ attempt, playback }),
-      () => live && setResult({ attempt, playback: { ok: false, status: 0, message: "Could not load the video. Please try again." } }),
+      (playback) => setState({ kind: "done", playback }),
+      () => setState({ kind: "done", playback: { ok: false, status: 0, message: "Could not load the video. Please try again." } }),
     );
-    return () => {
-      live = false;
-    };
-  }, [lessonId, attempt]);
+  }
 
-  const current = result?.attempt === attempt ? result.playback : null;
-
-  if (!current) return <Notice title="Loading secure video…" />;
+  if (state.kind !== "done") {
+    return (
+      <>
+        {/* A signed thumbnail link: plain <img>, not next/image. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {poster && <img src={poster} alt="" className="size-full object-cover" />}
+        {state.kind === "loading" ? (
+          <Notice title="Loading secure video…" />
+        ) : (
+          <button type="button" onClick={start} aria-label={`Play ${title}`} className="absolute inset-0 grid place-items-center bg-black/30 text-white">
+            <span className="grid size-16 place-items-center rounded-full bg-primary text-2xl text-brand" aria-hidden>▶</span>
+          </button>
+        )}
+      </>
+    );
+  }
+  const current = state.playback;
   if (!current.ok) {
     if (current.code === "video_failed") return <Notice icon title="Video unavailable"><p className="mt-1 text-sm text-white/80">{current.message}</p></Notice>;
-    if (current.status === 409) return <ProcessingNotice onRetry={() => setAttempt((n) => n + 1)} />;
+    if (current.status === 409) return <ProcessingNotice onRetry={start} />;
     return (
       <Notice icon title={current.status === 403 || current.status === 404 ? "Video unavailable" : "Can't play this video"}>
         <p className="mt-1 text-sm text-white/80">{current.message}</p>
@@ -203,7 +216,7 @@ function HlsLesson(props: LessonVideoProps) {
             Choose a plan
           </Link>
         ) : current.status !== 403 && current.status !== 404 ? (
-          <button type="button" onClick={() => setAttempt((n) => n + 1)} className="mt-3 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-brand">
+          <button type="button" onClick={start} className="mt-3 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-brand">
             Try again
           </button>
         ) : null}
@@ -211,7 +224,7 @@ function HlsLesson(props: LessonVideoProps) {
     );
   }
   if (current.provider === "url") return <UrlVideo {...props} src={current.url} />;
-  return <HlsPlayer key={current.url} lessonId={lessonId} initial={current} poster={props.poster} onTime={props.onTime} onEnded={props.onEnded} />;
+  return <HlsPlayer lessonId={lessonId} initial={current} poster={poster} onTime={props.onTime} onEnded={props.onEnded} />;
 }
 
 /** not in legacy: the video was uploaded and is still being prepared (API 409 `video_processing`). */

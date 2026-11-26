@@ -40,6 +40,11 @@ export async function lessonPlayback(lessonId: number): Promise<LessonPlayback> 
       const failed = e instanceof ApiError && e.code === 'video_failed';
       return { ok: false, status, code: failed ? 'video_failed' : 'video_processing', message: failed ? FAILED_MESSAGE : PROCESSING_MESSAGE };
     }
+    const code = e instanceof ApiError ? e.code : undefined;
+    // not in legacy: strict playback protection caps sessions per user (API 429 `playback_limit`).
+    if (status === 429 && code === 'playback_limit') {
+      return { ok: false, status, code, message: 'Too many plays in a short time. Try again later.' };
+    }
     const message =
       status === 403
         ? "You can't play this lesson."
@@ -50,6 +55,6 @@ export async function lessonPlayback(lessonId: number): Promise<LessonPlayback> 
             : status === 429
               ? 'Too many requests. Please wait a moment and try again.'
               : 'Could not load the video. Please try again.';
-    return { ok: false, status, message };
+    return { ok: false, status, code, message };
   }
 }
