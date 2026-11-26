@@ -58,6 +58,8 @@ export const INTEGRATIONS: Record<ProviderKey, { title: string; blurb: string; f
       { name: 'razorpay_webhook_secret', label: 'Razorpay webhook secret', kind: 'secret', gateway: 'razorpay' },
       { name: 'stripe_secret', label: 'Stripe secret key', kind: 'secret', gateway: 'stripe' },
       { name: 'stripe_webhook_secret', label: 'Stripe webhook secret', kind: 'secret', gateway: 'stripe' },
+      // not in legacy: production refuses demo checkout (no payment) unless this is on.
+      { name: 'allow_demo', label: 'Allow demo checkout in production', kind: 'bool', hint: 'Plans activate without payment while no gateway has keys. Leave off in production.' },
     ],
     test: 'Test gateway',
   },

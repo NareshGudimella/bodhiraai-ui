@@ -19,7 +19,7 @@ The same code also runs on a plain Node host (Hostinger) with `npm run build` an
 | R2 `bodhira-legacy` | bound as `LEGACY_FILES` | Legacy uploads (`media/…`, `cloud/…`) and the site's `.mp4` videos (`assets/…`), copied before cut-over |
 | R2 `bodhira-private` | bound as `PRIVATE_FILES`; the API's `R2_PRIVATE_BUCKET` | Every non-public upload (avatars, school logos, lesson files and thumbnails, assignment attachments, submissions, recordings). **Never public**: no `r2.dev` URL, no custom domain. Reached only through signed `/files/*` links (security: not in legacy) |
 | R2 `bodhiraai-web-opennext-cache` | bound as `NEXT_INC_CACHE_R2_BUCKET` | Next's cache entries. Never public |
-| R2 uploads bucket | the API's `R2_BUCKET` / `R2_PUBLIC_URL` | Public uploads (marketing site / CMS files only), as absolute URLs. Not used by the Worker |
+| R2 uploads bucket | the API panel's Integrations → Storage `bucket` / `public_url` | Public uploads (marketing site / CMS files only), as absolute URLs. Not used by the Worker |
 
 What the Worker does with each request ([worker/index.ts](worker/index.ts)):
 - **`/api/v1/*`, `/webhooks/*`:** passed to `API_ORIGIN` (Elastic Beanstalk), streamed, with `X-Client-IP` and `X-Proxy-Secret`. The mobile app and the gateway webhook URLs stay the same.
@@ -33,7 +33,7 @@ What the Worker does with each request ([worker/index.ts](worker/index.ts)):
 
 | Setting | Where | Value |
 |---|---|---|
-| `API_ORIGIN` | `wrangler.jsonc` vars | `https://api-origin.bodhiraai.com` |
+| `API_ORIGIN` | `wrangler.jsonc` vars | `https://api.bodhiraai.com` (Elastic Beanstalk, HTTPS with an ACM certificate) |
 | `SITE_URL` | `wrangler.jsonc` vars | `https://bodhiraai.com` |
 | `API_URL`, `LEGACY_URL` | derived in `worker/index.ts` (`nextEnv`) | `${API_ORIGIN}/api/v1` and `SITE_URL` (the Worker serves the legacy files on the site's own domain). The Next server code reads them from `process.env`; OpenNext fills `process.env` from the Worker's string bindings. Set them as vars only to override |
 | `APP_SECRET` | `npx wrangler secret put APP_SECRET` | **The API's `APP_SECRET`, the same value.** The Worker and the Next server derive two keys from it with HKDF-SHA256: the proxy header `X-Proxy-Secret` (info `bodhira:proxy`; sent on proxied API calls and by the Next server on its own calls, `lib/proxy-secret.ts`) and the signed-file key (info `bodhira:file-urls`). A wrong value gets the API's calls refused and every signed link answered 403. Rotating it changes both keys, so change the API's and the Worker's together (links already handed out break; they last 30 minutes, `FILE_URL_TTL`) |
@@ -84,7 +84,7 @@ Deploy the API first whenever a release changes both apps.
    ```
    The secrets belong to the Worker `ba-ui`, shared by `no-route` and `production`. `wrangler secret put` before the first deploy creates the Worker with no code yet; alternatively deploy `no-route` first and then set them (the site answers errors until they're set). The Durable Objects need no setup.
 4. **Legacy files:** copy them into `bodhira-legacy` under the same paths (runbook §3).
-5. **DNS:** `bodhiraai.com` must be proxied (orange cloud) before the `production` target is run. The route is `bodhiraai.com/*` in `env.production` only; `www` gets a 301 Redirect Rule to the apex instead (§5, "One canonical host"). `api-origin.bodhiraai.com` is a proxied record to the Beanstalk load balancer (runbook §5). No custom domain on the Worker: the route on the existing zone is enough.
+5. **DNS:** `bodhiraai.com` must be proxied (orange cloud) before the `production` target is run. The route is `bodhiraai.com/*` in `env.production` only; `www` gets a 301 Redirect Rule to the apex instead (§5, "One canonical host"). `api.bodhiraai.com` is a proxied record to the Beanstalk load balancer (runbook §5). No custom domain on the Worker: the route on the existing zone is enough.
 6. **Staging:** replace the `<placeholders>` in `env.staging` of `wrangler.jsonc` (host, zone, API origin), create `bodhira-legacy-staging`, `bodhira-private-staging` and `bodhiraai-web-opennext-cache-staging` (public access off), and set the staging secret with `--env staging` (the staging API's `APP_SECRET`). Never point it at production buckets or the production API.
 
 ## 5. Behaviour behind Cloudflare

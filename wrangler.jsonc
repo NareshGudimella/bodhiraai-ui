@@ -52,7 +52,7 @@
     // The Elastic Beanstalk environment, through a proxied Cloudflare hostname.
     // The Next server's API_URL is `${API_ORIGIN}/api/v1` and LEGACY_URL is
     // SITE_URL (worker/index.ts, nextEnv); set them here only to override.
-    "API_ORIGIN": "https://api-origin.bodhiraai.com",
+    "API_ORIGIN": "https://api.bodhiraai.com",
     "SITE_URL": "https://bodhiraai.com"
   },
   // Secret names only (set with `wrangler secret put`); `wrangler dev` warns when one is missing.
@@ -82,7 +82,7 @@
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOShardedTagCache", "DOQueueHandler"] }],
       "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "ba-ui" }],
       "vars": {
-        "API_ORIGIN": "https://api-origin.bodhiraai.com",
+        "API_ORIGIN": "https://api.bodhiraai.com",
         "SITE_URL": "https://bodhiraai.com"
       },
       "secrets": { "required": ["APP_SECRET"] },
