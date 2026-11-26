@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "if [ -n \"$WORKERS_CI\" ]; then npm run cf:build; else npm run build:next; fi",
+    "build:next": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test:worker": "node --test worker/test/",
