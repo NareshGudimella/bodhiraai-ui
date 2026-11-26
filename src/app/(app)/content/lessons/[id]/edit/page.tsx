@@ -30,7 +30,7 @@ export default async function EditLessonPage({ params }: PageProps<"/content/les
       />
       <div className="grid gap-8 [&>*]:min-w-0 lg:grid-cols-[3fr_2fr]">
         <Card>
-          <LessonForm action={updateLesson.bind(null, lesson.id, lesson.chapter_id)} initial={lesson} edit submitLabel="Save lesson" />
+          <LessonForm action={updateLesson.bind(null, lesson.id, lesson.chapter_id)} initial={lesson} edit submitLabel="Save lesson" chapterId={lesson.chapter_id} lessonId={lesson.id} />
         </Card>
         <section className="space-y-3 text-sm">
           <h2 className="font-semibold text-ink">Current media</h2>

@@ -62,7 +62,7 @@ export default async function ContentChapterPage({ params }: PageProps<"/content
         </section>
         <Card>
           <SectionTitle>Add lesson</SectionTitle>
-          <LessonForm action={createLesson.bind(null, chapter.id)} submitLabel="Add lesson" />
+          <LessonForm action={createLesson.bind(null, chapter.id)} submitLabel="Add lesson" chapterId={chapter.id} />
         </Card>
       </div>
     </>

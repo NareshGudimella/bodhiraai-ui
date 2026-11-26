@@ -1,9 +1,12 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
-import { buttonClass, secondaryButtonClass } from "@/components/ui";
+import { ProgressBar, buttonClass, secondaryButtonClass } from "@/components/ui";
 import type { FormState } from "@/lib/action-result";
+import { startLessonVideoUpload, saveLessonFields, updateLesson } from "@/lib/content-actions";
+import { putWithProgress } from "@/lib/direct-upload";
 import { isSignedFileUrl } from "@/lib/signed-file";
 
 type Initial = Partial<{
@@ -18,6 +21,10 @@ type Initial = Partial<{
   is_published: boolean;
 }>;
 
+const DIRECT_MAX = 5_000_000_000; // stream upload limit (docs/video-hls-contract.md)
+const MULTIPART_MAX = 200 * 1024 * 1024; // local-driver fallback through the server action
+const mb = (n: number) => (n / 1e6).toFixed(n < 1e7 ? 1 : 0);
+
 /**
  * Add / edit lesson form (legacy content/chapter and lesson-edit). Picking a
  * video fills the duration and grabs a frame at 25% as the thumbnail, sent as
@@ -28,13 +35,97 @@ export function LessonForm({
   initial = {},
   edit = false,
   submitLabel,
+  chapterId,
+  lessonId,
 }: {
   action: (state: FormState, form: FormData) => Promise<FormState>;
   initial?: Initial;
   edit?: boolean;
   submitLabel: string;
+  chapterId: number;
+  lessonId?: number;
 }) {
-  const [state, action, pending] = useActionState(run, undefined);
+  const router = useRouter();
+  const [formState, action, formPending] = useActionState(run, undefined);
+  // Video upload (browser to the API's host): runs from onSubmit, outside the form action.
+  const [local, setLocal] = useState<FormState>();
+  const state = local ?? formState;
+  const [busy, startTransition] = useTransition();
+  const [sent, setSent] = useState<{ done: number; total: number } | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [resetKey, setResetKey] = useState(0);
+  const xhr = useRef<XMLHttpRequest | null>(null);
+  const createdId = useRef<number | null>(null); // a retry must not create the lesson twice
+  const uploading = sent !== null;
+  const pending = formPending || busy || uploading;
+
+  useEffect(() => {
+    if (!uploading) return;
+    const warn = (ev: BeforeUnloadEvent) => ev.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [uploading]);
+
+  async function submitVideo(form: HTMLFormElement, file: File) {
+    const fail = (message: string) => {
+      setSent(null);
+      // values refill the fields after the form remounts; the file must be chosen again
+      const values = Object.fromEntries([...new FormData(form)].filter(([k, x]) => typeof x === "string" && k !== "thumbnail_data")) as Record<string, string>;
+      setLocal({ ok: false, message, values });
+    };
+    setLocal(undefined);
+    setInfo(null);
+    if (file.size > DIRECT_MAX) return fail("The video is larger than 5 GB.");
+    const data = new FormData(form);
+    data.delete("content_file");
+    setSent({ done: 0, total: file.size });
+    const saved = await saveLessonFields(chapterId, createdId.current ?? lessonId ?? null, data);
+    if ("error" in saved) {
+      setSent(null);
+      return setLocal(saved.error);
+    }
+    createdId.current = saved.id;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const contentType = file.type || (ext === "mkv" ? "video/x-matroska" : "video/mp4");
+    const presign = await startLessonVideoUpload(saved.id, { filename: file.name, size: file.size, content_type: contentType });
+    if ("message" in presign) return fail(presign.message);
+    const up = presign.data;
+    if (up.mode === "multipart") {
+      // Local storage: today's path, the file posted with the form (200 MB).
+      if (file.size > MULTIPART_MAX) return fail("The video is larger than 200 MB.");
+      setSent(null);
+      return startTransition(async () => {
+        setLocal((await updateLesson(saved.id, chapterId, undefined, new FormData(form))) ?? undefined);
+      });
+    }
+    let res;
+    try {
+      const req = (xhr.current = new XMLHttpRequest());
+      res = await putWithProgress(up.upload_url, contentType, file, (done) => setSent({ done, total: file.size }), req);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return fail("Upload cancelled.");
+      return fail("Upload failed, retry");
+    } finally {
+      xhr.current = null;
+    }
+    // 200 = the API has finished everything (the body is the lesson resource).
+    if (res.status === 403) return fail("Upload link expired, try again");
+    if (res.status === 422) {
+      let msg = "Upload failed, retry";
+      try { msg = JSON.parse(res.body).message ?? msg; } catch { /* not JSON */ }
+      return fail(msg);
+    }
+    if (res.status !== 200) return fail("Upload failed, retry");
+    setSent(null);
+    setInfo("Processing: the video will be ready in a few minutes");
+    if (edit) setTimeout(() => router.push(`/content/chapters/${chapterId}`), 1500);
+    else {
+      createdId.current = null;
+      setResetKey((k) => k + 1);
+      router.refresh();
+    }
+  }
+
   const e = state?.errors ?? {};
   const v = { ...initial, ...(state?.ok === false ? state.values : {}) } as Record<string, string | number | boolean | null | undefined>;
   const [type, setType] = useState(String(v.type ?? "video"));
@@ -85,7 +176,17 @@ export function LessonForm({
   }
 
   return (
-    <form action={action} className="space-y-3" key={JSON.stringify(state ?? null)}>
+    <form
+      action={action}
+      className="space-y-3"
+      key={JSON.stringify(state ?? null) + resetKey}
+      onSubmit={(ev) => {
+        const file = (ev.currentTarget.elements.namedItem("content_file") as HTMLInputElement | null)?.files?.[0];
+        if (type !== "video" || !file) return;
+        ev.preventDefault();
+        void submitVideo(ev.currentTarget, file);
+      }}
+    >
       <Field label="Title" error={e.title}><input name="title" required maxLength={160} defaultValue={text("title")} className={inputClass} /></Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Type" error={e.type}>
@@ -101,7 +202,7 @@ export function LessonForm({
       </div>
       {type !== "text" && (
         <div className="space-y-3 rounded-xl bg-page p-3 ring-1 ring-line">
-          <Field label={edit ? "Replace file" : "Upload file"} error={e.content_file} hint={type === "pdf" ? "PDF up to 50 MB" : "MP4, MOV, WebM or MKV up to 200 MB"}>
+          <Field label={edit ? "Replace file" : "Upload file"} error={e.content_file} hint={type === "pdf" ? "PDF up to 50 MB" : "MP4, MOV, WebM or MKV up to 5 GB"}>
             <input name="content_file" type="file" accept={type === "pdf" ? "application/pdf" : "video/*"} onChange={(ev) => picked(ev.target.files?.[0])} className="block w-full text-sm" />
           </Field>
           <Field label="…or a URL" error={e.content_url} hint={edit ? "Leave blank to keep the current file" : undefined}>
@@ -140,8 +241,18 @@ export function LessonForm({
         <label className="flex items-center gap-2"><input type="checkbox" name="is_free" value="1" defaultChecked={checked("is_free", false)} /> Free preview</label>
         <label className="flex items-center gap-2"><input type="checkbox" name="is_published" value="1" defaultChecked={checked("is_published", true)} /> Published</label>
       </div>
+      {sent && (
+        <div className="space-y-1.5 text-xs text-ink-2" aria-live="polite">
+          <ProgressBar value={(sent.done / sent.total) * 100} />
+          <div className="flex items-center justify-between">
+            <span>{Math.floor((sent.done / sent.total) * 100)}% · {mb(sent.done)} MB / {mb(sent.total)} MB</span>
+            <button type="button" onClick={() => xhr.current?.abort()} className={secondaryButtonClass}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {info && <p role="status" className="text-sm text-success">{info}</p>}
       <FormMessage state={state} />
-      <button disabled={pending} className={buttonClass}>{pending ? "Saving… (large files take a while)" : submitLabel}</button>
+      <button disabled={pending} className={buttonClass}>{uploading ? "Uploading…" : pending ? "Saving…" : submitLabel}</button>
     </form>
   );
 }

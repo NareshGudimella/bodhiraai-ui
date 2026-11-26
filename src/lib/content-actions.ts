@@ -2,7 +2,7 @@
 
 import { refresh } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { api, apiEnvelope } from './api';
+import { api, apiEnvelope, ApiError } from './api';
 import { failure, forwardForm, type FormState } from './action-result';
 import { idSeg } from '@/lib/api-path';
 import { isSignedFileUrl } from './signed-file';
@@ -65,6 +65,38 @@ export async function updateLesson(lessonId: number, chapterId: number, _: FormS
     return failure(e, 'Could not save the lesson.', keep(form));
   }
   redirect(`/content/chapters/${chapterId}`);
+}
+
+/**
+ * Video upload through the API (docs/video-hls-contract.md, "Upload through the API on AWS"): the browser can't hold the
+ * API token, so the small JSON calls go through here. The file itself goes from the browser to the API's own host.
+ * They return errors instead of throwing, since production hides thrown messages from the client.
+ */
+export type SaveResult = { id: number } | { error: FormState };
+
+/** Saves the lesson fields without the file: creates the lesson (chapterId) or patches it (lessonId). */
+export async function saveLessonFields(chapterId: number, lessonId: number | null, form: FormData): Promise<SaveResult> {
+  try {
+    if (lessonId) {
+      await api(`/content/lessons/${idSeg(lessonId)}`, { method: 'PATCH', body: lessonForm(form, ['sort_order']) });
+      return { id: lessonId };
+    }
+    const r = await api<{ id: number }>(`/content/chapters/${idSeg(chapterId)}/lessons`, { method: 'POST', body: lessonForm(form) });
+    return { id: r.id };
+  } catch (e) {
+    return { error: failure(e, 'Could not save the lesson.', keep(form)) };
+  }
+}
+
+export type VideoUpload = { mode: 'stream'; upload_url: string; expires_at: string } | { mode: 'multipart' };
+
+/** Forwards the size and type check to the API; `stream` gives the browser a token URL on the API's own host. */
+export async function startLessonVideoUpload(lessonId: number, file: { filename: string; size: number; content_type: string }): Promise<{ data: VideoUpload } | { message: string }> {
+  try {
+    return { data: await api<VideoUpload>(`/content/lessons/${idSeg(lessonId)}/video-upload`, { method: 'POST', body: file }) };
+  } catch (e) {
+    return { message: e instanceof ApiError ? e.message : 'Could not start the upload.' };
+  }
 }
 
 export async function deleteLesson(lessonId: number, chapterId: number) {

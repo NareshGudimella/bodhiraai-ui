@@ -18,7 +18,9 @@ export const LEGACY_CSP = [
   `script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net`,
   // GA4 also reports to regional *.analytics.google.com hosts; the Pixel posts to facebook.com
   // (both load only after cookie consent, components/site/consent-analytics.tsx; not in legacy).
-  "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com",
+  // api.bodhiraai.com: the browser PUTs lesson videos straight to the API's own host (DNS-only, no Cloudflare
+  // body cap). Hard-coded: this plain .mjs has no config for the API origin (not in legacy).
+  "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://api.bodhiraai.com",
   `frame-src 'self' https: https://api.razorpay.com`,
   "object-src 'none'",
   "base-uri 'self'",
