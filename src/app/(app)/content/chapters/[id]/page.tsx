@@ -3,6 +3,7 @@ import { Card, Empty, PageHeader, Pill, SectionTitle, secondaryButtonClass } fro
 import { createLesson, deleteChapter } from "@/lib/content-actions";
 import { contentApi } from "@/lib/content-api";
 import { mediaUrl } from "@/lib/media";
+import { canonical } from "@/lib/canonical";
 import { LessonForm } from "../../lesson-form";
 import { ConfirmButton } from "@/components/confirm-button";
 
@@ -11,15 +12,17 @@ const ICON = { video: "🎬", pdf: "📄", text: "📝" } as const;
 export default async function ContentChapterPage({ params }: PageProps<"/content/chapters/[id]">) {
   const { id } = await params;
   const { chapter } = await contentApi.chapter(id);
+  canonical(id, chapter.url_slug, "/content/chapters");
+  const subjectRef = chapter.subject.url_slug ?? chapter.subject_id;
   return (
     <>
       <PageHeader
-        back={{ href: `/content/subjects/${chapter.subject_id}`, label: chapter.subject.name }}
+        back={{ href: `/content/subjects/${subjectRef}`, label: chapter.subject.name }}
         title={chapter.title}
         subtitle={`${chapter.lessons.length} lesson${chapter.lessons.length === 1 ? "" : "s"} · ${chapter.is_published ? "Published" : "Draft"}`}
         action={
           <ConfirmButton
-            action={deleteChapter.bind(null, chapter.id, chapter.subject_id)}
+            action={deleteChapter.bind(null, chapter.url_slug ?? chapter.id, subjectRef)}
             message={`Delete "${chapter.title}" and all its lessons?`}
             className={secondaryButtonClass}
           >
@@ -52,7 +55,7 @@ export default async function ContentChapterPage({ params }: PageProps<"/content
                           {!l.is_published && <Pill>Draft</Pill>}
                         </span>
                       </span>
-                      <Link href={`/content/lessons/${l.id}/edit`} className="rounded-md border border-line px-2 py-1 text-xs hover:bg-primary-light">Edit</Link>
+                      <Link href={`/content/lessons/${l.url_slug ?? l.id}/edit`} className="rounded-md border border-line px-2 py-1 text-xs hover:bg-primary-light">Edit</Link>
                     </Card>
                   </li>
                 );
@@ -62,7 +65,7 @@ export default async function ContentChapterPage({ params }: PageProps<"/content
         </section>
         <Card>
           <SectionTitle>Add lesson</SectionTitle>
-          <LessonForm action={createLesson.bind(null, chapter.id)} submitLabel="Add lesson" chapterId={chapter.id} />
+          <LessonForm action={createLesson.bind(null, chapter.id)} submitLabel="Add lesson" chapterId={chapter.url_slug ?? chapter.id} />
         </Card>
       </div>
     </>

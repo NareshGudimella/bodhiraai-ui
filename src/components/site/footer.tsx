@@ -1,3 +1,4 @@
+import { accountLink } from "@/lib/session";
 import { Fragment } from "react";
 import { connection } from "next/server";
 import { mediaUrl } from "@/lib/media";
@@ -128,6 +129,7 @@ const SOCIAL_ICON = "text-[rgba(246,234,218,.85)] group-hover/social:text-maroon
  * back to top in React (footer-client.tsx) instead of the theme's jQuery.
  */
 export async function SiteFooter() {
+  const account = await accountLink();
   const [{ footer_menu, social, recent_posts }, asset, setting, year, biz] = await Promise.all([getChrome(), assetResolver(), settingResolver(), currentYear(), businessDetails()]);
   const siteName = setting("general.site_name", "Bodhira.ai");
   // contact.email / contact.phone, else the legacy contact page's (lib/site-business.ts).
@@ -138,7 +140,9 @@ export async function SiteFooter() {
   // Useful Links skips whatever the CMS Company Info menu already lists.
   const company = (footer_menu.length
     ? footer_menu.map((i) => ({ key: String(i.id), label: i.label, url: i.url, target: i.target }))
-    : FALLBACK_MENU.map(([label, url]) => ({ key: url, label, url, target: undefined }))
+    : FALLBACK_MENU.map(([label, url]) =>
+        url === "/login" ? { key: url, label: account.label, url: account.href, target: undefined } : { key: url, label, url, target: undefined },
+      )
   ).filter((i) => !LEGAL_KEYS.has(pathKey(i.url)));
   const companyKeys = new Set(company.map((i) => pathKey(i.url)));
   const useful = USEFUL_LINKS.filter(([, url]) => !companyKeys.has(pathKey(url)) && !LEGAL_KEYS.has(pathKey(url)));

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, Pill, SectionTitle } from "@/components/ui";
 import { contentApi } from "@/lib/content-api";
+import { canonical } from "@/lib/canonical";
 import { ChapterForm } from "./chapter-form";
 
 export default async function ContentSubjectPage({ params }: PageProps<"/content/subjects/[id]">) {
   const { id } = await params;
   const { subject, chapters } = await contentApi.subject(id);
+  canonical(id, subject.url_slug, "/content/subjects");
   return (
     <>
       <PageHeader
@@ -20,7 +22,7 @@ export default async function ContentSubjectPage({ params }: PageProps<"/content
             <ol className="space-y-2">
               {chapters.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/content/chapters/${c.id}`} className="block">
+                  <Link href={`/content/chapters/${c.url_slug ?? c.id}`} className="block">
                     <Card className="flex items-center justify-between gap-3 p-4 transition hover:ring-primary">
                       <span className="min-w-0">
                         <span className="block font-medium text-ink">{c.sort_order}. {c.title}</span>

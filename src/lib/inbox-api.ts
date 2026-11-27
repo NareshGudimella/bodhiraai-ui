@@ -1,11 +1,11 @@
 import 'server-only';
 import { apiEnvelope } from './api';
 import { load } from './load';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Chat (/api/v1/chat, teacher ↔ parent) and notifications (/api/v1/me/notifications). */
 
-export type Partner = { id: number; name: string; role: string; role_label: string | null; avatar: string | null };
+export type Partner = { id: number; public_id?: string; name: string; role: string; role_label: string | null; avatar: string | null };
 
 export type ChatMessage = { id: number; body: string; mine: boolean; read: boolean; created_at: string | null; time: string | null };
 
@@ -30,6 +30,7 @@ export const inboxApi = {
     load<
       {
         id: number;
+        public_id?: string;
         partner: Partner | null;
         last_message_at: string | null;
         unread_count: number;
@@ -41,7 +42,7 @@ export const inboxApi = {
       '/chat/contacts',
     ),
   conversation: (id: string) =>
-    load<{ conversation: { id: number; partner: Partner | null }; messages: ChatMessage[] }>(`/chat/${idSeg(id)}`),
+    load<{ conversation: { id: number; public_id?: string; partner: Partner | null }; messages: ChatMessage[] }>(`/chat/${seg(id)}`),
   notifications: async (page = 1): Promise<NotificationPage> => {
     const { data, meta } = await apiEnvelope<Notification[]>(`/me/notifications?page=${page}`);
     return { items: data, meta: meta as NotificationPage['meta'] };

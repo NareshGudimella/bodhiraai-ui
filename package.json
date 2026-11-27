@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:worker": "node --test worker/test/",
+    "test:sanitize": "node --test scripts/sanitize.test.mjs",
     "cf:build": "opennextjs-cloudflare build && node scripts/cf-assets-headers.mjs",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy",
@@ -19,7 +20,8 @@
     "hls.js": "^1.7.4",
     "next": "16.4.6",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "sanitize-html": "^2.18.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261125.1",
@@ -27,6 +29,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.2",
     "eslint": "^10",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",

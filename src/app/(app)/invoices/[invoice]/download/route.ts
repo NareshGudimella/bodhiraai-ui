@@ -10,8 +10,8 @@ export async function GET(request: Request, { params }: RouteContext<'/invoices/
   const token = await getToken();
   if (!token) return NextResponse.redirect(siteUrl('/login', request.url), 302);
   const { invoice } = await params;
-  if (!/^\d+$/.test(invoice)) return new NextResponse('Not Found', { status: 404 }); // security: not in legacy
-  const res = await fetch(`${API_URL}/billing/invoices/${invoice}/download`, {
+  if (invoice === '.' || invoice === '..') return new NextResponse('Not Found', { status: 404 }); // security: not in legacy; one encoded path segment
+  const res = await fetch(`${API_URL}/billing/invoices/${encodeURIComponent(invoice)}/download`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf', ...proxySecretHeader() },
     cache: 'no-store',
   });

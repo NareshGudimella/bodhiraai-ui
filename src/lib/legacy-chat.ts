@@ -4,8 +4,8 @@ import { api, ApiError } from './api';
 import { setFlash } from './flash';
 import { homeFor } from './roles';
 import { getToken } from './session';
-import { siteUrl } from './site-url';
-import { idSeg, seg } from '@/lib/api-path';
+import { isCrossSite, siteUrl } from './site-url';
+import { seg } from '@/lib/api-path';
 
 /**
  * Legacy GET /chat/with-teacher/{student} (parents) and /chat/with-parent/{student}
@@ -20,13 +20,15 @@ export async function legacyStartChat(
   start: 'with-teacher' | 'with-parent',
   student: string,
 ): Promise<NextResponse> {
+  // security: not in legacy. A chat started from another site creates nothing; the home page sends the visitor to their own chat list.
+  if (isCrossSite(request)) return NextResponse.redirect(siteUrl('/', request.url), 302);
   const path = `/chat/${start}/${encodeURIComponent(student)}`;
   if (!(await getToken())) {
     const url = siteUrl('/login', request.url);
     url.searchParams.set('next', path);
     return NextResponse.redirect(url, 302);
   }
-  if (!/^\d+$/.test(student)) return new NextResponse('Not Found', { status: 404 });
+  if (student === '.' || student === '..') return new NextResponse('Not Found', { status: 404 }); // security: not in legacy; the value is one API path segment
 
   const wanted = start === 'with-teacher' ? 'parent' : 'teacher';
   try {
@@ -34,8 +36,8 @@ export async function legacyStartChat(
     // Legacy `role:teacher,parent` middleware, then the per-action role check.
     if (me.role !== wanted) return new NextResponse('Forbidden', { status: 403 });
 
-    const { id } = await api<{ id: number }>(`/chat/${seg(start)}/${idSeg(student)}`, { method: 'POST' });
-    return NextResponse.redirect(siteUrl(`${homeFor(me.role)}/chat/${id}`, request.url), 302);
+    const { id, public_id } = await api<{ id: number; public_id?: string }>(`/chat/${seg(start)}/${seg(student)}`, { method: 'POST' });
+    return NextResponse.redirect(siteUrl(`${homeFor(me.role)}/chat/${public_id ?? id}`, request.url), 302);
   } catch (e) {
     if (!(e instanceof ApiError)) throw e;
     if (e.status === 401) return NextResponse.redirect(siteUrl('/login?expired=1', request.url), 302);

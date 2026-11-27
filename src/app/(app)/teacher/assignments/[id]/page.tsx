@@ -1,4 +1,5 @@
 import { Card, PageHeader, Pill, SectionTitle, Stat } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { mediaUrl } from "@/lib/media";
 import { fileNameOf } from "@/lib/signed-file";
 import { teacherApi } from "@/lib/teacher-api";
@@ -18,6 +19,7 @@ const due = (iso: string | null) =>
 export default async function AssignmentPage({ params }: PageProps<"/teacher/assignments/[id]">) {
   const { id } = await params;
   const { assignment: a, roster } = await teacherApi.assignment(id);
+  canonical(id, a.slug, "/teacher/assignments");
   const subs = new Map(a.submissions.map((s) => [s.id, s]));
   const submitted = roster.filter((r) => r.submission_id).length;
   const graded = roster.filter((r) => r.graded).length;

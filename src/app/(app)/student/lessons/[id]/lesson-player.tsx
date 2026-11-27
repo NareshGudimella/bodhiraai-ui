@@ -62,12 +62,12 @@ export function LessonPlayer({
     void saveProgress(lessonId, current).then(apply);
   }
 
-  /** The end always reports the final position (the 90% rule completes the lesson). */
+  /** Reaching the end completes the lesson (not in legacy: legacy relied on the 90% rule alone). */
   function onEnded(current: number, duration: number) {
     position.current = { current, duration };
     if (done) return;
     lastTick.current = Date.now();
-    void saveProgress(lessonId, current).then(apply);
+    void saveProgress(lessonId, current, true).then(apply);
   }
 
   const isVideo = type === "video" && (playback === "hls" || playback === "processing" || !!src);

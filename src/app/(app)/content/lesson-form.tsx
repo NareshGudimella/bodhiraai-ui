@@ -42,7 +42,7 @@ export function LessonForm({
   initial?: Initial;
   edit?: boolean;
   submitLabel: string;
-  chapterId: number;
+  chapterId: number | string;
   lessonId?: number;
 }) {
   const router = useRouter();
@@ -159,6 +159,19 @@ export function LessonForm({
     el.currentTime = Math.min(at, Math.max(0.1, el.duration - 0.1));
   }
 
+  /** Not in legacy: a video lesson's duration is the video's own length, never typed in. */
+  function setDuration(seconds: number) {
+    if (duration.current && Number.isFinite(seconds) && seconds > 0) duration.current.value = String(Math.round(seconds));
+  }
+
+  /** The length of a pasted video URL, read from its metadata (no download of the whole file). */
+  function measureUrl(url: string) {
+    if (type !== "video" || !/^(https?:\/\/|\/)/.test(url.trim())) return;
+    const el = Object.assign(document.createElement("video"), { muted: true, preload: "metadata" });
+    el.addEventListener("loadedmetadata", () => setDuration(el.duration), { once: true });
+    el.src = url.trim();
+  }
+
   function picked(file: File | undefined) {
     setThumb(null);
     if (!file || !file.type.startsWith("video/")) return;
@@ -167,7 +180,7 @@ export function LessonForm({
     el.addEventListener(
       "loadedmetadata",
       () => {
-        if (duration.current && !duration.current.value) duration.current.value = String(Math.round(el.duration));
+        setDuration(el.duration);
         grab(el.duration * 0.25);
       },
       { once: true },
@@ -196,8 +209,21 @@ export function LessonForm({
             <option value="text">Text</option>
           </select>
         </Field>
-        <Field label="Duration (seconds)" error={e.duration_sec}>
-          <input ref={duration} name="duration_sec" type="number" min={0} defaultValue={text("duration_sec")} className={inputClass} />
+        <Field
+          label="Duration (seconds)"
+          error={e.duration_sec}
+          hint={type === "video" ? "Taken from the video (the exact length is set again when it finishes processing)" : undefined}
+        >
+          <input
+            ref={duration}
+            name="duration_sec"
+            type="number"
+            min={0}
+            defaultValue={text("duration_sec")}
+            readOnly={type === "video"}
+            aria-readonly={type === "video"}
+            className={`${inputClass}${type === "video" ? " bg-page text-ink-2" : ""}`}
+          />
         </Field>
       </div>
       {type !== "text" && (
@@ -206,7 +232,14 @@ export function LessonForm({
             <input name="content_file" type="file" accept={type === "pdf" ? "application/pdf" : "video/*"} onChange={(ev) => picked(ev.target.files?.[0])} className="block w-full text-sm" />
           </Field>
           <Field label="…or a URL" error={e.content_url} hint={edit ? "Leave blank to keep the current file" : undefined}>
-            <input name="content_url" type="url" defaultValue={edit ? "" : text("content_url")} placeholder={edit ? current("content_url") : "https://"} className={inputClass} />
+            <input
+            name="content_url"
+            type="url"
+            defaultValue={edit ? "" : text("content_url")}
+            placeholder={edit ? current("content_url") : "https://"}
+            onBlur={(ev) => measureUrl(ev.target.value)}
+            className={inputClass}
+          />
           </Field>
         </div>
       )}

@@ -1,12 +1,13 @@
 import 'server-only';
 import { load } from './load';
 import type { LiveClass } from './student-api';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Typed reads for /api/v1/teacher/* (legacy contract). */
 
 export type ClassSummary = {
   id: number;
+  slug?: string;
   label: string;
   grade: string;
   section: string;
@@ -18,6 +19,7 @@ export type ClassSummary = {
 
 type UserRow = {
   id: number;
+  public_id?: string;
   name: string;
   username: string | null;
   email: string | null;
@@ -31,6 +33,7 @@ type UserRow = {
 export type ClassDetail = {
   class: {
     id: number;
+    slug?: string;
     grade: string;
     section: string;
     academic_year: string | null;
@@ -39,18 +42,19 @@ export type ClassDetail = {
     class_teacher: UserRow | null;
   };
   stats: { students: number; subjects: number; attendance_percent: number; assignments_count: number };
-  assignments: { id: number; title: string; due_date: string | null; max_marks: number; is_published: boolean }[];
+  assignments: { id: number; slug?: string; title: string; due_date: string | null; max_marks: number; is_published: boolean }[];
   recent_scores: { student: string | null; score: number; total: number; percent: number; submitted_at: string | null }[];
 };
 
 export type AttendanceSheet = {
-  class: { id: number; grade: string; section: string };
+  class: { id: number; slug?: string; grade: string; section: string };
   date: string;
-  records: { student_id: number; name: string; roll_no: string | null; status: string | null }[];
+  records: { student_id: number; student_public_id?: string; name: string; roll_no: string | null; status: string | null }[];
 };
 
 export type AssignmentRow = {
   id: number;
+  slug?: string;
   title: string;
   class: string | null;
   subject: string | null;
@@ -63,6 +67,7 @@ export type AssignmentRow = {
 export type AssignmentDetail = {
   assignment: {
     id: number;
+    slug?: string;
     title: string;
     description: string | null;
     attachment_url: string | null;
@@ -85,6 +90,7 @@ export type AssignmentDetail = {
 
 export type QuizRow = {
   id: number;
+  slug?: string;
   title: string;
   subject: string | null;
   chapter: string | null;
@@ -96,7 +102,7 @@ export type QuizRow = {
 };
 
 export type QuizAnalytics = {
-  quiz: { id: number; title: string; pass_marks: number; total_marks: number; subject: { name: string } | null; chapter: { title: string } | null };
+  quiz: { id: number; slug?: string; title: string; pass_marks: number; total_marks: number; subject: { name: string } | null; chapter: { title: string } | null };
   stats: { attempts: number; avg_percent: number; pass_rate: number; highest: number; lowest: number };
   attempts: { id: number; student: string | null; score: number; total: number; percent: number; submitted_at: string | null }[];
 };
@@ -126,7 +132,7 @@ export const teacherApi = {
         /** Not in legacy's API. */
         attendance_today_percent: number;
       };
-      classes: { id: number; label: string; students_count: number }[];
+      classes: { id: number; slug?: string; label: string; students_count: number }[];
       recent_submissions: {
         id: number;
         assignment_title: string | null;
@@ -138,15 +144,15 @@ export const teacherApi = {
       }[];
     }>('/teacher/home'),
   classes: () => load<ClassSummary[]>('/teacher/classes'),
-  class: (id: string) => load<ClassDetail>(`/teacher/classes/${idSeg(id)}`),
+  class: (id: string) => load<ClassDetail>(`/teacher/classes/${seg(id)}`),
   attendance: (id: string, date?: string) =>
-    load<AttendanceSheet>(`/teacher/classes/${idSeg(id)}/attendance${date ? `?date=${encodeURIComponent(date)}` : ''}`),
+    load<AttendanceSheet>(`/teacher/classes/${seg(id)}/attendance${date ? `?date=${encodeURIComponent(date)}` : ''}`),
   assignments: () => load<AssignmentRow[]>('/teacher/assignments'),
-  assignment: (id: string) => load<AssignmentDetail>(`/teacher/assignments/${idSeg(id)}`),
+  assignment: (id: string) => load<AssignmentDetail>(`/teacher/assignments/${seg(id)}`),
   quizzes: () => load<QuizRow[]>('/teacher/quizzes'),
-  quizAnalytics: (id: string) => load<QuizAnalytics>(`/teacher/quizzes/${idSeg(id)}/analytics`),
+  quizAnalytics: (id: string) => load<QuizAnalytics>(`/teacher/quizzes/${seg(id)}/analytics`),
   liveClasses: () => load<TeacherLive[]>('/teacher/live-classes'),
-  liveClass: (id: string) => load<TeacherLive>(`/teacher/live-classes/${idSeg(id)}`),
+  liveClass: (id: string) => load<TeacherLive>(`/teacher/live-classes/${seg(id)}`),
   student: (id: string) =>
     load<{
       student: UserRow & { grade: string | null; last_login_at: string | null; school: { name: string } | null };
@@ -166,8 +172,8 @@ export const teacherApi = {
       overall_avg: number;
       attendance: { month_label: string; totals: { percent: number; present: number; absent: number; late: number; excused: number } };
       ai_activity: { id: number; title: string; mode: string; messages_count: number; last_at: string | null }[];
-      parents: { id: number; name: string; avatar: string | null; relation: string | null; phone: string | null; email: string | null }[];
-    }>(`/teacher/students/${idSeg(id)}`),
+      parents: { id: number; public_id?: string; name: string; avatar: string | null; relation: string | null; phone: string | null; email: string | null }[];
+    }>(`/teacher/students/${seg(id)}`),
   liveScopes: () =>
     load<{
       classes: { id: number; label: string; students_count: number }[];

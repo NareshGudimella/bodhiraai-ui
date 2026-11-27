@@ -18,6 +18,7 @@ import { imageResolver, settingResolver, siteMetadata } from "@/lib/site";
 import { businessDetails, CONTACT_FALLBACK } from "@/lib/site-business";
 import { contactSubmit } from "@/lib/site-actions";
 import { getSiteFlash } from "@/lib/site-flash";
+import { sanitizeMap } from "@/lib/sanitize-html";
 
 /** Renders per request and may block, like the site layout (see its note). */
 export const instant = false;
@@ -143,7 +144,7 @@ export default async function ContactPage() {
             <div
               className="overflow-hidden rounded-xl border border-line bg-cream-2 shadow-md [&_iframe]:block [&_iframe]:h-[420px] [&_iframe]:w-full! [&_iframe]:border-0 max-sm:[&_iframe]:h-[320px]"
               data-reveal
-              dangerouslySetInnerHTML={{ __html: map }}
+              dangerouslySetInnerHTML={{ __html: sanitizeMap(map) }}
             />
           </div>
         </section>

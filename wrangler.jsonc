@@ -55,9 +55,11 @@
     "API_ORIGIN": "https://api.bodhiraai.com",
     "SITE_URL": "https://bodhiraai.com"
   },
+  // invocation_logs is off in every target: they record full URLs with tokens (reset links, HLS ?t=,
+  // signed /files links, handoff codes). Explicit console logs still work. security: not in legacy
   // Secret names only (set with `wrangler secret put`); `wrangler dev` warns when one is missing.
   "secrets": { "required": ["APP_SECRET"] },
-  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } },
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
 
   "env": {
     // Cut-over step 7 onwards. Same Worker name, so the secrets, Durable
@@ -86,7 +88,7 @@
         "SITE_URL": "https://bodhiraai.com"
       },
       "secrets": { "required": ["APP_SECRET"] },
-      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } }
+      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } }
     },
 
     // The cut-over rehearsal (docs/cutover-runbook.md §4). Never point it at
@@ -120,7 +122,7 @@
         "SITE_URL": "https://<staging-host>"
       },
       "secrets": { "required": ["APP_SECRET"] },
-      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true } }
+      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } }
     }
   }
 }

@@ -107,7 +107,7 @@ export default async function ProfilePage() {
                     </td>
                     <td className="hidden px-4 py-3 text-ink-3 sm:table-cell">{day(a.submitted_at)}</td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/student/attempts/${a.id}`} className="font-medium text-primary-dark hover:underline">
+                      <Link href={`/student/attempts/${a.public_id ?? a.id}`} className="font-medium text-primary-dark hover:underline">
                         View →
                       </Link>
                     </td>

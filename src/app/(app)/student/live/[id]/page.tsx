@@ -1,10 +1,12 @@
 import { Card, PageHeader, Pill, buttonClass, secondaryButtonClass } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { studentApi } from "@/lib/student-api";
 import { STATUS, when } from "../live-card";
 
 export default async function LiveClassPage({ params }: PageProps<"/student/live/[id]">) {
   const { id } = await params;
   const c = await studentApi.liveClass(id);
+  canonical(id, c.slug, "/student/live");
   const s = STATUS[c.live_status];
   // Only a live class can be joined; a scheduled one opens at its start time (legacy live/show.blade.php).
   const joinable = c.live_status === "live" && c.meeting_url;
@@ -26,7 +28,7 @@ export default async function LiveClassPage({ params }: PageProps<"/student/live
         </div>
         {c.description && <p className="mb-4 whitespace-pre-line text-sm text-ink">{c.description}</p>}
         {joinable ? (
-          <a href={`/student/live/${c.id}/join`} target="_blank" rel="noopener" className={buttonClass}>
+          <a href={`/student/live/${c.slug ?? c.id}/join`} target="_blank" rel="noopener" className={buttonClass}>
             ▶ Join now
           </a>
         ) : c.live_status === "scheduled" ? (

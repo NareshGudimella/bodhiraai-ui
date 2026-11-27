@@ -15,7 +15,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [remaining, setRemaining] = useState(quiz.duration_min * 60);
   const [error, setError] = useState<string | null>(null);
-  const [celebration, setCelebration] = useState<{ attemptId: number; data: Celebration } | null>(null);
+  const [celebration, setCelebration] = useState<{ attemptId: string | number; data: Celebration } | null>(null);
   const [pending, startTransition] = useTransition();
   const submitted = useRef(false);
 
@@ -176,7 +176,7 @@ const TIER_STYLE: Record<string, string> = {
 };
 
 /** Newly earned badges after a passed quiz (legacy partials/badge-celebration). */
-function CelebrationPanel({ attemptId, data }: { attemptId: number; data: Celebration }) {
+function CelebrationPanel({ attemptId, data }: { attemptId: string | number; data: Celebration }) {
   return (
     <Card className="mx-auto max-w-lg text-center">
       <p className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Badge unlocked</p>

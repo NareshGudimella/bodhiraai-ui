@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Card, PageHeader, Pill, Stat, buttonClass, secondaryButtonClass } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { answerText, givenAnswers, optionParts } from "@/lib/student-answers";
 import { studentApi } from "@/lib/student-api";
 
 export default async function AttemptResultPage({ params }: PageProps<"/student/attempts/[id]">) {
-  const a = await studentApi.attempt((await params).id);
-  const subjectId = a.quiz.subject?.id;
+  const { id } = await params;
+  const a = await studentApi.attempt(id);
+  canonical(id, a.public_id, "/student/attempts");
+  const subjectId = a.quiz.subject?.url_slug ?? a.quiz.subject?.id;
 
   return (
     <>
@@ -94,7 +97,7 @@ export default async function AttemptResultPage({ params }: PageProps<"/student/
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link href="/student/quizzes" className={secondaryButtonClass}>← Back to quizzes</Link>
-        <Link href={`/student/quizzes/${a.quiz.id}`} className={buttonClass}>🔁 Try again</Link>
+        <Link href={`/student/quizzes/${a.quiz.slug ?? a.quiz.id}`} className={buttonClass}>🔁 Try again</Link>
       </div>
     </>
   );

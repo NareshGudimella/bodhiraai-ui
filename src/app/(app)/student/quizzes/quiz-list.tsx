@@ -33,7 +33,7 @@ export function QuizList({ quizzes }: { quizzes: QuizSummary[] }) {
       <ul className="grid gap-3 sm:grid-cols-2">
         {shown.map((q, i) => (
           <li key={q.id}>
-            <Link href={`/student/quizzes/${q.id}`} className="block h-full">
+            <Link href={`/student/quizzes/${q.slug ?? q.id}`} className="block h-full">
               <Card className="ccard h-full p-4 transition hover:ring-primary" style={cardTone(i)}>
                 <p className="font-semibold text-ink">{q.title}</p>
                 <p className="mt-1 text-xs text-ink-2">{[q.subject, q.chapter].filter(Boolean).join(" · ")}</p>

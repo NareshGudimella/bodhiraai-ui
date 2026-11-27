@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { assetResolver, settingResolver } from "@/lib/site";
+import { accountLink } from "@/lib/session";
 import { getChrome } from "@/lib/site-api";
 import { HeaderBar, MenuButton, MobileMenu, MobileMenuProvider } from "./header-client";
 import { BrandIcon, brandFor, Icon } from "./icons";
@@ -41,6 +42,7 @@ export async function SiteHeader() {
   const nav = header_menu.length ? header_menu.map((i) => ({ label: i.label, url: i.url, target: i.target || "_self" })) : DEFAULT_NAV;
   const logo = asset("assets/img/logo/bodhira-logo-light.png");
   const siteName = setting("general.site_name", "Bodhira.ai");
+  const account = await accountLink();
   return (
     <MobileMenuProvider>
       <a
@@ -66,9 +68,9 @@ export async function SiteHeader() {
             </li>
           </ul>
           <div className="flex items-center gap-5">
-            <a href="/login" className={cx("inline-flex items-center gap-2 whitespace-nowrap", TOPBAR_LINK)}>
+            <a href={account.href} className={cx("inline-flex items-center gap-2 whitespace-nowrap", TOPBAR_LINK)}>
               <Icon name="user" size={14} className="text-gold-bright" />
-              Sign In
+              {account.label}
             </a>
             {social.length > 0 && (
               <div className="flex items-center gap-2.5 max-sm:hidden">
@@ -120,8 +122,8 @@ export async function SiteHeader() {
             </ul>
           </nav>
           <div className="flex flex-none items-center gap-2.5">
-            <a href="/login" className={btn("gold", "custom", "min-h-[42px] px-5 text-[15px] max-[1101px]:px-4 max-sm:hidden")}>
-              Sign In <Icon name="arrowRight" size={16} />
+            <a href={account.href} className={btn("gold", "custom", "min-h-[42px] px-5 text-[15px] max-[1101px]:px-4 max-sm:hidden")}>
+              {account.label} <Icon name="arrowRight" size={16} />
             </a>
             <MenuButton />
           </div>
@@ -140,8 +142,8 @@ export async function SiteHeader() {
           </a>
         }
         signIn={
-          <a href="/login" className={btn("maroon", "md", "-mt-6 mb-8 w-full nav:hidden focus-visible:outline-maroon! focus-visible:outline-offset-2! focus-visible:rounded-[6px]")}>
-            Sign In
+          <a href={account.href} className={btn("maroon", "md", "-mt-6 mb-8 w-full nav:hidden focus-visible:outline-maroon! focus-visible:outline-offset-2! focus-visible:rounded-[6px]")}>
+            {account.label}
           </a>
         }
         contact={

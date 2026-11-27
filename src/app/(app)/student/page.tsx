@@ -47,7 +47,7 @@ export default async function StudentHome() {
             <ul className="space-y-2">
               {upcoming_quizzes.map((q, i) => (
                 <li key={q.id}>
-                  <Link href={`/student/quizzes/${q.id}`} className="block">
+                  <Link href={`/student/quizzes/${q.slug ?? q.id}`} className="block">
                     <Card className="ccard p-4 transition hover:ring-primary" style={cardTone(i)}>
                       <p className="font-medium text-ink">{q.title}</p>
                       <p className="text-xs text-ink-2">

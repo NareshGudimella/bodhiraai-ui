@@ -29,13 +29,14 @@ function schoolForm(form: FormData, extra: string[] = []) {
 }
 
 export async function createSchool(_: FormState, form: FormData): Promise<FormState> {
-  let id: number;
+  let ref: string | number;
   try {
-    ({ id } = await api<{ id: number }>('/super/schools/web', { body: schoolForm(form, ['code']) }));
+    const r = await api<{ id: number; slug?: string }>('/super/schools/web', { body: schoolForm(form, ['code']) });
+    ref = r.slug ?? r.id;
   } catch (e) {
     return failure(e, 'Could not create the school.', form);
   }
-  redirect(`/super/schools/${id}`);
+  redirect(`/super/schools/${ref}`);
 }
 
 export async function updateSchool(id: number, _: FormState, form: FormData): Promise<FormState> {
@@ -91,11 +92,12 @@ export async function toggleSchoolAdmin(schoolId: number, userId: number) {
 const SYLLABUS_FIELDS = ['board', 'grade', 'name', 'description', 'sort_order', 'is_active'];
 
 export async function saveSyllabus(id: number | null, _: FormState, form: FormData): Promise<FormState> {
-  let target: number;
+  let target: string | number;
   try {
-    ({ id: target } = id
-      ? await api<{ id: number }>(`/super/syllabi/${idSeg(id)}`, { method: 'PATCH', body: pick(form, SYLLABUS_FIELDS) })
-      : await api<{ id: number }>('/super/syllabi', { body: pick(form, SYLLABUS_FIELDS) }));
+    const r = id
+      ? await api<{ id: number; slug?: string }>(`/super/syllabi/${idSeg(id)}`, { method: 'PATCH', body: pick(form, SYLLABUS_FIELDS) })
+      : await api<{ id: number; slug?: string }>('/super/syllabi', { body: pick(form, SYLLABUS_FIELDS) });
+    target = r.slug ?? r.id;
   } catch (e) {
     return failure(e, 'Could not save the syllabus.', form);
   }

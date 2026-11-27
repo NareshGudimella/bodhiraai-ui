@@ -1,5 +1,6 @@
 import { Card, Empty, PageHeader, Pill, Stat } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { parentApi } from "@/lib/parent-api";
 import { ChildTabs } from "../child-tabs";
 
@@ -8,10 +9,11 @@ const TONE: Record<string, "success" | "brand" | "neutral"> = { graded: "success
 export default async function ChildAssignmentsPage({ params }: PageProps<"/parent/children/[id]/assignments">) {
   const { id } = await params;
   const { student, assignments, totals } = await parentApi.assignments(id);
+  canonical(id, student.public_id, "/parent/children", "/assignments");
   return (
     <>
       <PageHeader back={{ href: "/parent", label: "Dashboard" }} title={student.name} />
-      <ChildTabs id={id} current="/assignments" />
+      <ChildTabs id={student.public_id ?? id} current="/assignments" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Stat label="Total" value={totals.total} />
         <Stat label="Graded" value={totals.graded} />

@@ -31,7 +31,7 @@ export default async function SuperSchoolsPage({ searchParams }: PageProps<"/sup
               {schools.map((s) => (
                 <tr key={s.id} className="border-t border-line">
                   <td>
-                    <Link href={`/super/schools/${s.id}`} className="font-medium hover:underline">{s.name}</Link>
+                    <Link href={`/super/schools/${s.slug ?? s.id}`} className="font-medium hover:underline">{s.name}</Link>
                     {s.is_direct && <span className="ml-2"><DirectBadge /></span>}
                     <span className="block text-xs text-ink-3">{s.code}{s.email ? ` · ${s.email}` : ""}</span>
                   </td>

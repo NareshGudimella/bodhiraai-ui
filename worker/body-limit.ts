@@ -24,6 +24,16 @@ export function overBodyLimit(method: string, path: string, contentLength: strin
   return Number(contentLength) > bodyLimit(path);
 }
 
+/** Past this, a request with no session cookie is refused before any other check. */
+export const ANONYMOUS_BODY_LIMIT = 12 * MB;
+
+/** security: not in legacy. A non-GET/HEAD body over 12 MB without a `bodhira_token` cookie. */
+export function refuseAnonymousBigBody(method: string, contentLength: string | null, cookie: string | null): boolean {
+  if (method === 'GET' || method === 'HEAD') return false;
+  if (!(Number(contentLength) > ANONYMOUS_BODY_LIMIT)) return false;
+  return !/(?:^|;\s*)bodhira_token=/.test(cookie ?? '');
+}
+
 /** The body, cut off with an error once it passes the limit (no Content-Length, e.g. chunked). */
 export function limitBody(body: ReadableStream<Uint8Array> | null, path: string): ReadableStream<Uint8Array> | null {
   if (!body) return null;

@@ -11,7 +11,7 @@ export function AssignmentForm({
   classId,
   subjects,
 }: {
-  classes: { id: number; label: string }[];
+  classes: { id: number; slug?: string; label: string }[];
   classId?: string;
   subjects: { id: number; name: string }[];
 }) {
@@ -28,7 +28,7 @@ export function AssignmentForm({
             <select
               name="class_id"
               defaultValue={classId}
-              onChange={(ev) => router.replace(`?class=${ev.target.value}`)}
+              onChange={(ev) => router.replace(`?class=${classes.find((c) => String(c.id) === ev.target.value)?.slug ?? ev.target.value}`)}
               className={inputClass}
             >
               {classes.map((c) => (

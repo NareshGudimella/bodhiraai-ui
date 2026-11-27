@@ -25,6 +25,7 @@ export default async function StudentAssignmentsPage() {
           <AssignmentList
             rows={rows.map((a) => ({
               id: a.id,
+              slug: a.slug,
               title: a.title,
               subject: a.subject,
               due_date: a.due_date,

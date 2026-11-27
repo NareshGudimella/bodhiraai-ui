@@ -1,6 +1,6 @@
 import 'server-only';
 import { load } from './load';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Typed reads for /api/v1/student/* (shapes match bodhiraai-api, i.e. the legacy contract). */
 
@@ -8,6 +8,8 @@ export type Subject = {
   id: number;
   name: string;
   slug: string;
+  /** Not in legacy: the globally unique slug the URLs use (`slug` is per school + grade). */
+  url_slug?: string;
   grade: string | null;
   icon: string | null;
   color: string | null;
@@ -20,6 +22,7 @@ export type Subject = {
 export type Chapter = {
   id: number;
   subject_id: number;
+  url_slug?: string;
   title: string;
   description: string | null;
   sort_order: number;
@@ -28,6 +31,7 @@ export type Chapter = {
 
 export type Lesson = {
   id: number;
+  url_slug?: string;
   chapter_id: number;
   title: string;
   type: 'video' | 'pdf' | 'text' | string;
@@ -40,10 +44,15 @@ export type Lesson = {
   duration_label: string;
   is_free: boolean;
   sort_order: number;
-  chapter?: { id: number; title: string; subject: { id: number; name: string; icon: string | null } | null };
+  chapter?: {
+    id: number;
+    url_slug?: string;
+    title: string;
+    subject: { id: number; url_slug?: string; name: string; icon: string | null } | null;
+  };
 };
 
-export type Sibling = { id: number; title: string; type: string; sort_order: number; duration_sec: number };
+export type Sibling = { id: number; url_slug?: string; title: string; type: string; sort_order: number; duration_sec: number };
 
 export type Progress = { status: string; watched_seconds: number; progress_percent: number };
 
@@ -52,17 +61,19 @@ export type QuizState = {
   all_completed: boolean;
   quiz: {
     id: number;
+    slug?: string;
     title: string;
     duration_min: number;
     total_marks: number;
     pass_marks: number;
     questions_count: number;
   } | null;
-  attempt: { id: number; score: number; total_marks: number; passed: boolean } | null;
+  attempt: { id: number; public_id?: string; score: number; total_marks: number; passed: boolean } | null;
 };
 
 export type QuizSummary = {
   id: number;
+  slug?: string;
   title: string;
   subject: string | null;
   chapter: string | null;
@@ -81,13 +92,14 @@ export type Question = {
 
 export type Quiz = {
   id: number;
+  slug?: string;
   title: string;
   description: string | null;
   duration_min: number;
   total_marks: number;
   pass_marks: number;
-  subject?: { id: number; name: string; icon: string | null } | null;
-  chapter?: { id: number; title: string } | null;
+  subject?: { id: number; url_slug?: string; name: string; icon: string | null } | null;
+  chapter?: { id: number; url_slug?: string; title: string } | null;
   questions?: Question[];
 };
 
@@ -132,6 +144,9 @@ export type Dashboard = {
   profile_completion_percent: number;
   continue_learning: {
     lesson_id: number;
+    lesson_slug?: string | null;
+    subject_slug?: string | null;
+    chapter_slug?: string | null;
     title: string;
     subject: string | null;
     chapter: string | null;
@@ -145,6 +160,7 @@ export type Dashboard = {
 
 export type AttemptResult = {
   id: number;
+  public_id?: string;
   status: string;
   score: number;
   total_marks: number;
@@ -171,6 +187,7 @@ export type TokenStatus = { limit: number; used: number; remaining: number; perc
 
 export type AiSessionSummary = {
   id: number;
+  public_id?: string;
   title: string | null;
   mode: string;
   messages_count: number;
@@ -182,6 +199,7 @@ export type AiMessage = { id: number; role: 'user' | 'assistant'; content: strin
 
 export type LiveClass = {
   id: number;
+  slug?: string;
   title: string;
   scheduled_at: string;
   duration_min: number;
@@ -207,6 +225,7 @@ export type Submission = {
 
 export type StudentAssignment = {
   id: number;
+  slug?: string;
   title: string;
   subject: string | null;
   class: string;
@@ -220,7 +239,9 @@ const get = load;
 
 export type ProfileAttempt = {
   id: number;
+  public_id?: string;
   quiz_id: number;
+  quiz_slug?: string | null;
   title: string | null;
   subject: string | null;
   score: number;
@@ -290,21 +311,21 @@ export const studentApi = {
       '/student/badges',
     ),
   subjects: () => get<Subject[]>('/student/subjects'),
-  subject: (id: string) => get<{ subject: Subject; chapters: Chapter[] }>(`/student/subjects/${idSeg(id)}`),
+  subject: (id: string) => get<{ subject: Subject; chapters: Chapter[] }>(`/student/subjects/${seg(id)}`),
   chapterLessons: (id: string) =>
-    get<{ chapter: { id: number; title: string; subject_id: number }; lessons: Lesson[]; quiz_state: QuizState }>(
-      `/student/chapters/${idSeg(id)}/lessons`,
+    get<{ chapter: { id: number; url_slug?: string; title: string; subject_id: number; subject_slug?: string | null }; lessons: Lesson[]; quiz_state: QuizState }>(
+      `/student/chapters/${seg(id)}/lessons`,
     ),
   lesson: (id: string) =>
     get<{ lesson: Lesson; progress: Progress; siblings: Sibling[] }>(
-      `/student/lessons/${idSeg(id)}`,
+      `/student/lessons/${seg(id)}`,
     ),
   quizzes: () => get<QuizSummary[]>('/student/quizzes'),
-  quiz: (id: string) => get<Quiz>(`/student/quizzes/${idSeg(id)}`),
-  attempt: (id: string) => get<AttemptResult>(`/student/attempts/${idSeg(id)}`),
+  quiz: (id: string) => get<Quiz>(`/student/quizzes/${seg(id)}`),
+  attempt: (id: string) => get<AttemptResult>(`/student/attempts/${seg(id)}`),
   aiSessions: () => get<AiSessionSummary[]>('/student/ai/sessions'),
   aiSession: (id: string | number) =>
-    get<{ session: { id: number; title: string | null }; messages: AiMessage[] }>(`/student/ai/sessions/${idSeg(id)}`),
+    get<{ session: { id: number; public_id?: string; title: string | null }; messages: AiMessage[] }>(`/student/ai/sessions/${seg(id)}`),
   aiTokens: () => get<TokenStatus>('/student/ai/tokens'),
   aiRecommendations: () =>
     get<{
@@ -312,12 +333,13 @@ export const studentApi = {
       next_lesson: { id: number; title: string; subject: string | null; chapter: string | null } | null;
     }>('/student/ai/recommendations'),
   liveClasses: () => get<{ live_now: LiveClass[]; upcoming: LiveClass[]; past: LiveClass[] }>('/student/live-classes'),
-  liveClass: (id: string) => get<LiveClass>(`/student/live-classes/${idSeg(id)}`),
+  liveClass: (id: string) => get<LiveClass>(`/student/live-classes/${seg(id)}`),
   assignments: () => get<StudentAssignment[]>('/student/assignments'),
   assignment: (id: string) =>
     get<{
       assignment: {
         id: number;
+        slug?: string;
         title: string;
         description: string | null;
         attachment_url: string | null;
@@ -329,5 +351,5 @@ export const studentApi = {
       };
       status: string;
       submission: Submission | null;
-    }>(`/student/assignments/${idSeg(id)}`),
+    }>(`/student/assignments/${seg(id)}`),
 };

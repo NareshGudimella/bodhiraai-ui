@@ -20,7 +20,7 @@ export const when = (iso: string) =>
 export function LiveCard({ c, href, subject, i = 0 }: { c: LiveClass; href?: string; subject?: string | null; i?: number }) {
   const s = STATUS[c.live_status];
   return (
-    <Link href={href ?? `/student/live/${c.id}`} className="block h-full">
+    <Link href={href ?? `/student/live/${c.slug ?? c.id}`} className="block h-full">
       <Card className="ccard h-full p-4 transition hover:ring-primary" style={cardTone(i)}>
         <div className="mb-2 flex items-start justify-between gap-3">
           <p className="font-semibold text-ink">{c.title}</p>

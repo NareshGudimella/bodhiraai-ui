@@ -1,19 +1,22 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, Pill } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { studentApi } from "@/lib/student-api";
 import { ChapterQuiz } from "../../chapter-quiz";
 
 const TYPE_ICON: Record<string, string> = { video: "▶️", pdf: "📄", text: "📖" };
 
 export default async function ChapterPage({ params }: PageProps<"/student/chapters/[id]">) {
-  const { chapter, lessons, quiz_state } = await studentApi.chapterLessons((await params).id);
+  const { id } = await params;
+  const { chapter, lessons, quiz_state } = await studentApi.chapterLessons(id);
+  canonical(id, chapter.url_slug, "/student/chapters");
   const done = new Set(quiz_state.completed_ids);
 
   return (
     <>
       <PageHeader
-        back={{ href: `/student/subjects/${chapter.subject_id}`, label: "Chapters" }}
+        back={{ href: `/student/subjects/${chapter.subject_slug ?? chapter.subject_id}`, label: "Chapters" }}
         title={chapter.title}
         subtitle={`${done.size} of ${lessons.length} lessons complete`}
       />
@@ -21,7 +24,7 @@ export default async function ChapterPage({ params }: PageProps<"/student/chapte
         <ol className="space-y-2">
           {lessons.map((l, i) => (
             <li key={l.id}>
-              <Link href={`/student/lessons/${l.id}`} className="block">
+              <Link href={`/student/lessons/${l.url_slug ?? l.id}`} className="block">
                 <Card className="ccard flex items-center gap-4 p-4 transition hover:ring-primary" style={cardTone(i)}>
                   <span aria-hidden className="text-xl">
                     {done.has(l.id) ? "✅" : (TYPE_ICON[l.type] ?? "📘")}

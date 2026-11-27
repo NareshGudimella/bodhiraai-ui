@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, SectionTitle, Stat, buttonClass } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { teacherApi } from "@/lib/teacher-api";
 import { mediaUrl } from "@/lib/media";
 import { AddStudentForm, RosterList } from "./roster";
@@ -11,6 +12,7 @@ const day = (iso: string | null) =>
 export default async function ClassPage({ params }: PageProps<"/teacher/classes/[id]">) {
   const { id } = await params;
   const { class: c, stats, assignments, recent_scores } = await teacherApi.class(id);
+  canonical(id, c.slug, "/teacher/classes");
   const students = [...c.students].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
@@ -19,7 +21,7 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
         back={{ href: "/teacher/classes", label: "Classes" }}
         title={`Grade ${c.grade} - ${c.section}`}
         subtitle={c.class_teacher ? `Class teacher: ${c.class_teacher.name}` : undefined}
-        action={<Link href={`/teacher/classes/${c.id}/attendance`} className={buttonClass}>Take attendance</Link>}
+        action={<Link href={`/teacher/classes/${c.slug ?? c.id}/attendance`} className={buttonClass}>Take attendance</Link>}
       />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Students" value={stats.students} />
@@ -35,6 +37,7 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
             classId={c.id}
             students={students.map((s) => ({
               id: s.id,
+              public_id: s.public_id,
               name: s.name,
               username: s.username,
               email: s.email,
@@ -64,7 +67,7 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
               <ul className="space-y-2">
                 {assignments.map((a, i) => (
                   <li key={a.id}>
-                    <Link href={`/teacher/assignments/${a.id}`} className="block">
+                    <Link href={`/teacher/assignments/${a.slug ?? a.id}`} className="block">
                       <Card className="ccard p-3 pl-4 transition hover:ring-primary" style={cardTone(i)}>
                         <p className="font-medium text-ink">{a.title}</p>
                         <p className="text-xs text-ink-3">{day(a.due_date)} · {a.max_marks} marks</p>

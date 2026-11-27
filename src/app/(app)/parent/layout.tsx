@@ -24,7 +24,7 @@ async function ParentShell({ children }: { children: ReactNode }) {
     ...NAV,
     ...kids.map((k) => ({
       label: k.name,
-      href: `/parent/children/${k.id}`,
+      href: `/parent/children/${k.public_id ?? k.id}`,
       icon: [...k.name][0]?.toUpperCase(),
       group: "Children",
     })),

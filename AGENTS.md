@@ -82,7 +82,7 @@ Next.js 16 frontend replacing the legacy Laravel Blade UI. It talks only to bodh
 ```bash
 npm run dev          # :3000 (needs bodhiraai-api on API_URL)
 npm run lint
-npm run build        # next build --webpack; `npm run start` serves it (Hostinger)
+npm run build        # next build --webpack; `npm run start` serves it locally
 npm run test:worker  # worker/test (signed links, legacy keys, body limits)
 npm run cf:build     # OpenNext Cloudflare build into .open-next/
 npm run cf:preview   # the Worker in workerd on :8787 (needs .dev.vars, see .dev.vars.example)
@@ -90,4 +90,4 @@ npm run cf:preview   # the Worker in workerd on :8787 (needs .dev.vars, see .dev
 
 `.env.local`: copy `.env.example` (`API_URL` for the Nest API, `LEGACY_URL` for legacy-served media and marketing pages such as `/contact`).
 
-Production: one Cloudflare Worker (`wrangler.jsonc`, entry `worker/index.ts`): the edge routing (API proxy, R2 files, signed `/files`, body limits) plus the Next.js app through the OpenNext adapter (`open-next.config.ts`; the Worker code has its own tsconfig, `npx tsc --noEmit -p worker`). See [DEPLOY.md](DEPLOY.md). Many isolates run at once and each may be recycled any time, so keep no per-process state; the `site` cache lives in R2 and the Durable Object tag cache, shared by all of them. Server code reads settings from `process.env` (the Worker's vars and secrets; `API_URL` and `LEGACY_URL` are derived in `worker/index.ts`). The same app also runs with `npm run build` + `npm run start`.
+Production: one Cloudflare Worker (`wrangler.jsonc`, entry `worker/index.ts`): the edge routing (API proxy, R2 files, signed `/files`, body limits) plus the Next.js app through the OpenNext adapter (`open-next.config.ts`; the Worker code has its own tsconfig, `npx tsc --noEmit -p worker`). See [DEPLOY.md](DEPLOY.md). Many isolates run at once and each may be recycled any time, so keep no per-process state; the `site` cache lives in R2 and the Durable Object tag cache, shared by all of them. Server code reads settings from `process.env` (the Worker's vars and secrets; `API_URL` and `LEGACY_URL` are derived in `worker/index.ts`). `npm run build` (plain Next build, or `cf:build` when `WORKERS_CI` is set) + `npm run start` run it locally.

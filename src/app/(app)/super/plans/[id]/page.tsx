@@ -1,10 +1,12 @@
 import { Card, PageHeader } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { superApi } from "@/lib/super-api";
 import { PlanForm } from "../plan-form";
 
 export default async function EditPlanPage({ params }: PageProps<"/super/plans/[id]">) {
   const { id } = await params;
   const p = await superApi.plan(id);
+  canonical(id, p.slug, "/super/plans");
   return (
     <>
       <PageHeader back={{ href: "/super/plans", label: "Plans" }} title={`Edit: ${p.name}`} />

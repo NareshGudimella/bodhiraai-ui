@@ -3,12 +3,14 @@ import { Card, Empty, PageHeader, SectionTitle } from "@/components/ui";
 import { unenrolStudent, unlinkSubject } from "@/lib/admin-actions";
 import { cardTone } from "@/lib/appearance";
 import { adminApi } from "@/lib/admin-api";
+import { canonical } from "@/lib/canonical";
 import { EnrolForm, LinkSubjectForm } from "./class-forms";
 
 export default async function AdminClassPage({ params }: PageProps<"/admin/classes/[id]">) {
   const { id } = await params;
   const [detail, options] = await Promise.all([adminApi.class(id), adminApi.classOptions(id)]);
   const { class: c, students, subjects } = detail;
+  canonical(id, c.slug, "/admin/classes");
   const teacherName = new Map(options.teachers.map((t) => [t.id, t.name]));
   return (
     <>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, ProgressBar, SectionTitle, Stat, buttonClass } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { parentApi } from "@/lib/parent-api";
 import { ChildTabs } from "../child-tabs";
 
@@ -8,13 +9,14 @@ const RATING = { strong: "text-success", fair: "text-primary-dark", weak: "text-
 export default async function ChildPerformancePage({ params }: PageProps<"/parent/children/[id]/performance">) {
   const { id } = await params;
   const p = await parentApi.performance(id);
+  canonical(id, p.student.public_id, "/parent/children", "/performance");
   // Legacy "Needs attention": weak subjects first, then fair ones.
   const weak = p.by_subject.filter((s) => s.rating === "weak");
   const fair = p.by_subject.filter((s) => s.rating === "fair");
   return (
     <>
       <PageHeader back={{ href: "/parent", label: "Dashboard" }} title={p.student.name} />
-      <ChildTabs id={id} current="/performance" />
+      <ChildTabs id={p.student.public_id ?? id} current="/performance" />
       <div className="max-w-xs">
         <Stat label="Overall quiz average" value={`${p.overall_avg}%`} />
       </div>

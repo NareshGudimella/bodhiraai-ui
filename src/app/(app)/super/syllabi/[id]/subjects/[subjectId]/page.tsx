@@ -1,18 +1,22 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, Pill, SectionTitle } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { superApi } from "@/lib/super-api";
 import { SyllabusChapterForm } from "../../subject-form";
 
 export default async function SyllabusSubjectPage({ params }: PageProps<"/super/syllabi/[id]/subjects/[subjectId]">) {
   const { id, subjectId } = await params;
   const { syllabus, subject, chapters } = await superApi.syllabusSubject(id, subjectId);
+  const syllabusRef = syllabus.slug ?? id;
+  canonical(id, syllabus.slug, "/super/syllabi", `/subjects/${subject.url_slug ?? subjectId}`);
+  canonical(subjectId, subject.url_slug, `/super/syllabi/${syllabusRef}/subjects`);
   return (
     <>
       <PageHeader
-        back={{ href: `/super/syllabi/${syllabus.id}`, label: syllabus.name }}
+        back={{ href: `/super/syllabi/${syllabusRef}`, label: syllabus.name }}
         title={`${subject.icon ?? ""} ${subject.name}`.trim()}
-        action={<Link href={`/content/subjects/${subject.id}`} className="text-sm text-primary underline">Open in the content library</Link>}
+        action={<Link href={`/content/subjects/${subject.url_slug ?? subject.id}`} className="text-sm text-primary underline">Open in the content library</Link>}
       />
       <div className="grid gap-8 [&>*]:min-w-0 lg:grid-cols-[2fr_1fr]">
         <section>
@@ -21,7 +25,7 @@ export default async function SyllabusSubjectPage({ params }: PageProps<"/super/
             <ol className="space-y-2">
               {chapters.map((c, i) => (
                 <li key={c.id}>
-                  <Link href={`/content/chapters/${c.id}`} className="block">
+                  <Link href={`/content/chapters/${c.url_slug ?? c.id}`} className="block">
                     <Card className="ccard flex items-center justify-between gap-3 p-3 pl-4 transition hover:ring-primary" style={cardTone(i)}>
                       <span className="min-w-0">
                         <span className="block font-medium text-ink">{c.title}</span>

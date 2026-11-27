@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, buttonClass, secondaryButtonClass } from "@/components/ui";
 import { billingApi } from "@/lib/billing-api";
+import { canonical } from "@/lib/canonical";
 import { paise } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Payment successful" };
 
 /** Legacy CheckoutController::success (`billing.thank-you`). */
 export default async function CheckoutSuccessPage({ params }: PageProps<"/checkout/success/[invoice]">) {
-  const invoice = await billingApi.invoice((await params).invoice);
+  const { invoice: param } = await params;
+  const invoice = await billingApi.invoice(param);
+  canonical(param, invoice.public_id, "/checkout/success");
   const row = "flex justify-between gap-3 py-1 text-sm text-ink-2";
   return (
     <Card className="mx-auto mt-4 max-w-2xl p-8 text-center">
@@ -26,7 +29,7 @@ export default async function CheckoutSuccessPage({ params }: PageProps<"/checko
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Link href="/student" className={buttonClass}>Go to dashboard →</Link>
         {invoice.pdf_path && (
-          <a href={`/invoices/${invoice.id}/download`} className={secondaryButtonClass}>⬇ Download invoice</a>
+          <a href={`/invoices/${invoice.public_id ?? invoice.id}/download`} className={secondaryButtonClass}>⬇ Download invoice</a>
         )}
       </div>
       <p className="mt-6 text-xs text-ink-3">

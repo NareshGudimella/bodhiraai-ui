@@ -2,7 +2,7 @@ import 'server-only';
 import type { PageMeta } from './admin-api';
 import { apiEnvelope } from './api';
 import { load } from './load';
-import { idSeg, seg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Field schema of a CMS collection (bodhiraai-api src/cms/cms.schema.ts). */
 export type ResourceField = {
@@ -15,6 +15,10 @@ export type ResourceField = {
 };
 export type ResourceMeta = { fields: ResourceField[]; labels: [string, string]; toggleable: boolean };
 export type Row = Record<string, unknown> & { id: number };
+
+/** Not in legacy: the URL identifier of a collection row: its slug (services, categories) or public_id; null when the API sent neither. */
+export const rowRef = (row: Row): string | null =>
+  typeof row.slug === 'string' && row.slug ? row.slug : typeof row.public_id === 'string' ? row.public_id : null;
 
 export const RESOURCE_SLUGS = ['services', 'features', 'faqs', 'testimonials', 'team', 'categories', 'social'] as const;
 
@@ -112,7 +116,7 @@ export const cmsApi = {
       recent_posts: Post[];
     }>('/cms'),
   resource: (slug: string) => load<ResourceMeta & { rows: Row[] }>(`/cms/${seg(slug)}`),
-  resourceRow: (slug: string, id: string) => load<ResourceMeta & { row: Row }>(`/cms/${seg(slug)}/${idSeg(id)}`),
+  resourceRow: (slug: string, id: string) => load<ResourceMeta & { row: Row }>(`/cms/${seg(slug)}/${seg(id)}`),
   pages: () => load<CmsPage[]>('/cms/pages'),
   page: (slug: string) => load<{ page: CmsPage; section_types: Record<string, string> }>(`/cms/pages/${seg(slug)}`),
   posts: (params: URLSearchParams) => page<Post[]>(`/cms/posts?${params}`),

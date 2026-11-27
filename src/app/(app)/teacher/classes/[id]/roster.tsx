@@ -10,6 +10,7 @@ import type { FormState } from "@/lib/action-result";
 
 export type RosterStudent = {
   id: number;
+  public_id?: string;
   name: string;
   username: string | null;
   email: string | null;
@@ -151,7 +152,7 @@ export function RosterRow({ classId, student }: { classId: number; student: Rost
           )}
           <span className="min-w-0">
             <span className="mr-2 text-xs text-ink-3">{student.roll_no ?? "—"}</span>
-            <Link href={`/teacher/students/${student.id}`} className="font-medium text-ink hover:text-brand hover:underline">
+            <Link href={`/teacher/students/${student.public_id ?? student.id}`} className="font-medium text-ink hover:text-brand hover:underline">
               {student.name}
             </Link>
             <span className="block truncate text-xs text-ink-3">{student.username ?? student.email ?? student.phone ?? ""}</span>

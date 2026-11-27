@@ -1,5 +1,6 @@
 import { Card, Empty, PageHeader, Pill, SectionTitle, Stat, buttonClass } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { startChat } from "@/lib/inbox-actions";
 import { parentApi } from "@/lib/parent-api";
 import { ChildAvatar } from "../../child-avatar";
@@ -10,6 +11,7 @@ const STATUS: Record<string, string> = { completed: "Completed", in_progress: "I
 export default async function ChildPage({ params }: PageProps<"/parent/children/[id]">) {
   const { id } = await params;
   const { student, stats, recent_lessons, recent_quizzes } = await parentApi.child(id);
+  canonical(id, student.public_id, "/parent/children");
   return (
     <>
       <PageHeader
@@ -27,7 +29,7 @@ export default async function ChildPage({ params }: PageProps<"/parent/children/
           </form>
         }
       />
-      <ChildTabs id={id} current="" />
+      <ChildTabs id={student.public_id ?? id} current="" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Attendance" value={`${stats.attendance_percent}%`} hint={`${stats.attendance_present}/${stats.attendance_total} days present`} />
         <Stat label="Quiz average" value={`${stats.avg_quiz_percent}%`} hint={`${stats.quizzes_attempted} quizzes`} />

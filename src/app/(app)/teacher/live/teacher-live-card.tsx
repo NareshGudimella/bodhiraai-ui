@@ -9,7 +9,7 @@ export function TeacherLiveCard({ c, index }: { c: TeacherLive; index: number })
   const s = STATUS[c.live_status];
   const past = c.live_status === "ended";
   return (
-    <Link href={`/teacher/live/${c.id}`} className="block h-full">
+    <Link href={`/teacher/live/${c.slug ?? c.id}`} className="block h-full">
       <Card className="ccard h-full p-4 pl-5 transition hover:ring-primary" style={cardTone(index)}>
         <div className="mb-2 flex items-start justify-between gap-3">
           <p className="font-semibold text-ink">{c.title}</p>

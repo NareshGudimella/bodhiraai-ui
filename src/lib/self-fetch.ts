@@ -9,7 +9,7 @@ type SelfBinding = { fetch(input: string | URL, init?: RequestInit): Promise<Res
  * - On Cloudflare Workers (OpenNext) through the WORKER_SELF_REFERENCE service
  *   binding: a Worker can't reach itself on 127.0.0.1, and a fetch to its own
  *   route (`bodhiraai.com/*`) would skip the Worker and go to the zone's origin.
- * - Under `next start` (Hostinger, local) on this server's own port.
+ * - Under `next start` (local) on this server's own port.
  */
 export function fetchSelf(path: string, requestUrl: string, init?: RequestInit): Promise<Response> {
   const self = cloudflareSelf();

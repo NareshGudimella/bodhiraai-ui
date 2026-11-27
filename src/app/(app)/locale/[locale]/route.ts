@@ -3,7 +3,7 @@ import { api } from '@/lib/api';
 import { FLASH_COOKIE } from '@/lib/flash';
 import { getLocale, isLocale, LOCALE_COOKIE, translate } from '@/lib/i18n';
 import { getToken } from '@/lib/session';
-import { siteUrl } from '@/lib/site-url';
+import { isCrossSite, siteUrl } from '@/lib/site-url';
 
 /**
  * Legacy LocaleController (`/locale/{locale}`): remember the language for this
@@ -15,6 +15,7 @@ import { siteUrl } from '@/lib/site-url';
 export async function GET(request: Request, { params }: RouteContext<'/locale/[locale]'>) {
   const { locale } = await params;
   if (!isLocale(locale)) return new NextResponse('Not Found', { status: 404 });
+  if (isCrossSite(request)) return NextResponse.redirect(siteUrl('/', request.url), 302); // security: not in legacy
   const before = await getLocale();
   if (await getToken()) await api('/me/locale', { body: { locale } }).catch(() => undefined);
 

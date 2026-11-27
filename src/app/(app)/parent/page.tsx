@@ -15,7 +15,10 @@ const ALERT_LINK: Record<string, { path: string; label: string }> = {
 export default async function ParentHome() {
   const { parent, children, alerts } = await parentApi.home();
   // `child_id` is not in legacy; fall back to the child's name for older APIs.
-  const childIdFor = (a: (typeof alerts)[number]) => a.child_id ?? children.find((c) => c.name === a.child)?.id;
+  const childIdFor = (a: (typeof alerts)[number]) => {
+    const kid = a.child_id === undefined ? children.find((c) => c.name === a.child) : undefined;
+    return a.child_public_id ?? a.child_id ?? kid?.public_id ?? kid?.id;
+  };
   return (
     <>
       <PageHeader title={`Hello, ${parent.name.split(" ")[0]}`} subtitle="How your children are doing." />
@@ -50,7 +53,7 @@ export default async function ParentHome() {
           {children.map((c) => (
             <li key={c.id}>
               <Card className="h-full">
-                <Link href={`/parent/children/${c.id}`} className="flex items-center gap-3 transition hover:opacity-80">
+                <Link href={`/parent/children/${c.public_id ?? c.id}`} className="flex items-center gap-3 transition hover:opacity-80">
                   <ChildAvatar name={c.name} avatar={c.avatar} />
                   <div>
                     <p className="font-semibold text-ink">{c.name}</p>
@@ -73,8 +76,8 @@ export default async function ParentHome() {
                   ))}
                 </dl>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Link href={`/parent/children/${c.id}`} className={buttonClass}>Overview</Link>
-                  <Link href={`/parent/children/${c.id}/performance`} className={secondaryButtonClass}>Performance</Link>
+                  <Link href={`/parent/children/${c.public_id ?? c.id}`} className={buttonClass}>Overview</Link>
+                  <Link href={`/parent/children/${c.public_id ?? c.id}/performance`} className={secondaryButtonClass}>Performance</Link>
                   <form action={startChat.bind(null, "with-teacher", c.id)}>
                     <button className={secondaryButtonClass}>💬 Chat</button>
                   </form>

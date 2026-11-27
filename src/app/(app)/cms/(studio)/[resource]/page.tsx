@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Empty, PageHeader, Pill, buttonClass } from "@/components/ui";
 import { deleteResource, toggleResource } from "@/lib/cms-actions";
-import { cmsApi, RESOURCE_SLUGS, type ResourceField, type Row } from "@/lib/cms-api";
+import { cmsApi, RESOURCE_SLUGS, rowRef, type ResourceField, type Row } from "@/lib/cms-api";
 import { mediaUrl } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Web Studio" };
@@ -46,7 +46,7 @@ export default async function ResourceIndexPage({ params }: PageProps<"/cms/[res
                   {cols.map((f) => <td key={f.name} className="max-w-xs px-4 py-3">{cell(f, row)}</td>)}
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2 text-xs">
-                      <Link href={`/cms/${resource}/${row.id}`} className="rounded-lg border border-line px-2.5 py-1 hover:bg-primary-light">Edit</Link>
+                      <Link href={`/cms/${resource}/${rowRef(row) ?? row.id}`} className="rounded-lg border border-line px-2.5 py-1 hover:bg-primary-light">Edit</Link>
                       {toggleable && (
                         <form action={toggleResource.bind(null, resource, row.id)}>
                           <button className="rounded-lg border border-line px-2.5 py-1 hover:bg-primary-light">{row.is_active ? "Hide" : "Show"}</button>

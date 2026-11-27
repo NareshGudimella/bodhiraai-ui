@@ -16,7 +16,7 @@ export default async function ClassesPage() {
           {classes.map((c, i) => (
             <li key={c.id}>
               <Card className="ccard flex h-full flex-col p-4 pl-5 transition hover:ring-primary" style={cardTone(i)}>
-                <Link href={`/teacher/classes/${c.id}`} className="block flex-1">
+                <Link href={`/teacher/classes/${c.slug ?? c.id}`} className="block flex-1">
                   <p className="text-lg font-semibold text-brand">{c.label}</p>
                   <p className="text-sm text-ink-2">
                     {c.students_count} {c.students_count === 1 ? "student" : "students"}
@@ -25,8 +25,8 @@ export default async function ClassesPage() {
                   {c.class_teacher && <p className="mt-1 text-xs text-ink-3">Class teacher: {c.class_teacher}</p>}
                 </Link>
                 <div className="mt-3 flex gap-2">
-                  <Link href={`/teacher/classes/${c.id}`} className={buttonClass}>Overview</Link>
-                  <Link href={`/teacher/classes/${c.id}/attendance`} className={secondaryButtonClass}>Attendance</Link>
+                  <Link href={`/teacher/classes/${c.slug ?? c.id}`} className={buttonClass}>Overview</Link>
+                  <Link href={`/teacher/classes/${c.slug ?? c.id}/attendance`} className={secondaryButtonClass}>Attendance</Link>
                 </div>
               </Card>
             </li>

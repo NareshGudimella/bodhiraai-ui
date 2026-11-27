@@ -265,6 +265,7 @@ export function HlsPlayer({ lessonId, initial, poster, onTime, onEnded }: Props)
       >
         {cssFull ? "Close" : "Fullscreen"}
       </button>
+      {source.watermark && <CopyrightOverlay viewer={source.watermark.split(" · ")[0]} />}
       {source.watermark && <Watermarks text={source.watermark} />}
       {(stopped || error) && (
         <div role="alert" className="absolute inset-0 z-20 grid place-items-center bg-black/85 p-6 text-center text-white">
@@ -313,4 +314,36 @@ function Watermarks({ text }: { text: string }) {
       {text}
     </span>
   ));
+}
+
+/**
+ * not in legacy: copyright marking for learning videos. A faint diagonal pattern
+ * over the whole frame (cannot be cropped out of a screen recording) and a fixed
+ * corner notice, both naming the viewer. Click-through; inside our fullscreen.
+ */
+function CopyrightOverlay({ viewer }: { viewer: string }) {
+  const line = `© Bodhira.ai · ${viewer} · Do not record or share`;
+  return (
+    <>
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-10 select-none overflow-hidden">
+        <div className="absolute -inset-1/2 flex -rotate-[24deg] flex-wrap content-center justify-center gap-x-16 gap-y-12">
+          {Array.from({ length: 48 }, (_, i) => (
+            <span
+              key={i}
+              style={{ opacity: 0.12, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+              className="whitespace-nowrap text-sm font-semibold text-white"
+            >
+              {line}
+            </span>
+          ))}
+        </div>
+      </div>
+      <p
+        aria-hidden
+        className="pointer-events-none absolute right-3 top-3 z-10 max-w-[70%] select-none truncate rounded-full bg-black/55 px-3 py-1 text-[11px] font-medium text-white/85"
+      >
+        © Bodhira.ai · For {viewer} only · Recording or sharing is prohibited
+      </p>
+    </>
+  );
 }

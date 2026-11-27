@@ -1,4 +1,5 @@
 import { Card, PageHeader, Pill, SectionTitle } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { mediaUrl } from "@/lib/media";
 import { fileNameOf } from "@/lib/signed-file";
 import { studentApi } from "@/lib/student-api";
@@ -8,6 +9,7 @@ import { SubmitForm } from "./submit-form";
 export default async function StudentAssignmentPage({ params }: PageProps<"/student/assignments/[id]">) {
   const { id } = await params;
   const { assignment: a, status, submission } = await studentApi.assignment(id);
+  canonical(id, a.slug, "/student/assignments");
   const s = ASSIGNMENT_STATUS[status] ?? ASSIGNMENT_STATUS.pending;
   const left = submission ? "" : daysMessage(daysDiff(a.due_date));
   // Legacy `/media/...` paths resolve against the legacy files; signed links pass through.

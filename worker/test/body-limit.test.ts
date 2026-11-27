@@ -2,7 +2,7 @@
 // security: not in legacy
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bodyLimit, limitBody, overBodyLimit } from '../body-limit.ts';
+import { bodyLimit, limitBody, overBodyLimit, refuseAnonymousBigBody } from '../body-limit.ts';
 
 const MB = 1024 * 1024;
 
@@ -42,4 +42,16 @@ test('a body without Content-Length is cut off past the limit', async () => {
     },
   });
   assert.equal((await new Response(limitBody(small, '/contact')).arrayBuffer()).byteLength, 4 * MB);
+});
+
+test('anonymous big bodies are refused', () => {
+  const big = String(13 * MB);
+  assert.equal(refuseAnonymousBigBody('POST', big, null), true);
+  assert.equal(refuseAnonymousBigBody('POST', big, 'a=1; bodhira_locale=en'), true);
+  assert.equal(refuseAnonymousBigBody('POST', big, 'a=1; bodhira_token=x'), false);
+  assert.equal(refuseAnonymousBigBody('POST', big, 'bodhira_token=x'), false);
+  assert.equal(refuseAnonymousBigBody('POST', String(12 * MB), null), false);
+  assert.equal(refuseAnonymousBigBody('POST', null, null), false);
+  assert.equal(refuseAnonymousBigBody('GET', big, null), false);
+  assert.equal(refuseAnonymousBigBody('HEAD', big, null), false);
 });

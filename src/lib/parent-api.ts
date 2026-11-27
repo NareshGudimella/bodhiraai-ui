@@ -1,6 +1,6 @@
 import 'server-only';
 import { load } from './load';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Typed reads for /api/v1/parent/* (legacy contract). */
 
@@ -15,12 +15,12 @@ export type ChildStats = {
   lessons_completed: number;
 };
 
-export type Student = { id: number; name: string; grade: string | null; avatar: string | null };
+export type Student = { id: number; public_id?: string; name: string; grade: string | null; avatar: string | null };
 
 export const parentApi = {
   /** Linked children (sidebar). `avatar` is not in legacy. */
   children: () =>
-    load<{ id: number; name: string; grade: string | null; relation: string | null; avatar?: string | null }[]>(
+    load<{ id: number; public_id?: string; name: string; grade: string | null; relation: string | null; avatar?: string | null }[]>(
       '/parent/children',
     ),
   home: () =>
@@ -28,6 +28,7 @@ export const parentApi = {
       parent: { name: string; children_count: number };
       children: {
         id: number;
+        public_id?: string;
         name: string;
         grade: string | null;
         avatar_letter: string;
@@ -38,7 +39,7 @@ export const parentApi = {
         stats: ChildStats;
       }[];
       /** `child_id` is not in legacy. */
-      alerts: { type: string; child: string; child_id?: number; message: string }[];
+      alerts: { type: string; child: string; child_id?: number; child_public_id?: string; message: string }[];
     }>('/parent/home'),
   child: (id: string) =>
     load<{
@@ -46,7 +47,7 @@ export const parentApi = {
       stats: ChildStats;
       recent_lessons: { title: string | null; subject: string | null; status: string; progress: number; last_viewed_at: string | null }[];
       recent_quizzes: { title: string | null; subject: string | null; score: number; total: number; percent: number; submitted_at: string | null }[];
-    }>(`/parent/children/${idSeg(id)}`),
+    }>(`/parent/children/${seg(id)}`),
   attendance: (id: string, month?: string) =>
     load<{
       student: Student;
@@ -54,7 +55,7 @@ export const parentApi = {
       month_label: string;
       totals: { present: number; absent: number; late: number; excused: number; total: number; percent: number };
       records: { date: string; date_label: string; status: string; remarks: string | null }[];
-    }>(`/parent/children/${idSeg(id)}/attendance${month ? `?month=${encodeURIComponent(month)}` : ''}`),
+    }>(`/parent/children/${seg(id)}/attendance${month ? `?month=${encodeURIComponent(month)}` : ''}`),
   performance: (id: string) =>
     load<{
       student: Student;
@@ -69,7 +70,7 @@ export const parentApi = {
       }[];
       progress: { subject: string; started: number; completed: number }[];
       overall_avg: number;
-    }>(`/parent/children/${idSeg(id)}/performance`),
+    }>(`/parent/children/${seg(id)}/performance`),
   assignments: (id: string) =>
     load<{
       student: Student;
@@ -86,5 +87,5 @@ export const parentApi = {
         submitted_at: string | null;
       }[];
       totals: { total: number; graded: number; submitted: number; pending: number; missed: number };
-    }>(`/parent/children/${idSeg(id)}/assignments`),
+    }>(`/parent/children/${seg(id)}/assignments`),
 };

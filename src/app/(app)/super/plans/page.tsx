@@ -28,7 +28,7 @@ function PlanCard({ p, index }: { p: Plan; index: number }) {
         <ul className="list-inside list-disc text-xs text-ink-2">{p.features.map((f, i) => <li key={i}>{f}</li>)}</ul>
       )}
       <div className="mt-auto flex flex-wrap gap-2 pt-2">
-        <Link href={`/super/plans/${p.id}`} className="rounded-md border border-line px-2 py-1 text-xs hover:bg-primary-light">Edit</Link>
+        <Link href={`/super/plans/${p.slug ?? p.id}`} className="rounded-md border border-line px-2 py-1 text-xs hover:bg-primary-light">Edit</Link>
         <form action={togglePlan.bind(null, p.id)}>
           <button className="rounded-md border border-line px-2 py-1 text-xs hover:bg-primary-light">{p.is_active ? "Hide" : "Activate"}</button>
         </form>

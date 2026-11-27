@@ -20,7 +20,7 @@ export default async function AdminClassesPage() {
             <ul className="grid gap-3 sm:grid-cols-2">
               {classes.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/admin/classes/${c.id}`} className="block h-full">
+                  <Link href={`/admin/classes/${c.slug ?? c.id}`} className="block h-full">
                     <Card className="h-full p-4 transition hover:ring-primary">
                       <p className="text-lg font-semibold text-brand">{c.label}</p>
                       <p className="text-xs text-ink-2">{c.class_teacher ? `Class teacher: ${c.class_teacher}` : "No class teacher"}</p>

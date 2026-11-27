@@ -2,6 +2,7 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { Card, Empty, PageHeader, Pill, SectionTitle } from "@/components/ui";
 import { deleteQuestion } from "@/lib/content-actions";
 import { contentApi } from "@/lib/content-api";
+import { canonical } from "@/lib/canonical";
 import { QuestionForm } from "./question-form";
 import { QuizForm } from "../quiz-form";
 
@@ -10,6 +11,7 @@ const TYPE = { mcq: "Multiple choice", tf: "True / false", short: "Short answer"
 export default async function QuizEditPage({ params }: PageProps<"/content/quizzes/[id]">) {
   const { id } = await params;
   const { quiz, subjects, chapters } = await contentApi.quiz(id);
+  canonical(id, quiz.slug, "/content/quizzes");
   const s = (n: number | null) => (n == null ? "" : String(n));
   return (
     <>

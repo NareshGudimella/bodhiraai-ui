@@ -22,7 +22,7 @@ export default async function TeacherChatPage() {
             <ul className="space-y-2">
               {conversations.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/teacher/chat/${c.id}`} className="block">
+                  <Link href={`/teacher/chat/${c.public_id ?? c.id}`} className="block">
                     <Card className="flex items-center gap-3 p-4 transition hover:ring-primary">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-light font-bold text-brand">
                         {c.partner?.name.charAt(0) ?? "?"}

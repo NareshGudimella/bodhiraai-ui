@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Flash } from "@/components/flash";
 import { ApiError } from "@/lib/api";
 import { billingApi } from "@/lib/billing-api";
+import { canonical } from "@/lib/canonical";
 import { requireRole } from "@/lib/dal";
 import { paise } from "@/lib/money";
 import { PayForm } from "./pay-form";
@@ -42,6 +43,7 @@ async function Summary({ params, searchParams }: PageProps<"/checkout/[subscript
     if (e instanceof ApiError && (e.status === 403 || e.status === 404)) notFound();
     throw e;
   }
+  canonical(subscription, s.subscription.public_id, "/checkout", typeof cycle === "string" ? `?cycle=${encodeURIComponent(cycle)}` : "");
   const line = "flex justify-between gap-3 py-2 text-sm text-ink-2";
   return (
     <section className="rounded-3xl bg-card p-8 text-ink shadow-[0_30px_60px_rgba(0,0,0,.35)]">

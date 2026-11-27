@@ -44,7 +44,7 @@ export default async function AdminAnalyticsPage() {
                 <Card className="space-y-3 p-4">
                   <p className="flex items-baseline justify-between gap-2 font-semibold text-brand">
                     <span>{c.label} <span className="text-xs font-normal text-ink-3">· {c.students} students</span></span>
-                    <Link href={`/admin/classes/${c.id}`} className="text-xs font-semibold hover:underline">Open →</Link>
+                    <Link href={`/admin/classes/${c.slug ?? c.id}`} className="text-xs font-semibold hover:underline">Open →</Link>
                   </p>
                   <div><p className="mb-1 flex justify-between text-xs text-ink-2"><span>Attendance</span><span>{c.attendance_percent}%</span></p><ProgressBar value={c.attendance_percent} /></div>
                   <div><p className="mb-1 flex justify-between text-xs text-ink-2"><span>Quiz average</span><span>{c.avg_quiz_percent}%</span></p><ProgressBar value={c.avg_quiz_percent} /></div>

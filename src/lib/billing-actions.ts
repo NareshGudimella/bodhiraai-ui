@@ -41,12 +41,12 @@ export async function registerStudent(_: FormState, form: FormData): Promise<For
   try {
     const { data, message } = await apiEnvelope<{
       token: string;
-      checkout: { subscription_id: number; cycle: string } | null;
+      checkout: { subscription_id: number; subscription_public_id?: string; cycle: string } | null;
     }>('/auth/register/student', { body: { ...pick(form, SIGNUP_FIELDS), accept: '1' }, token: null });
     await setSession(data.token, 'student');
     await setFlash(message);
     target = data.checkout
-      ? `/checkout/${data.checkout.subscription_id}?cycle=${data.checkout.cycle}`
+      ? `/checkout/${data.checkout.subscription_public_id ?? data.checkout.subscription_id}?cycle=${data.checkout.cycle}`
       : '/student';
   } catch (e) {
     return failure(e, 'Could not create your account.', withoutPasswords(form));
@@ -61,12 +61,12 @@ export async function registerStudent(_: FormState, form: FormData): Promise<For
 export async function paywallCheckout(_: FormState, form: FormData): Promise<FormState> {
   let target = '/student';
   try {
-    const { data, message } = await apiEnvelope<{ checkout?: { subscription_id: number; cycle: string } }>(
+    const { data, message } = await apiEnvelope<{ checkout?: { subscription_id: number; subscription_public_id?: string; cycle: string } }>(
       '/billing/paywall/checkout',
       { body: pick(form, ['plan', 'cycle']) },
     );
     await setFlash(message);
-    if (data.checkout) target = `/checkout/${data.checkout.subscription_id}?cycle=${data.checkout.cycle}`;
+    if (data.checkout) target = `/checkout/${data.checkout.subscription_public_id ?? data.checkout.subscription_id}?cycle=${data.checkout.cycle}`;
   } catch (e) {
     return failure(e, 'Could not start that plan.');
   }
@@ -75,17 +75,17 @@ export async function paywallCheckout(_: FormState, form: FormData): Promise<For
 
 /** Pay for a subscription (legacy CheckoutController::complete), then the invoice page. */
 export async function completeCheckout(subscriptionId: number, _: FormState, form: FormData): Promise<FormState> {
-  let invoiceId: number;
+  let invoiceRef: string | number;
   try {
-    const { data, message } = await apiEnvelope<{ id: number }>(`/billing/checkout/${idSeg(subscriptionId)}/complete`, {
+    const { data, message } = await apiEnvelope<{ id: number; public_id?: string }>(`/billing/checkout/${idSeg(subscriptionId)}/complete`, {
       body: pick(form, ['cycle', 'demo', 'razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature']),
     });
     await setFlash(message);
-    invoiceId = data.id;
+    invoiceRef = data.public_id ?? data.id;
   } catch (e) {
     return failure(e, 'Payment could not be completed.');
   }
-  redirect(`/checkout/success/${invoiceId}`);
+  redirect(`/checkout/success/${invoiceRef}`);
 }
 
 export type CheckoutPayload = {

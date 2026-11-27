@@ -34,15 +34,16 @@ export async function toggleUser(id: number) {
 }
 
 export async function createClass(_: FormState, form: FormData): Promise<FormState> {
-  let id: number;
+  let ref: string | number;
   try {
-    ({ id } = await api<{ id: number }>('/admin/classes', {
+    const r = await api<{ id: number; slug?: string }>('/admin/classes', {
       body: pick(form, ['grade', 'section', 'academic_year', 'class_teacher_id']),
-    }));
+    });
+    ref = r.slug ?? r.id;
   } catch (e) {
     return failure(e, 'Could not create the class.', form);
   }
-  redirect(`/admin/classes/${id}`);
+  redirect(`/admin/classes/${ref}`);
 }
 
 async function mutate(path: string, method: string, body?: object, form?: FormData): Promise<FormState> {

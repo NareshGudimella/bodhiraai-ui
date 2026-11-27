@@ -55,7 +55,7 @@ export default async function SuperRevenuePage() {
             <ul className="space-y-1 text-sm">
               {r.expiring_soon.map((s, i) => (
                 <li key={s.id}>
-                  <Link href={`/super/schools/${s.id}`} className="ccard flex justify-between gap-2 rounded-lg bg-card py-2 pl-4 pr-3 ring-1 ring-line hover:ring-primary" style={cardTone(i)}>
+                  <Link href={`/super/schools/${s.slug ?? s.id}`} className="ccard flex justify-between gap-2 rounded-lg bg-card py-2 pl-4 pr-3 ring-1 ring-line hover:ring-primary" style={cardTone(i)}>
                     <span className="truncate text-ink">{s.name} <span className="text-xs capitalize text-ink-3">· {s.plan}</span></span>
                     <span className="flex shrink-0 items-center gap-2 text-xs text-ink-3">{s.plan_expires_at.slice(0, 10)} <Pill>{daysLeft(s.plan_expires_at)}d left</Pill></span>
                   </Link>

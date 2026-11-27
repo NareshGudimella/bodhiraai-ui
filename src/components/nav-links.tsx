@@ -70,6 +70,8 @@ export function NavList({ items, active }: { items: NavItem[]; active?: string }
   );
 }
 
+const ROUTE_WORDS = new Set(["new", "edit", "attendance", "performance", "assignments", "subjects"]);
+
 /** Top-bar trail: section / current page (/ New, Edit or Details below it). Render inside <Suspense>. */
 export function Breadcrumbs({ items, section }: { items: NavItem[]; section: string }) {
   const path = usePathname();
@@ -78,7 +80,10 @@ export function Breadcrumbs({ items, section }: { items: NavItem[]; section: str
   const item = items.find((i) => i.href === href);
   const rest = item ? path.slice(item.href.split("?")[0].length).split("/").filter(Boolean) : [];
   const last = rest.at(-1);
-  const tail = last ? (/^\d+$/.test(last) ? "Details" : last.replace(/[-_]/g, " ")) : undefined;
+  // A record's slug / public_id (or old numeric id) reads "Details", as the numeric id did. Fixed route words and the
+  // CMS pages and posts, which were always addressed by slug, keep their text.
+  const isRoute = ROUTE_WORDS.has(last ?? "") || item?.href === "/cms/pages" || item?.href === "/cms/posts";
+  const tail = last ? (isRoute ? last.replace(/[-_]/g, " ") : "Details") : undefined;
   return (
     <nav aria-label="Breadcrumb" className="min-w-0">
       <ol className="flex min-w-0 items-center gap-1.5 text-sm text-ink-3">

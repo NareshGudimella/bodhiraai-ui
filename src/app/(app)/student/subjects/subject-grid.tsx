@@ -9,7 +9,7 @@ export function SubjectGrid({ subjects }: { subjects: Subject[] }) {
     <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {subjects.map((s, i) => (
         <li key={s.id}>
-          <Link href={`/student/subjects/${s.id}`} className="block h-full">
+          <Link href={`/student/subjects/${s.url_slug ?? s.id}`} className="block h-full">
             <Card className="ccard h-full p-4 transition hover:ring-primary" style={cardTone(i)}>
               <div className="flex items-center gap-3">
                 <span

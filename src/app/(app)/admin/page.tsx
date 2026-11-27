@@ -64,7 +64,7 @@ export default async function AdminHome() {
                   <span className="min-w-0 truncate text-ink">{u.name} <span className="text-ink-3">· {u.role_label}</span></span>
                   <span className="flex shrink-0 items-center gap-3">
                     <span className="text-xs text-ink-3">{u.created_at}</span>
-                    <Link href={`/admin/users/${u.id}`} className="text-xs font-semibold text-brand hover:underline">Edit</Link>
+                    <Link href={`/admin/users/${u.public_id ?? u.id}`} className="text-xs font-semibold text-brand hover:underline">Edit</Link>
                   </span>
                 </li>
               ))}

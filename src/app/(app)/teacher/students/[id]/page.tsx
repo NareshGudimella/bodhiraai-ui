@@ -1,5 +1,6 @@
 import { Card, Empty, PageHeader, Pill, ProgressBar, SectionTitle, Stat, secondaryButtonClass } from "@/components/ui";
 import { AI_TONE, cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { startChat } from "@/lib/inbox-actions";
 import { mediaUrl } from "@/lib/media";
 import { teacherApi } from "@/lib/teacher-api";
@@ -27,6 +28,7 @@ export default async function TeacherStudentPage({ params }: PageProps<"/teacher
   const { id } = await params;
   const p = await teacherApi.student(id);
   const s = p.student;
+  canonical(id, s.public_id, "/teacher/students");
   const att = p.attendance.totals;
   const lastLogin = s.last_login_at
     ? new Date(s.last_login_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" })

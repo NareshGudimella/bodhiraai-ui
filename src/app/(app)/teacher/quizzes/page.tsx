@@ -15,7 +15,7 @@ export default async function TeacherQuizzesPage() {
         <ul className="grid gap-3 sm:grid-cols-2">
           {quizzes.map((q, i) => (
             <li key={q.id}>
-              <Link href={`/teacher/quizzes/${q.id}`} className="block h-full">
+              <Link href={`/teacher/quizzes/${q.slug ?? q.id}`} className="block h-full">
                 <Card className="ccard h-full p-4 pl-5 transition hover:ring-primary" style={cardTone(i)}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium text-ink">{q.title}</p>

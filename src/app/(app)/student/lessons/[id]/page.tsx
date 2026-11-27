@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader, secondaryButtonClass } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { getT } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
 import { askAi } from "@/lib/student-actions";
@@ -13,8 +14,11 @@ const askClass =
   "inline-flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-1.5 text-xs font-semibold text-primary-light shadow-md transition hover:bg-brand-mid";
 
 export default async function LessonPage({ params }: PageProps<"/student/lessons/[id]">) {
-  const { lesson, progress, siblings } = await studentApi.lesson((await params).id);
-  const [{ quiz_state }, t] = await Promise.all([studentApi.chapterLessons(String(lesson.chapter_id)), getT()]);
+  const { id } = await params;
+  const { lesson, progress, siblings } = await studentApi.lesson(id);
+  canonical(id, lesson.url_slug, "/student/lessons");
+  const chapterRef = lesson.chapter?.url_slug ?? lesson.chapter_id;
+  const [{ quiz_state }, t] = await Promise.all([studentApi.chapterLessons(String(chapterRef)), getT()]);
 
   const index = siblings.findIndex((s) => s.id === lesson.id);
   const prev = index > 0 ? siblings[index - 1] : null;
@@ -36,7 +40,7 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
   return (
     <>
       <PageHeader
-        back={{ href: `/student/chapters/${lesson.chapter_id}`, label: chapter?.title ?? "Chapter" }}
+        back={{ href: `/student/chapters/${chapterRef}`, label: chapter?.title ?? "Chapter" }}
         title={lesson.title}
         subtitle={[
           chapter?.subject?.name,
@@ -76,14 +80,14 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
 
           <nav aria-label="Lesson navigation" className="mt-6 flex flex-wrap justify-between gap-3">
             {prev ? (
-              <Link href={`/student/lessons/${prev.id}`} className={secondaryButtonClass}>
+              <Link href={`/student/lessons/${prev.url_slug ?? prev.id}`} className={secondaryButtonClass}>
                 ← {prev.title}
               </Link>
             ) : (
               <span />
             )}
             {next && (
-              <Link href={`/student/lessons/${next.id}`} className={secondaryButtonClass}>
+              <Link href={`/student/lessons/${next.url_slug ?? next.id}`} className={secondaryButtonClass}>
                 {next.title} →
               </Link>
             )}
@@ -126,7 +130,7 @@ export default async function LessonPage({ params }: PageProps<"/student/lessons
                     <span aria-disabled="true" className="flex items-center gap-3 rounded-xl p-2 opacity-55">{body}</span>
                   ) : (
                     <Link
-                      href={`/student/lessons/${s.id}`}
+                      href={`/student/lessons/${s.url_slug ?? s.id}`}
                       aria-current={isNow ? "page" : undefined}
                       className="flex items-center gap-3 rounded-xl p-2 hover:bg-primary-light aria-[current=page]:bg-primary-light"
                     >

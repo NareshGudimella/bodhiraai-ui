@@ -1,5 +1,5 @@
 # Checks every push and pull request: the Next.js app (plain `next build`, as
-# the Hostinger host runs it), the Worker's tests, and the OpenNext Cloudflare
+# Cloudflare's Git build uses it), the Worker's tests, and the OpenNext Cloudflare
 # build with a wrangler dry run for each target. Nothing here talks to Cloudflare.
 name: CI
 on:
@@ -17,7 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
-      # `npm run build` + `next start` hosting (Hostinger). It doesn't call the API.
+      # the plain Next build (Cloudflare's Git build uses it unless WORKERS_CI is set). It doesn't call the API.
       - run: npm run build
   worker:
     runs-on: ubuntu-24.04

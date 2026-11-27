@@ -1,9 +1,11 @@
 import { Card, Empty, PageHeader, Pill, SectionTitle, Stat } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { teacherApi } from "@/lib/teacher-api";
 
 export default async function QuizAnalyticsPage({ params }: PageProps<"/teacher/quizzes/[id]">) {
   const { id } = await params;
   const { quiz, stats, attempts } = await teacherApi.quizAnalytics(id);
+  canonical(id, quiz.slug, "/teacher/quizzes");
   return (
     <>
       <PageHeader

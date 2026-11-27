@@ -26,8 +26,8 @@ export async function sendChatMessage(
 /** Open (or create) a conversation from the contacts list, then go to it. */
 export async function startChat(start: 'with-teacher' | 'with-parent', studentId: number) {
   const user = await getCurrentUser();
-  const { id } = await api<{ id: number }>(`/chat/${seg(start)}/${idSeg(studentId)}`, { method: 'POST' });
-  redirect(`${homeFor(user.role)}/chat/${id}`);
+  const { id, public_id } = await api<{ id: number; public_id?: string }>(`/chat/${seg(start)}/${idSeg(studentId)}`, { method: 'POST' });
+  redirect(`${homeFor(user.role)}/chat/${public_id ?? id}`);
 }
 
 export async function markNotificationRead(id: string, href: string | null) {

@@ -1,7 +1,7 @@
 import 'server-only';
 import { apiEnvelope } from './api';
 import { load } from './load';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Typed reads for /api/v1/admin/* (legacy contract plus the two web helpers). */
 
@@ -9,6 +9,7 @@ export type PageMeta = { current_page: number; per_page: number; total: number; 
 
 export type AdminUserRow = {
   id: number;
+  public_id?: string;
   name: string;
   email: string | null;
   phone: string | null;
@@ -24,6 +25,7 @@ export type AdminSubject = {
   id: number;
   name: string;
   slug: string;
+  url_slug?: string;
   grade: string | null;
   icon: string | null;
   color: string | null;
@@ -69,7 +71,7 @@ export const adminApi = {
         attendance_percent: number;
         active_assignments: number;
       };
-      recent_signups: { id: number; name: string; role_label: string | null; created_at: string | null }[];
+      recent_signups: { id: number; public_id?: string; name: string; role_label: string | null; created_at: string | null }[];
       recent_attempts: { student: string | null; quiz: string | null; subject: string | null; percent: number; submitted_at: string | null }[];
     }>('/admin/home'),
   users: async (params: URLSearchParams) => {
@@ -79,11 +81,12 @@ export const adminApi = {
   /** Seat usage vs the school's caps (null without a school). */
   seats: () =>
     load<{ teachers_used: number; teachers_max: number; students_used: number; students_max: number } | null>('/admin/users/seats'),
-  user: (id: string) => load<AdminUser>(`/admin/users/${idSeg(id)}`),
+  user: (id: string) => load<AdminUser>(`/admin/users/${seg(id)}`),
   classes: () =>
     load<
       {
         id: number;
+        slug?: string;
         label: string;
         academic_year: string | null;
         class_teacher: string | null;
@@ -93,21 +96,21 @@ export const adminApi = {
     >('/admin/classes'),
   class: (id: string) =>
     load<{
-      class: { id: number; label: string; academic_year: string | null; class_teacher: string | null };
+      class: { id: number; slug?: string; label: string; academic_year: string | null; class_teacher: string | null };
       students: { id: number; name: string; roll_no: string | null; grade: string | null; avatar: string | null }[];
       subjects: { id: number; name: string; teacher_id: number | null; icon: string | null; grade: string | null }[];
-    }>(`/admin/classes/${idSeg(id)}`),
+    }>(`/admin/classes/${seg(id)}`),
   classOptions: (id: string) =>
     load<{
       available_students: { id: number; name: string; grade: string | null }[];
       available_subjects: { id: number; name: string; grade: string | null }[];
       teachers: { id: number; name: string }[];
-    }>(`/admin/classes/${idSeg(id)}/options`),
+    }>(`/admin/classes/${seg(id)}/options`),
   subjects: () => load<AdminSubject[]>('/admin/subjects'),
   content: () => load<AdminContent>('/admin/content'),
   analytics: () =>
     load<{
-      classes: { id: number; label: string; students: number; attendance_percent: number; avg_quiz_percent: number }[];
+      classes: { id: number; slug?: string; label: string; students: number; attendance_percent: number; avg_quiz_percent: number }[];
       attendance_trend: { date: string; percent: number }[];
       totals: { lessons_completed: number; quiz_attempts: number; avg_quiz_percent: number };
     }>('/admin/analytics'),
@@ -115,7 +118,7 @@ export const adminApi = {
     load<{
       links: { id: number; name: string; role: string; pivot: { relation: string | null } }[];
       linkable: { id: number; name: string; grade?: string | null; phone?: string | null }[];
-    }>(`/admin/users/${idSeg(id)}/links`),
+    }>(`/admin/users/${seg(id)}/links`),
   syllabi: () =>
     load<{
       school: { id: number; name: string };

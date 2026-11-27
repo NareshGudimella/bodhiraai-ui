@@ -4,7 +4,7 @@ import { refresh } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { api, apiEnvelope, ApiError } from './api';
 import { failure, forwardForm, type FormState } from './action-result';
-import { idSeg } from '@/lib/api-path';
+import { idSeg, seg } from '@/lib/api-path';
 import { isSignedFileUrl } from './signed-file';
 
 /** Server Actions for the super admin content library (/content). */
@@ -22,12 +22,12 @@ async function mutate(path: string, method: string, body: object | FormData | un
   }
 }
 
-export async function createChapter(subjectId: number, _: FormState, form: FormData) {
-  return mutate(`/content/subjects/${idSeg(subjectId)}/chapters`, 'POST', pick(form, ['title', 'description', 'sort_order', 'is_published']), form);
+export async function createChapter(subjectId: number | string, _: FormState, form: FormData) {
+  return mutate(`/content/subjects/${seg(subjectId)}/chapters`, 'POST', pick(form, ['title', 'description', 'sort_order', 'is_published']), form);
 }
 
-export async function deleteChapter(chapterId: number, subjectId: number) {
-  await api(`/content/chapters/${idSeg(chapterId)}`, { method: 'DELETE' });
+export async function deleteChapter(chapterId: number | string, subjectId: number | string) {
+  await api(`/content/chapters/${seg(chapterId)}`, { method: 'DELETE' });
   redirect(`/content/subjects/${subjectId}`);
 }
 
@@ -54,13 +54,13 @@ const keep = (form: FormData) => {
   return f;
 };
 
-export async function createLesson(chapterId: number, _: FormState, form: FormData) {
-  return mutate(`/content/chapters/${idSeg(chapterId)}/lessons`, 'POST', lessonForm(form), keep(form));
+export async function createLesson(chapterId: number | string, _: FormState, form: FormData) {
+  return mutate(`/content/chapters/${seg(chapterId)}/lessons`, 'POST', lessonForm(form), keep(form));
 }
 
-export async function updateLesson(lessonId: number, chapterId: number, _: FormState, form: FormData): Promise<FormState> {
+export async function updateLesson(lessonId: number, chapterId: number | string, _: FormState, form: FormData): Promise<FormState> {
   try {
-    await api(`/content/lessons/${idSeg(lessonId)}`, { method: 'PATCH', body: lessonForm(form, ['sort_order']) });
+    await api(`/content/lessons/${seg(lessonId)}`, { method: 'PATCH', body: lessonForm(form, ['sort_order']) });
   } catch (e) {
     return failure(e, 'Could not save the lesson.', keep(form));
   }
@@ -75,13 +75,13 @@ export async function updateLesson(lessonId: number, chapterId: number, _: FormS
 export type SaveResult = { id: number } | { error: FormState };
 
 /** Saves the lesson fields without the file: creates the lesson (chapterId) or patches it (lessonId). */
-export async function saveLessonFields(chapterId: number, lessonId: number | null, form: FormData): Promise<SaveResult> {
+export async function saveLessonFields(chapterId: number | string, lessonId: number | null, form: FormData): Promise<SaveResult> {
   try {
     if (lessonId) {
-      await api(`/content/lessons/${idSeg(lessonId)}`, { method: 'PATCH', body: lessonForm(form, ['sort_order']) });
+      await api(`/content/lessons/${seg(lessonId)}`, { method: 'PATCH', body: lessonForm(form, ['sort_order']) });
       return { id: lessonId };
     }
-    const r = await api<{ id: number }>(`/content/chapters/${idSeg(chapterId)}/lessons`, { method: 'POST', body: lessonForm(form) });
+    const r = await api<{ id: number }>(`/content/chapters/${seg(chapterId)}/lessons`, { method: 'POST', body: lessonForm(form) });
     return { id: r.id };
   } catch (e) {
     return { error: failure(e, 'Could not save the lesson.', keep(form)) };
@@ -93,31 +93,32 @@ export type VideoUpload = { mode: 'stream'; upload_url: string; expires_at: stri
 /** Forwards the size and type check to the API; `stream` gives the browser a token URL on the API's own host. */
 export async function startLessonVideoUpload(lessonId: number, file: { filename: string; size: number; content_type: string }): Promise<{ data: VideoUpload } | { message: string }> {
   try {
-    return { data: await api<VideoUpload>(`/content/lessons/${idSeg(lessonId)}/video-upload`, { method: 'POST', body: file }) };
+    return { data: await api<VideoUpload>(`/content/lessons/${seg(lessonId)}/video-upload`, { method: 'POST', body: file }) };
   } catch (e) {
     return { message: e instanceof ApiError ? e.message : 'Could not start the upload.' };
   }
 }
 
-export async function deleteLesson(lessonId: number, chapterId: number) {
-  await api(`/content/lessons/${idSeg(lessonId)}`, { method: 'DELETE' });
+export async function deleteLesson(lessonId: number, chapterId: number | string) {
+  await api(`/content/lessons/${seg(lessonId)}`, { method: 'DELETE' });
   redirect(`/content/chapters/${chapterId}`);
 }
 
 const QUIZ_FIELDS = ['title', 'description', 'subject_id', 'chapter_id', 'duration_min', 'pass_marks'];
 
 export async function createQuiz(_: FormState, form: FormData): Promise<FormState> {
-  let id: number;
+  let ref: string | number;
   try {
-    ({ id } = await api<{ id: number }>('/content/quizzes', { body: pick(form, QUIZ_FIELDS.filter((f) => f !== 'chapter_id')) }));
+    const r = await api<{ id: number; slug?: string }>('/content/quizzes', { body: pick(form, QUIZ_FIELDS.filter((f) => f !== 'chapter_id')) });
+    ref = r.slug ?? r.id;
   } catch (e) {
     return failure(e, 'Could not create the quiz.', form);
   }
-  redirect(`/content/quizzes/${id}`);
+  redirect(`/content/quizzes/${ref}`);
 }
 
 export async function updateQuiz(quizId: number, _: FormState, form: FormData) {
-  return mutate(`/content/quizzes/${idSeg(quizId)}`, 'PATCH', pick(form, [...QUIZ_FIELDS, 'is_published']), form);
+  return mutate(`/content/quizzes/${seg(quizId)}`, 'PATCH', pick(form, [...QUIZ_FIELDS, 'is_published']), form);
 }
 
 export async function addQuestion(quizId: number, _: FormState, form: FormData) {
@@ -125,7 +126,7 @@ export async function addQuestion(quizId: number, _: FormState, form: FormData) 
     ...pick(form, ['body', 'type', 'marks', 'correct_answer', 'explanation']),
     options: form.getAll('options[]').filter((v): v is string => typeof v === 'string'),
   };
-  return mutate(`/content/quizzes/${idSeg(quizId)}/questions`, 'POST', body, form);
+  return mutate(`/content/quizzes/${seg(quizId)}/questions`, 'POST', body, form);
 }
 
 export async function deleteQuestion(questionId: number) {

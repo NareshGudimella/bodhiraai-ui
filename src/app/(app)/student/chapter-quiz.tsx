@@ -25,9 +25,9 @@ export async function ChapterQuiz({ state }: { state: QuizState }) {
         </p>
       </div>
       {attempt ? (
-        <Link href={`/student/attempts/${attempt.id}`} className={buttonClass}>View result</Link>
+        <Link href={`/student/attempts/${attempt.public_id ?? attempt.id}`} className={buttonClass}>View result</Link>
       ) : all_completed ? (
-        <Link href={`/student/quizzes/${quiz.id}`} className={buttonClass}>{t("Take Quiz")}</Link>
+        <Link href={`/student/quizzes/${quiz.slug ?? quiz.id}`} className={buttonClass}>{t("Take Quiz")}</Link>
       ) : null}
     </Card>
   );

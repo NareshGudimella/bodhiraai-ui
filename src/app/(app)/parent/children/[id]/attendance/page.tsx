@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, Pill, Stat, secondaryButtonClass } from "@/components/ui";
+import { canonical } from "@/lib/canonical";
 import { parentApi } from "@/lib/parent-api";
 import { ChildTabs } from "../child-tabs";
 
@@ -15,10 +16,11 @@ export default async function ChildAttendancePage({ params, searchParams }: Page
   const { id } = await params;
   const month = (await searchParams).month;
   const a = await parentApi.attendance(id, typeof month === "string" ? month : undefined);
+  canonical(id, a.student.public_id, "/parent/children", `/attendance${typeof month === "string" ? `?month=${encodeURIComponent(month)}` : ""}`);
   return (
     <>
       <PageHeader back={{ href: "/parent", label: "Dashboard" }} title={a.student.name} />
-      <ChildTabs id={id} current="/attendance" />
+      <ChildTabs id={a.student.public_id ?? id} current="/attendance" />
       <div className="mb-4 flex items-center justify-between gap-2">
         <Link href={`?month=${shift(a.month, -1)}`} className={secondaryButtonClass}>← Previous</Link>
         <h2 className="font-semibold text-brand">{a.month_label}</h2>

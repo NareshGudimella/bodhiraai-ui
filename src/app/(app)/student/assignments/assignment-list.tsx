@@ -8,6 +8,7 @@ import { ASSIGNMENT_STATUS, daysMessage, groupOf, mj, type Group } from "./statu
 
 export type Row = {
   id: number;
+  slug?: string;
   title: string;
   subject: string | null;
   due_date: string | null;
@@ -54,7 +55,7 @@ export function AssignmentList({ rows }: { rows: Row[] }) {
             const msg = daysMessage(a.diff);
             return (
               <li key={a.id}>
-                <Link href={`/student/assignments/${a.id}`} className="block">
+                <Link href={`/student/assignments/${a.slug ?? a.id}`} className="block">
                   <Card className="ccard flex flex-wrap items-center justify-between gap-3 p-4 transition hover:ring-primary" style={cardTone(i)}>
                     <span className="min-w-0">
                       <span className="block font-medium text-ink">{a.title}</span>

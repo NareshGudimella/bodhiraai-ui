@@ -2,6 +2,7 @@ import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { Card, PageHeader, secondaryButtonClass } from "@/components/ui";
 import { ApiError } from "@/lib/api";
+import { canonical } from "@/lib/canonical";
 import { studentApi } from "@/lib/student-api";
 import { Chat } from "./chat";
 import { RetryButton } from "./retry-button";
@@ -64,6 +65,7 @@ export async function AiWorkspace({ sessionId, fresh = false }: { sessionId?: st
     );
   }
   const { sessions, tokens, current } = data;
+  if (sessionId && current) canonical(sessionId, current.session.public_id, "/student/ai");
 
   return (
     <>
@@ -74,7 +76,7 @@ export async function AiWorkspace({ sessionId, fresh = false }: { sessionId?: st
             {sessions.map((s) => (
               <li key={s.id} className="shrink-0">
                 <Link
-                  href={`/student/ai/${s.id}`}
+                  href={`/student/ai/${s.public_id ?? s.id}`}
                   aria-current={current?.session.id === s.id ? "page" : undefined}
                   className="block max-w-56 truncate rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-card aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-brand aria-[current=page]:ring-1 aria-[current=page]:ring-line lg:max-w-none"
                 >
@@ -90,7 +92,7 @@ export async function AiWorkspace({ sessionId, fresh = false }: { sessionId?: st
         </nav>
         <Chat
           key={current?.session.id ?? "new"}
-          sessionId={current?.session.id ?? null}
+          sessionId={current?.session.public_id ?? current?.session.id ?? null}
           initialMessages={current?.messages ?? []}
           initialTokens={tokens}
         />

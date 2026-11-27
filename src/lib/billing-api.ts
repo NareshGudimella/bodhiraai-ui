@@ -3,12 +3,13 @@ import type { PageMeta } from './admin-api';
 import { api, apiEnvelope } from './api';
 import { load } from './load';
 import type { Plan, SchoolModel } from './super-api';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 export type { Plan };
 
 export type Subscription = {
   id: number;
+  public_id?: string;
   subscribable_id: number;
   plan: string;
   status: string;
@@ -20,6 +21,7 @@ export type Subscription = {
 
 export type Invoice = {
   id: number;
+  public_id?: string;
   number: string;
   plan_name: string;
   cycle: string;
@@ -48,7 +50,7 @@ export type Payment = {
   period_start: string | null;
   period_end: string | null;
   created_at: string;
-  school?: { id: number; name: string } | null;
+  school?: { id: number; slug?: string; name: string } | null;
 };
 
 /** SuperAdminService::INDIVIDUAL_PLANS, as the paywall gets them. */
@@ -89,8 +91,8 @@ export const billingApi = {
     }>('/billing/paywall'),
   /** Throws ApiError 422 (`no_plan`) when the subscription has no plan to pay for. */
   checkout: (id: string, cycle: string) =>
-    api<CheckoutSummary>(`/billing/checkout/${idSeg(id)}?${new URLSearchParams({ cycle })}`),
-  invoice: (id: string) => load<Invoice>(`/billing/invoices/${idSeg(id)}`),
+    api<CheckoutSummary>(`/billing/checkout/${seg(id)}?${new URLSearchParams({ cycle })}`),
+  invoice: (id: string) => load<Invoice>(`/billing/invoices/${seg(id)}`),
   school: () =>
     load<{
       school: SchoolModel | null;

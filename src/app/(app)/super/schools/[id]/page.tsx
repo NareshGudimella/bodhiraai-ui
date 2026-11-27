@@ -2,6 +2,7 @@ import { Card, PageHeader, Pill, SectionTitle, Stat, secondaryButtonClass } from
 import { toggleSchool } from "@/lib/super-actions";
 import { mediaUrl } from "@/lib/media";
 import { PLAN_KEYS, superApi } from "@/lib/super-api";
+import { canonical } from "@/lib/canonical";
 import { inr, tone } from "../../format";
 import { SchoolForm } from "../school-form";
 import { GrantForm } from "./grant-form";
@@ -10,11 +11,10 @@ import { SchoolAdmins } from "./school-admins";
 
 export default async function SuperSchoolPage({ params }: PageProps<"/super/schools/[id]">) {
   const { id } = await params;
-  const [{ school: s, stats }, options, admins] = await Promise.all([
-    superApi.school(id),
-    superApi.schoolFormOptions(id),
-    superApi.schoolAdmins(id),
-  ]);
+  const { school: s, stats } = await superApi.school(id);
+  canonical(id, s.slug, "/super/schools");
+  // The API's `?school=` query takes a numeric id only (the route-binding guard rewrites path params, not queries).
+  const [options, admins] = await Promise.all([superApi.schoolFormOptions(String(s.id)), superApi.schoolAdmins(s.id)]);
   const theme = s.settings?.theme;
   const direct = !!s.is_direct;
   return (

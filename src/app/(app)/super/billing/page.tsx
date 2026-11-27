@@ -35,7 +35,7 @@ export default async function SuperBillingPage({ searchParams }: PageProps<"/sup
                 <tr key={p.id}>
                   <td className="whitespace-nowrap">{mjY(p.created_at)}</td>
                   <td className="font-medium">
-                    {p.school ? <Link href={`/super/schools/${p.school.id}`} className="hover:underline">{p.school.name}</Link> : "—"}
+                    {p.school ? <Link href={`/super/schools/${p.school.slug ?? p.school.id}`} className="hover:underline">{p.school.name}</Link> : "—"}
                   </td>
                   <td className="capitalize">{p.plan}</td>
                   <td className="num font-medium text-ink">{paise(p.amount_paise)}</td>

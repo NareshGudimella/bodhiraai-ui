@@ -3,12 +3,15 @@ import { deleteLesson, updateLesson } from "@/lib/content-actions";
 import { contentApi } from "@/lib/content-api";
 import { mediaUrl } from "@/lib/media";
 import { isSignedFileUrl } from "@/lib/signed-file";
+import { canonical } from "@/lib/canonical";
 import { ConfirmButton } from "@/components/confirm-button";
 import { LessonForm } from "../../../lesson-form";
 
 export default async function EditLessonPage({ params }: PageProps<"/content/lessons/[id]/edit">) {
   const { id } = await params;
   const { lesson } = await contentApi.lesson(id);
+  canonical(id, lesson.url_slug, "/content/lessons", "/edit");
+  const chapterRef = lesson.chapter.url_slug ?? lesson.chapter_id;
   const media = mediaUrl(lesson.content_url);
   // Editors manage uploaded lesson videos but may not play them: only enrolled students
   // and their teachers can (our encrypted HLS, our signed file, or a legacy upload not moved yet).
@@ -19,18 +22,18 @@ export default async function EditLessonPage({ params }: PageProps<"/content/les
   return (
     <>
       <PageHeader
-        back={{ href: `/content/chapters/${lesson.chapter_id}`, label: lesson.chapter.title }}
+        back={{ href: `/content/chapters/${chapterRef}`, label: lesson.chapter.title }}
         title={`Edit: ${lesson.title}`}
         subtitle={lesson.chapter.subject.name}
         action={
-          <ConfirmButton action={deleteLesson.bind(null, lesson.id, lesson.chapter_id)} message={`Delete "${lesson.title}"?`} className={secondaryButtonClass}>
+          <ConfirmButton action={deleteLesson.bind(null, lesson.id, chapterRef)} message={`Delete "${lesson.title}"?`} className={secondaryButtonClass}>
             Delete lesson
           </ConfirmButton>
         }
       />
       <div className="grid gap-8 [&>*]:min-w-0 lg:grid-cols-[3fr_2fr]">
         <Card>
-          <LessonForm action={updateLesson.bind(null, lesson.id, lesson.chapter_id)} initial={lesson} edit submitLabel="Save lesson" chapterId={lesson.chapter_id} lessonId={lesson.id} />
+          <LessonForm action={updateLesson.bind(null, lesson.id, chapterRef)} initial={lesson} edit submitLabel="Save lesson" chapterId={chapterRef} lessonId={lesson.id} />
         </Card>
         <section className="space-y-3 text-sm">
           <h2 className="font-semibold text-ink">Current media</h2>

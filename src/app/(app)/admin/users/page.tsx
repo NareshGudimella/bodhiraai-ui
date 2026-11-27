@@ -33,7 +33,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                   <td className="px-4 py-2 font-medium text-ink">
                     <span className="flex items-center gap-2">
                       <Avatar name={u.name} src={u.avatar} size={32} />
-                      <Link href={`/admin/users/${u.id}`} className="hover:underline">{u.name}</Link>
+                      <Link href={`/admin/users/${u.public_id ?? u.id}`} className="hover:underline">{u.name}</Link>
                     </span>
                   </td>
                   <td className="px-4 py-2 capitalize text-ink-2">{u.role.replace("_", " ")}</td>
@@ -42,7 +42,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                   <td className="px-4 py-2"><Pill tone={u.status === "active" ? "success" : "neutral"}>{u.status}</Pill></td>
                   <td className="px-4 py-2 text-right">
                     <span className="inline-flex items-center gap-2">
-                      <Link href={`/admin/users/${u.id}`} className="text-xs font-semibold text-brand hover:underline">Edit</Link>
+                      <Link href={`/admin/users/${u.public_id ?? u.id}`} className="text-xs font-semibold text-brand hover:underline">Edit</Link>
                       <form action={toggleUser.bind(null, u.id)}>
                         <button className="rounded-md border border-line px-2 py-1 text-xs hover:bg-primary-light">
                           {u.status === "active" ? "Deactivate" : "Activate"}

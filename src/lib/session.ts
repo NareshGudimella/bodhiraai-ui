@@ -1,5 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
+import { homeFor } from './roles';
 
 /** httpOnly cookie holding the Sanctum-format API token (`<id>|<secret>`). */
 export const TOKEN_COOKIE = 'bodhira_token';
@@ -30,4 +31,16 @@ export async function clearSession() {
   const store = await cookies();
   store.delete(TOKEN_COOKIE);
   store.delete(ROLE_COOKIE);
+}
+
+/**
+ * Not in legacy (it always showed Sign In): the site's account link. Signed in →
+ * "My Account" to their dashboard; the role cookie is only a hint (the dashboard
+ * checks access), and an unknown role goes to /login, which redirects signed-in users home.
+ */
+export async function accountLink(): Promise<{ href: string; label: string }> {
+  const jar = await cookies();
+  if (!jar.get(TOKEN_COOKIE)?.value) return { href: '/login', label: 'Sign In' };
+  const home = homeFor(jar.get(ROLE_COOKIE)?.value);
+  return { href: home === '/' ? '/login' : home, label: 'My Account' };
 }

@@ -1,11 +1,12 @@
 import 'server-only';
 import { load } from './load';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Typed reads for /api/v1/content/* (super admin content library; new endpoints). */
 
 export type ContentSubject = {
   id: number;
+  url_slug?: string;
   school_id: number | null;
   syllabus_id: number | null;
   name: string;
@@ -18,6 +19,7 @@ export type ContentSubject = {
 
 export type ContentChapter = {
   id: number;
+  url_slug?: string;
   subject_id: number;
   title: string;
   description: string | null;
@@ -27,6 +29,7 @@ export type ContentChapter = {
 
 export type ContentLesson = {
   id: number;
+  url_slug?: string;
   chapter_id: number;
   title: string;
   type: 'video' | 'pdf' | 'text';
@@ -45,6 +48,7 @@ export type ContentLesson = {
 
 export type ContentQuiz = {
   id: number;
+  slug?: string;
   subject_id: number | null;
   chapter_id: number | null;
   title: string;
@@ -73,11 +77,11 @@ export const contentApi = {
       totals: { subjects: number; chapters: number; lessons: number; quizzes: number };
     }>('/content'),
   subject: (id: string) =>
-    load<{ subject: ContentSubject; chapters: (ContentChapter & { lessons_count: number })[] }>(`/content/subjects/${idSeg(id)}`),
+    load<{ subject: ContentSubject; chapters: (ContentChapter & { lessons_count: number })[] }>(`/content/subjects/${seg(id)}`),
   chapter: (id: string) =>
-    load<{ chapter: ContentChapter & { subject: ContentSubject; lessons: ContentLesson[] } }>(`/content/chapters/${idSeg(id)}`),
+    load<{ chapter: ContentChapter & { subject: ContentSubject; lessons: ContentLesson[] } }>(`/content/chapters/${seg(id)}`),
   lesson: (id: string) =>
-    load<{ lesson: ContentLesson & { chapter: ContentChapter & { subject: ContentSubject } } }>(`/content/lessons/${idSeg(id)}`),
+    load<{ lesson: ContentLesson & { chapter: ContentChapter & { subject: ContentSubject } } }>(`/content/lessons/${seg(id)}`),
   quizzes: () =>
     load<{
       subjects: ContentSubject[];
@@ -85,6 +89,6 @@ export const contentApi = {
     }>('/content/quizzes'),
   quiz: (id: string) =>
     load<{ quiz: ContentQuiz & { questions: ContentQuestion[] }; subjects: ContentSubject[]; chapters: ContentChapter[] }>(
-      `/content/quizzes/${idSeg(id)}`,
+      `/content/quizzes/${seg(id)}`,
     ),
 };

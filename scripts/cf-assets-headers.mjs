@@ -4,7 +4,7 @@
  * before the Worker runs, so next.config.mjs's headers() never reaches them;
  * this gives them the same security headers (production values) and makes the
  * hashed _next/static files immutable. Written into the build output, not
- * public/, so `next start` (Hostinger) doesn't serve a /_headers file.
+ * public/, so `next start` doesn't serve a /_headers file.
  */
 import { writeFileSync, existsSync } from "node:fs";
 

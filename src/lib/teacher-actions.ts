@@ -4,7 +4,7 @@ import { refresh } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { api, apiEnvelope } from './api';
 import { failure, forwardForm, type FormState } from './action-result';
-import { idSeg } from '@/lib/api-path';
+import { idSeg, seg } from '@/lib/api-path';
 
 /** Server Actions for teacher forms. Each returns FormState for useActionState. */
 
@@ -20,7 +20,7 @@ export async function saveAttendance(classId: number, _: FormState, form: FormDa
     if (m && typeof value === 'string' && value) records[m[1]] = value;
   }
   try {
-    const { saved } = await api<{ saved: number }>(`/teacher/classes/${idSeg(classId)}/attendance`, {
+    const { saved } = await api<{ saved: number }>(`/teacher/classes/${seg(classId)}/attendance`, {
       body: { date: field(form, 'date'), records },
     });
     refresh();
@@ -31,7 +31,7 @@ export async function saveAttendance(classId: number, _: FormState, form: FormDa
 }
 
 export async function createAssignment(_: FormState, form: FormData): Promise<FormState> {
-  let id: number;
+  let ref: string | number;
   try {
     // Multipart: the optional `attachment` file goes through the API's storage service.
     const body = forwardForm(
@@ -39,11 +39,12 @@ export async function createAssignment(_: FormState, form: FormData): Promise<Fo
       ['class_id', 'subject_id', 'title', 'description', 'attachment_url', 'due_date', 'max_marks'],
       'attachment',
     );
-    ({ id } = await api<{ id: number }>('/teacher/assignments', { body }));
+    const r = await api<{ id: number; slug?: string }>('/teacher/assignments', { body });
+    ref = r.slug ?? r.id;
   } catch (e) {
     return failure(e, 'Could not create the assignment.', form);
   }
-  redirect(`/teacher/assignments/${id}`);
+  redirect(`/teacher/assignments/${ref}`);
 }
 
 export async function gradeSubmission(submissionId: number, _: FormState, form: FormData): Promise<FormState> {
@@ -59,9 +60,9 @@ export async function gradeSubmission(submissionId: number, _: FormState, form: 
 }
 
 export async function scheduleLiveClass(_: FormState, form: FormData): Promise<FormState> {
-  let id: number;
+  let ref: string | number;
   try {
-    ({ id } = await api<{ id: number }>('/teacher/live-classes', {
+    const r = await api<{ id: number; slug?: string }>('/teacher/live-classes', {
       body: {
         title: field(form, 'title'),
         description: field(form, 'description'),
@@ -74,15 +75,16 @@ export async function scheduleLiveClass(_: FormState, form: FormData): Promise<F
         provider: field(form, 'provider'),
         meeting_url: field(form, 'meeting_url'),
       },
-    }));
+    });
+    ref = r.slug ?? r.id;
   } catch (e) {
     return failure(e, 'Could not schedule the class.', form);
   }
-  redirect(`/teacher/live/${id}`);
+  redirect(`/teacher/live/${ref}`);
 }
 
 export async function cancelLiveClass(id: number) {
-  await api(`/teacher/live-classes/${idSeg(id)}/cancel`, { method: 'POST' });
+  await api(`/teacher/live-classes/${seg(id)}/cancel`, { method: 'POST' });
   refresh();
 }
 
@@ -90,7 +92,7 @@ const STUDENT_FIELDS = ['name', 'roll_no', 'email', 'phone', 'dob', 'gender', 'p
 
 export async function addStudent(classId: number, _: FormState, form: FormData): Promise<FormState> {
   try {
-    const r = await apiEnvelope<{ username: string }>(`/teacher/classes/${idSeg(classId)}/students`, {
+    const r = await apiEnvelope<{ username: string }>(`/teacher/classes/${seg(classId)}/students`, {
       body: forwardForm(form, STUDENT_FIELDS, 'avatar'),
     });
     refresh();
@@ -102,7 +104,7 @@ export async function addStudent(classId: number, _: FormState, form: FormData):
 
 export async function updateStudent(classId: number, studentId: number, _: FormState, form: FormData): Promise<FormState> {
   try {
-    const r = await apiEnvelope(`/teacher/classes/${idSeg(classId)}/students/${idSeg(studentId)}`, {
+    const r = await apiEnvelope(`/teacher/classes/${seg(classId)}/students/${seg(studentId)}`, {
       method: 'PUT',
       body: forwardForm(form, STUDENT_FIELDS, 'avatar'),
     });
@@ -114,7 +116,7 @@ export async function updateStudent(classId: number, studentId: number, _: FormS
 }
 
 export async function setStudentStatus(classId: number, studentId: number, form: FormData) {
-  await api(`/teacher/classes/${idSeg(classId)}/students/${idSeg(studentId)}/status`, {
+  await api(`/teacher/classes/${seg(classId)}/students/${seg(studentId)}/status`, {
     method: 'PATCH',
     body: { status: form.get('status') },
   });
@@ -122,6 +124,6 @@ export async function setStudentStatus(classId: number, studentId: number, form:
 }
 
 export async function removeStudent(classId: number, studentId: number) {
-  await api(`/teacher/classes/${idSeg(classId)}/students/${idSeg(studentId)}`, { method: 'DELETE' });
+  await api(`/teacher/classes/${seg(classId)}/students/${seg(studentId)}`, { method: 'DELETE' });
   refresh();
 }

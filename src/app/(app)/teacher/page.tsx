@@ -43,7 +43,7 @@ export default async function TeacherHome() {
             <ul className="space-y-2">
               {classes.map((c, i) => (
                 <li key={c.id}>
-                  <Link href={`/teacher/classes/${c.id}`} className="block">
+                  <Link href={`/teacher/classes/${c.slug ?? c.id}`} className="block">
                     <Card className="ccard flex items-center justify-between p-4 pl-5 transition hover:ring-primary" style={cardTone(i)}>
                       <span className="font-medium text-ink">{c.label}</span>
                       <span className="text-xs text-ink-3">{c.students_count} students</span>

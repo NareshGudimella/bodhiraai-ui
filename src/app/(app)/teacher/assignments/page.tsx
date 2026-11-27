@@ -21,7 +21,7 @@ export default async function AssignmentsPage() {
         <ul className="space-y-2">
           {rows.map((a, i) => (
             <li key={a.id}>
-              <Link href={`/teacher/assignments/${a.id}`} className="block">
+              <Link href={`/teacher/assignments/${a.slug ?? a.id}`} className="block">
                 <Card className="ccard flex flex-wrap items-center justify-between gap-3 p-4 pl-5 transition hover:ring-primary" style={cardTone(i)}>
                   <span className="min-w-0">
                     <span className="block font-medium text-ink">{a.title}</span>

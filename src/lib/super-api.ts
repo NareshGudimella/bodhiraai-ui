@@ -2,12 +2,13 @@ import 'server-only';
 import { apiEnvelope } from './api';
 import { load } from './load';
 import type { PageMeta } from './admin-api';
-import { idSeg } from '@/lib/api-path';
+import { seg } from '@/lib/api-path';
 
 /** Typed reads for /api/v1/super/* (legacy contract). */
 
 export type SchoolRow = {
   id: number;
+  slug?: string;
   name: string;
   code: string;
   email: string | null;
@@ -35,6 +36,7 @@ export type SchoolAdmin = {
 
 export type SchoolModel = {
   id: number;
+  slug?: string;
   name: string;
   code: string;
   email: string | null;
@@ -69,6 +71,7 @@ export type Syllabus = {
 
 export type Plan = {
   id: number;
+  slug?: string;
   key: string;
   audience: 'individual' | 'school';
   name: string;
@@ -129,7 +132,7 @@ export const superApi = {
     load<{
       platform: Record<string, number>;
       growth: { date: string; users: number; attempts: number }[];
-      top_schools: { id: number; name: string; code: string; plan: string; users_count: number; classes_count: number; status: string }[];
+      top_schools: { id: number; slug?: string; name: string; code: string; plan: string; users_count: number; classes_count: number; status: string }[];
     }>('/super/home'),
   schools: async (params: URLSearchParams) => {
     const { data, meta } = await apiEnvelope<SchoolRow[]>(`/super/schools?${params}`);
@@ -149,9 +152,9 @@ export const superApi = {
         mrr: number;
       };
       admins: { id: number; name: string; email: string | null; phone: string | null; status: string }[];
-    }>(`/super/schools/${idSeg(id)}`),
+    }>(`/super/schools/${seg(id)}`),
   /** not in legacy: the school's School Admin accounts. */
-  schoolAdmins: (id: string | number) => load<SchoolAdmin[]>(`/super/schools/${idSeg(id)}/admins`),
+  schoolAdmins: (id: string | number) => load<SchoolAdmin[]>(`/super/schools/${seg(id)}/admins`),
   users: async (params: URLSearchParams) => {
     const { data, meta } = await apiEnvelope<
       { id: number; name: string; email: string | null; phone: string | null; role: string; school: string | null; status: string; created_at: string | null }[]
@@ -164,7 +167,7 @@ export const superApi = {
       arr: number;
       by_plan: { plan: string; count: number; price: number; mrr_contribution: number }[];
       by_status: { active: number; inactive: number; suspended: number };
-      expiring_soon: { id: number; name: string; plan: string; plan_expires_at: string }[];
+      expiring_soon: { id: number; slug?: string; name: string; plan: string; plan_expires_at: string }[];
     }>('/super/revenue'),
   aiUsage: () =>
     load<{
@@ -183,24 +186,24 @@ export const superApi = {
     }>('/super/health'),
   schoolFormOptions: (schoolId?: string) =>
     load<{ syllabi: Syllabus[]; selected: number[]; plan_prices: Record<string, number> }>(
-      `/super/schools/form-options${schoolId ? `?school=${schoolId}` : ''}`,
+      `/super/schools/form-options${schoolId ? `?school=${encodeURIComponent(schoolId)}` : ''}`,
     ),
   syllabi: () => load<(Syllabus & { subjects_count: number; schools_count: number })[]>('/super/syllabi'),
   syllabus: (id: string) =>
     load<{
       syllabus: Syllabus;
-      subjects: { id: number; name: string; icon: string | null; color: string | null; description: string | null; chapters_count: number }[];
-    }>(`/super/syllabi/${idSeg(id)}`),
+      subjects: { id: number; url_slug?: string; name: string; icon: string | null; color: string | null; description: string | null; chapters_count: number }[];
+    }>(`/super/syllabi/${seg(id)}`),
   syllabusSubject: (id: string, subjectId: string) =>
     load<{
       syllabus: Syllabus;
-      subject: { id: number; name: string; icon: string | null; grade: string | null };
-      chapters: { id: number; title: string; description: string | null; is_published: boolean; lessons_count: number }[];
-    }>(`/super/syllabi/${idSeg(id)}/subjects/${idSeg(subjectId)}`),
+      subject: { id: number; url_slug?: string; name: string; icon: string | null; grade: string | null };
+      chapters: { id: number; url_slug?: string; title: string; description: string | null; is_published: boolean; lessons_count: number }[];
+    }>(`/super/syllabi/${seg(id)}/subjects/${seg(subjectId)}`),
   mailSettings: () => load<MailSettings>('/super/mail-settings'),
   integrations: () => load<Record<string, IntegrationItem>>('/super/integrations'),
   plans: () => load<Plan[]>('/super/plans'),
-  plan: (id: string) => load<Plan>(`/super/plans/${idSeg(id)}`),
+  plan: (id: string) => load<Plan>(`/super/plans/${seg(id)}`),
   enquiries: async (params: URLSearchParams) => {
     const { data, meta } = await apiEnvelope<{ enquiries: Enquiry[]; counts: Record<string, number>; status: string | null }>(
       `/super/enquiries?${params}`,

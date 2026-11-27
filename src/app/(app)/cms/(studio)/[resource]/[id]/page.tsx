@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card, PageHeader } from "@/components/ui";
-import { cmsApi, RESOURCE_SLUGS } from "@/lib/cms-api";
+import { canonical } from "@/lib/canonical";
+import { cmsApi, RESOURCE_SLUGS, rowRef } from "@/lib/cms-api";
 import { mediaUrl } from "@/lib/media";
 import { ResourceForm } from "../resource-form";
 
@@ -11,6 +12,7 @@ export default async function EditResourcePage({ params }: PageProps<"/cms/[reso
   const { resource, id } = await params;
   if (!RESOURCE_SLUGS.includes(resource as (typeof RESOURCE_SLUGS)[number])) notFound();
   const { row, fields, labels } = await cmsApi.resourceRow(resource, id);
+  canonical(id, rowRef(row), `/cms/${resource}`);
   const imageUrls = Object.fromEntries(
     fields.filter((f) => f.type === "image").map((f) => [f.name, typeof row[f.name] === "string" ? mediaUrl(row[f.name] as string) : null]),
   );

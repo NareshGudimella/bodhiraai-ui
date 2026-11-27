@@ -18,7 +18,7 @@ export default async function SyllabiPage() {
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {syllabi.map((s) => (
             <li key={s.id}>
-              <Link href={`/super/syllabi/${s.id}`} className="block h-full">
+              <Link href={`/super/syllabi/${s.slug ?? s.id}`} className="block h-full">
                 <Card className="h-full p-4 transition hover:ring-primary">
                   <p className="flex items-start justify-between gap-2">
                     <span className="font-semibold text-ink">{s.name}</span>

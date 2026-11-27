@@ -1,12 +1,14 @@
 import { Card, Empty, SectionTitle, PageHeader } from "@/components/ui";
 import { unlinkUser } from "@/lib/admin-actions";
 import { adminApi } from "@/lib/admin-api";
+import { canonical } from "@/lib/canonical";
 import { UserForm } from "../user-form";
 import { LinkForm } from "./link-form";
 
 export default async function EditUserPage({ params }: PageProps<"/admin/users/[id]">) {
   const { id } = await params;
   const [u, { links, linkable }] = await Promise.all([adminApi.user(id), adminApi.links(id)]);
+  canonical(id, u.public_id, "/admin/users");
   const linksTo = u.role === "parent" ? "Children" : u.role === "student" ? "Parents" : null;
   return (
     <>

@@ -17,7 +17,7 @@ export default async function QuizBuilderPage() {
             <ul className="space-y-2">
               {quizzes.map((q) => (
                 <li key={q.id}>
-                  <Link href={`/content/quizzes/${q.id}`} className="block">
+                  <Link href={`/content/quizzes/${q.slug ?? q.id}`} className="block">
                     <Card className="flex items-center justify-between gap-3 p-4 transition hover:ring-primary">
                       <span className="min-w-0">
                         <span className="block font-medium text-ink">{q.title}</span>

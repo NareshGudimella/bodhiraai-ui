@@ -25,7 +25,7 @@ export default async function ContentLibraryPage() {
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {subjects.map((s) => (
               <li key={s.id}>
-                <Link href={`/content/subjects/${s.id}`} className="block h-full">
+                <Link href={`/content/subjects/${s.url_slug ?? s.id}`} className="block h-full">
                   <Card className="h-full p-4 transition hover:ring-primary">
                     <p className="flex items-start justify-between gap-2">
                       <span className="font-semibold text-brand">{s.icon} {s.name}</span>

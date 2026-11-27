@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader } from "@/components/ui";
 import { cardTone } from "@/lib/appearance";
+import { canonical } from "@/lib/canonical";
 import { studentApi } from "@/lib/student-api";
 
 export default async function SubjectPage({ params }: PageProps<"/student/subjects/[id]">) {
-  const { subject, chapters } = await studentApi.subject((await params).id);
+  const { id } = await params;
+  const { subject, chapters } = await studentApi.subject(id);
+  canonical(id, subject.url_slug, "/student/subjects");
 
   return (
     <>
@@ -17,7 +20,7 @@ export default async function SubjectPage({ params }: PageProps<"/student/subjec
         <ol className="space-y-2">
           {chapters.map((c, i) => (
             <li key={c.id}>
-              <Link href={`/student/chapters/${c.id}`} className="block">
+              <Link href={`/student/chapters/${c.url_slug ?? c.id}`} className="block">
                 <Card className="ccard flex items-center gap-4 p-4 transition hover:ring-primary" style={cardTone(i)}>
                   <span className="ccard-tile flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold">
                     {i + 1}

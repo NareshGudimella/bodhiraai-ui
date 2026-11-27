@@ -14,8 +14,10 @@ export const LEGACY_CSP = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
-  `script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://static.cloudflareinsights.com`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  // 'unsafe-inline' stays for now: Next's inline bootstrap/RSC scripts and the appearance script need it.
+  // Moving to per-request nonces is a later task. security: not in legacy
+  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://static.cloudflareinsights.com`,
   // GA4 also reports to regional *.analytics.google.com hosts; the Pixel posts to facebook.com
   // (both load only after cookie consent, components/site/consent-analytics.tsx; not in legacy).
   // api.bodhiraai.com: the browser PUTs lesson videos straight to the API's own host (DNS-only, no Cloudflare
@@ -23,7 +25,8 @@ export const LEGACY_CSP = [
   // Cloudflare Web Analytics: Cloudflare injects its cookieless beacon (static.cloudflareinsights.com)
   // and it reports to cloudflareinsights.com.
   "connect-src 'self' https://api.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://api.bodhiraai.com https://cloudflareinsights.com",
-  `frame-src 'self' https: https://api.razorpay.com`,
+  // Embeds: Razorpay checkout, the contact map (Google Maps), the homepage/popup video (YouTube, no-cookie). security: not in legacy
+  "frame-src 'self' https://api.razorpay.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self' https://api.razorpay.com https://checkout.stripe.com",

@@ -1,11 +1,13 @@
 import { Card, Empty, PageHeader, Pill, SectionTitle, secondaryButtonClass } from "@/components/ui";
 import { cancelLiveClass } from "@/lib/teacher-actions";
+import { canonical } from "@/lib/canonical";
 import { teacherApi } from "@/lib/teacher-api";
 import { STATUS, when } from "@/app/(app)/student/live/live-card";
 
 export default async function TeacherLiveClassPage({ params }: PageProps<"/teacher/live/[id]">) {
   const { id } = await params;
   const c = await teacherApi.liveClass(id);
+  canonical(id, c.slug, "/teacher/live");
   const s = STATUS[c.live_status];
   const cancellable = c.live_status === "scheduled" || c.live_status === "live";
 

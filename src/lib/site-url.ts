@@ -9,6 +9,15 @@ export function siteUrl(path: string, requestUrl: string): URL {
 }
 
 /**
+ * A state-changing GET started by another site (link, img, redirect): the browser says so in
+ * Sec-Fetch-Site. Same-origin, same-site, user-typed ("none") and missing headers pass.
+ * security: not in legacy
+ */
+export function isCrossSite(request: Request): boolean {
+  return request.headers.get('sec-fetch-site') === 'cross-site';
+}
+
+/**
  * The public site's origin for canonical, Open Graph, sitemap and JSON-LD URLs
  * (SEO: not in legacy). SITE_URL in production (the Worker sets it); locally
  * `http://localhost:3000`. A production server without SITE_URL gets null, so

@@ -55,7 +55,7 @@ export default async function SuperAdminHome() {
                   {top_schools.map((s) => (
                     <tr key={s.id}>
                       <td>
-                        <Link href={`/super/schools/${s.id}`} className="font-medium text-ink hover:underline">{s.name}</Link>
+                        <Link href={`/super/schools/${s.slug ?? s.id}`} className="font-medium text-ink hover:underline">{s.name}</Link>
                         <span className="block text-xs capitalize text-ink-3">{s.code} · {s.plan}</span>
                       </td>
                       <td className="num">{s.users_count}</td>

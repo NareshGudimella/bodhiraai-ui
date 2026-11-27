@@ -22,7 +22,7 @@ export function Chat({
   initialMessages,
   initialTokens,
 }: {
-  sessionId: number | null;
+  sessionId: string | number | null;
   initialMessages: AiMessage[];
   initialTokens: TokenStatus;
 }) {

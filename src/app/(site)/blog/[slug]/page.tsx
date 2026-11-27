@@ -13,6 +13,7 @@ import { mediaUrl } from "@/lib/media";
 import { assetResolver, DEFAULT_OG, fmtDate, settingResolver, siteMetadata, strLimit } from "@/lib/site";
 import { getChrome, getPost, SiteApiError } from "@/lib/site-api";
 import { absoluteUrl } from "@/lib/site-url";
+import { sanitizeCms } from "@/lib/sanitize-html";
 
 /** Renders per request and may block, like the site layout (see its note). */
 export const instant = false;
@@ -143,7 +144,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
           <div className="mx-auto grid max-w-[1080px] grid-cols-[minmax(0,1fr)_320px] items-start gap-[72px] *:min-w-0 max-xl:grid-cols-[minmax(0,1fr)_280px] max-xl:gap-12 max-lg:grid-cols-1">
             <article className={cx("transition-[transform,box-shadow] duration-300 ease-bh", ARTICLE_HOVER)}>
               {/* CMS-authored HTML, rendered raw as in legacy ({!! $post->body !!}). */}
-              <div className="site-prose site-prose-article" dangerouslySetInnerHTML={{ __html: post.body ?? "" }} />
+              <div className="site-prose site-prose-article" dangerouslySetInnerHTML={{ __html: sanitizeCms(post.body ?? "") }} />
               {post.tags.length > 0 && (
                 <ul className="m-0 mt-10 flex list-none flex-wrap gap-2 border-t border-line p-0 pt-7" aria-label="Tags">
                   {post.tags.map((tag) => (

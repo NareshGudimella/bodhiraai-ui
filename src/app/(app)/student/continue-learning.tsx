@@ -17,7 +17,7 @@ export function ContinueLearning({ items }: { items: Dashboard["continue_learnin
       <ul className="space-y-2">
         {shown.map((c) => (
           <li key={c.lesson_id}>
-            <Link href={`/student/lessons/${c.lesson_id}`} className="block">
+            <Link href={`/student/lessons/${c.lesson_slug ?? c.lesson_id}`} className="block">
               <Card className="p-4 transition hover:ring-primary">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="truncate font-medium text-ink">

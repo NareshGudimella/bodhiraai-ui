@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, Empty, PageHeader, Pill, SectionTitle, secondaryButtonClass } from "@/components/ui";
 import { deleteSyllabus, deleteSyllabusSubject } from "@/lib/super-actions";
+import { canonical } from "@/lib/canonical";
 import { superApi } from "@/lib/super-api";
 import { ConfirmButton } from "@/components/confirm-button";
 import { SyllabusForm } from "../syllabus-form";
@@ -9,6 +10,7 @@ import { SubjectForm } from "./subject-form";
 export default async function SyllabusPage({ params }: PageProps<"/super/syllabi/[id]">) {
   const { id } = await params;
   const { syllabus: s, subjects } = await superApi.syllabus(id);
+  canonical(id, s.slug, "/super/syllabi");
   return (
     <>
       <PageHeader
@@ -30,7 +32,7 @@ export default async function SyllabusPage({ params }: PageProps<"/super/syllabi
                 {subjects.map((x) => (
                   <li key={x.id}>
                     <Card className="flex items-center justify-between gap-3 p-3 text-sm">
-                      <Link href={`/super/syllabi/${s.id}/subjects/${x.id}`} className="min-w-0 hover:underline">
+                      <Link href={`/super/syllabi/${s.slug ?? s.id}/subjects/${x.url_slug ?? x.id}`} className="min-w-0 hover:underline">
                         <span className="block font-medium text-ink">{x.icon} {x.name}</span>
                         <span className="block text-xs text-ink-3">{x.chapters_count} chapters</span>
                       </Link>
