@@ -4,6 +4,8 @@ import { useActionState } from "react";
 import { AuthAlert, AuthField, PasswordInput, Spinner } from "@/components/auth/auth-fields";
 import { authButton, authInput } from "@/components/auth/auth-styles";
 import { resetPassword } from "@/lib/auth-actions";
+import { NewPasswordInput } from "@/components/new-password-input";
+import { L, emailProps } from "@/lib/input-limits";
 
 export function ResetForm({ token, email }: { token: string; email: string }) {
   const [state, action, pending] = useActionState(resetPassword, undefined);
@@ -16,21 +18,19 @@ export function ResetForm({ token, email }: { token: string; email: string }) {
           <input
             key={state?.email}
             name="email"
-            type="email"
             defaultValue={state?.email ?? email}
             {...c}
+            {...emailProps(L.email)}
             required
-            autoComplete="email"
-            spellCheck={false}
             className={authInput}
           />
         )}
       </AuthField>
       <AuthField label="New password">
-        {(c) => <PasswordInput {...c} name="password" required minLength={8} autoComplete="new-password" />}
+        {(c) => <NewPasswordInput auth {...c} name="password" required />}
       </AuthField>
       <AuthField label="Confirm password">
-        {(c) => <PasswordInput {...c} name="password_confirmation" required autoComplete="new-password" />}
+        {(c) => <PasswordInput {...c} name="password_confirmation" required maxLength={L.passwordMax} autoComplete="new-password" />}
       </AuthField>
       <button type="submit" disabled={pending} className={authButton}>
         {pending && <Spinner />}

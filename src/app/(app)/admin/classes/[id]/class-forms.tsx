@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { enrolStudent, linkSubject } from "@/lib/admin-actions";
+import { L } from "@/lib/input-limits";
 
 const sel = `${inputClass} py-1.5 text-sm`;
 
@@ -13,12 +14,12 @@ export function EnrolForm({ classId, students }: { classId: number; students: { 
   return (
     <form action={action} className="flex flex-wrap items-end gap-2">
       <label className="min-w-40 flex-1 text-xs text-ink-3"><span className="mb-1 block">Student</span>
-        <select name="student_id" className={sel}>
+        <select name="student_id" required className={sel}>
           {students.map((s) => <option key={s.id} value={s.id}>{s.name}{s.grade ? ` (Grade ${s.grade})` : ""}</option>)}
         </select>
       </label>
       <label className="w-28 text-xs text-ink-3"><span className="mb-1 block">Roll no.</span>
-        <input name="roll_no" maxLength={20} className={sel} />
+        <input name="roll_no" maxLength={L.rollNoEnrol} className={sel} />
       </label>
       <button disabled={pending} className={buttonClass}>Enrol</button>
       <div className="w-full empty:hidden"><FormMessage state={state} /></div>
@@ -40,7 +41,7 @@ export function LinkSubjectForm({
   return (
     <form action={action} className="flex flex-wrap items-end gap-2">
       <label className="min-w-36 flex-1 text-xs text-ink-3"><span className="mb-1 block">Subject</span>
-        <select name="subject_id" className={sel}>{subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+        <select name="subject_id" required className={sel}>{subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
       </label>
       <label className="min-w-36 flex-1 text-xs text-ink-3"><span className="mb-1 block">Teacher</span>
         <select name="teacher_id" className={sel}><option value="">—</option>{teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>

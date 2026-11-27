@@ -4,6 +4,7 @@ import { useState } from "react";
 import { inputClass } from "@/components/form";
 import { Card, Empty } from "@/components/ui";
 import { startChat } from "@/lib/inbox-actions";
+import { L } from "@/lib/input-limits";
 
 export type ContactRow = {
   start: "with-teacher" | "with-parent";
@@ -25,6 +26,7 @@ export function ContactList({ contacts }: { contacts: ContactRow[] }) {
           <span className="sr-only">Search contacts</span>
           <input
             type="search"
+            maxLength={L.search}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search parent or student…"

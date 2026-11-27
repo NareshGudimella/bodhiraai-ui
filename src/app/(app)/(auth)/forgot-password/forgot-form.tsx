@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { AuthAlert, AuthField, Spinner } from "@/components/auth/auth-fields";
 import { authButton, authInput } from "@/components/auth/auth-styles";
 import { sendResetLink } from "@/lib/auth-actions";
+import { L, emailProps } from "@/lib/input-limits";
 
 export function ForgotForm() {
   const [state, action, pending] = useActionState(sendResetLink, undefined);
@@ -15,13 +16,11 @@ export function ForgotForm() {
           <input
             key={state?.email}
             name="email"
-            type="email"
             defaultValue={state?.email}
             {...c}
+            {...emailProps(L.email)}
             required
             autoFocus
-            autoComplete="email"
-            spellCheck={false}
             className={authInput}
           />
         )}

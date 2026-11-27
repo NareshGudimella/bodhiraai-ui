@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { Card, SectionTitle, buttonClass } from "@/components/ui";
 import { createClass } from "@/lib/admin-actions";
+import { L } from "@/lib/input-limits";
 
 /** `defaultYear`: legacy class-form default, e.g. 2026-27 (computed on the server). */
 export function CreateClassForm({ teachers, defaultYear }: { teachers: { id: number; name: string }[]; defaultYear: string }) {
@@ -15,11 +16,11 @@ export function CreateClassForm({ teachers, defaultYear }: { teachers: { id: num
       <SectionTitle>New class</SectionTitle>
       <form action={action} className="space-y-3" key={JSON.stringify(v)}>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Grade" error={e.grade}><input name="grade" required maxLength={10} defaultValue={v.grade} className={inputClass} /></Field>
-          <Field label="Section" error={e.section}><input name="section" required maxLength={10} defaultValue={v.section} className={inputClass} /></Field>
+          <Field label="Grade" error={e.grade}><input name="grade" required maxLength={L.grade} defaultValue={v.grade} className={inputClass} /></Field>
+          <Field label="Section" error={e.section}><input name="section" required maxLength={L.section} defaultValue={v.section} className={inputClass} /></Field>
         </div>
         <Field label="Academic year" error={e.academic_year} hint="e.g. 2026-27">
-          <input name="academic_year" maxLength={9} defaultValue={v.academic_year ?? defaultYear} className={inputClass} />
+          <input name="academic_year" maxLength={L.academicYear} defaultValue={v.academic_year ?? defaultYear} className={inputClass} />
         </Field>
         <Field label="Class teacher" error={e.class_teacher_id}>
           <select name="class_teacher_id" defaultValue={v.class_teacher_id ?? ""} className={inputClass}>

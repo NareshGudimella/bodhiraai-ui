@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { AuthAlert, AuthField, PasswordInput, Spinner } from "@/components/auth/auth-fields";
 import { authButton, authInput } from "@/components/auth/auth-styles";
 import { cmsLogin } from "@/lib/cms-actions";
+import { L, currentPasswordProps } from "@/lib/input-limits";
 
 export function CmsLoginForm() {
   const [state, action, pending] = useActionState(cmsLogin, undefined);
@@ -24,12 +25,13 @@ export function CmsLoginForm() {
             autoCapitalize="none"
             spellCheck={false}
             required
+            maxLength={L.identifier}
             className={authInput}
           />
         )}
       </AuthField>
       <AuthField label="Password" error={passwordError}>
-        {(c) => <PasswordInput {...c} name="password" autoComplete="current-password" required />}
+        {(c) => <PasswordInput {...c} name="password" {...currentPasswordProps} required />}
       </AuthField>
       {general && <AuthAlert tone="error">{general}</AuthAlert>}
       <button type="submit" disabled={pending} className={authButton}>

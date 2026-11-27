@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { linkUser } from "@/lib/admin-actions";
+import { L } from "@/lib/input-limits";
 
 const sel = `${inputClass} py-1.5 text-sm`;
 
@@ -21,7 +22,7 @@ export function LinkForm({
     <form action={action} className="flex flex-wrap items-end gap-2">
       <label className="min-w-48 flex-1 text-xs text-ink-3">
         <span className="mb-1 block">{otherKey === "student_id" ? "Student" : "Parent"}</span>
-        <select name={otherKey} className={sel}>
+        <select name={otherKey} required className={sel}>
           {options.map((o) => (
             <option key={o.id} value={o.id}>
               {o.name}{o.grade ? ` (Grade ${o.grade})` : ""}{o.phone ? ` · ${o.phone}` : ""}
@@ -31,7 +32,7 @@ export function LinkForm({
       </label>
       <label className="w-36 text-xs text-ink-3">
         <span className="mb-1 block">Relation</span>
-        <input name="relation" maxLength={20} placeholder="mother, father…" className={sel} />
+        <input name="relation" maxLength={L.relation} placeholder="mother, father…" className={sel} />
       </label>
       <button disabled={pending} className={buttonClass}>Link</button>
       <div className="w-full empty:hidden"><FormMessage state={state} /></div>

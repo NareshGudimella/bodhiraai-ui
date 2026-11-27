@@ -7,6 +7,7 @@ import type { IntegrationField, INTEGRATIONS } from "@/lib/integrations-spec";
 import type { IntegrationItem } from "@/lib/super-api";
 import { clearIntegrationSecret, saveIntegration, testIntegration } from "@/lib/super-actions";
 import type { FormState } from "@/lib/action-result";
+import { digitsOnly, phoneProps } from "@/lib/input-limits";
 
 type Spec = (typeof INTEGRATIONS)[keyof typeof INTEGRATIONS];
 
@@ -16,7 +17,7 @@ function SecretInput({ provider, f, isSet, error }: { provider: string; f: Integ
   return (
     <div>
       <Field label={f.label} error={error} hint="Leave blank to keep the saved value">
-        <input name={f.name} type="password" maxLength={2000} autoComplete="new-password" className={inputClass} />
+        <input name={f.name} type="password" maxLength={f.maxLength ?? 500} autoComplete="new-password" className={inputClass} />
       </Field>
       <span className="mt-1 flex items-center gap-3 text-xs">
         <span className={`font-medium ${isSet ? "text-success" : "text-ink-3"}`}>{isSet ? "Saved" : "Not set"}</span>
@@ -93,10 +94,14 @@ export function IntegrationCard({ provider, spec, item }: { provider: string; sp
               <Field key={f.name} label={f.label} error={e[f.name]} hint={f.hint}>
                 <input
                   name={f.name}
-                  type={f.kind === "int" ? "number" : "text"}
+                  type={f.kind === "int" ? "number" : f.kind === "url" ? "url" : "text"}
+                  inputMode={f.kind === "int" ? "numeric" : f.kind === "url" ? "url" : undefined}
                   min={f.min}
                   max={f.max}
+                  step={f.kind === "int" ? 1 : undefined}
                   maxLength={f.maxLength}
+                  pattern={f.pattern}
+                  title={f.pattern ? "Letters, digits and the characters the provider allows only" : undefined}
                   placeholder={f.placeholder}
                   autoComplete="off"
                   defaultValue={str(f.name)}
@@ -116,8 +121,8 @@ export function IntegrationCard({ provider, spec, item }: { provider: string; sp
       {spec.test && (
         <form action={testAction} className="mt-5 space-y-3 rounded-lg bg-page/60 p-4 ring-1 ring-line">
           {provider === "sms" && (
-            <Field label="Phone number" error={test?.errors?.phone} hint="Uses the saved settings (save first)">
-              <input name="phone" type="tel" required maxLength={20} defaultValue={test?.values?.phone} className={inputClass} />
+            <Field label="Phone number" error={test?.errors?.phone} hint="10-digit mobile number. Uses the saved settings (save first)">
+              <input name="phone" {...phoneProps()} onInput={digitsOnly} required defaultValue={test?.values?.phone} className={inputClass} />
             </Field>
           )}
           <FormMessage state={test} />

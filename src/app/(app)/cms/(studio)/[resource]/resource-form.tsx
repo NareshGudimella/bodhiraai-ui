@@ -6,6 +6,8 @@ import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass, secondaryButtonClass } from "@/components/ui";
 import { saveResource } from "@/lib/cms-actions";
 import type { ResourceField, Row } from "@/lib/cms-api";
+import { FILE, L, checkFiles, ruleProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 /** Legacy `cms.resource.form`: one input per schema field, by type. */
 export function ResourceForm({
@@ -34,6 +36,7 @@ export function ResourceForm({
     <form action={action} className="grid gap-4 [&>*]:min-w-0 sm:grid-cols-2">
       {fields.map((f) => {
         const key = `${f.name}-${v?.[f.name] ?? ""}`;
+        const lim = ruleProps(f.rules);
         const wide = ["textarea", "richtext", "image"].includes(f.type) ? "sm:col-span-2" : "";
         if (f.type === "boolean") {
           const checked = v ? v[f.name] === "1" : row ? Boolean(row[f.name]) : f.name === "is_active";
@@ -50,22 +53,22 @@ export function ResourceForm({
           <div key={key} className={wide}>
             <Field label={f.label} error={e?.[f.name] ?? e?.[`${f.name}_file`]} hint={f.help}>
               {f.type === "textarea" || f.type === "richtext" ? (
-                <textarea name={f.name} defaultValue={initial(f)} rows={f.type === "richtext" ? 8 : 3} className={inputClass} />
+                <CountedTextarea name={f.name} required={lim.required} maxLength={lim.maxLength ?? L.body} defaultValue={initial(f)} rows={f.type === "richtext" ? 8 : 3} className={inputClass} />
               ) : f.type === "number" ? (
-                <input name={f.name} type="number" defaultValue={initial(f)} className={inputClass} />
+                <input name={f.name} {...lim} defaultValue={initial(f)} className={inputClass} />
               ) : f.type === "color" ? (
-                <input name={f.name} defaultValue={initial(f)} placeholder="#C49560" className={inputClass} />
+                <input name={f.name} {...lim} defaultValue={initial(f)} placeholder="#C49560" className={inputClass} />
               ) : f.type === "image" ? (
                 <span className="flex flex-wrap items-center gap-3">
                   {imageUrls[f.name] && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={imageUrls[f.name]!} alt="" className="size-14 rounded-lg object-cover ring-1 ring-line" />
                   )}
-                  <input name={f.name} defaultValue={initial(f)} placeholder="Image URL (or upload below)" className={`${inputClass} min-w-0 flex-1`} />
-                  <input name={`${f.name}_file`} type="file" accept="image/*" className="w-full text-sm" />
+                  <input name={f.name} {...lim} defaultValue={initial(f)} placeholder="Image URL (or upload below)" className={`${inputClass} min-w-0 flex-1`} />
+                  <input name={`${f.name}_file`} type="file" accept={FILE.image.accept} onChange={checkFiles(FILE.image.kb)} className="w-full text-sm" />
                 </span>
               ) : (
-                <input name={f.name} defaultValue={initial(f)} className={inputClass} />
+                <input name={f.name} {...lim} defaultValue={initial(f)} className={inputClass} />
               )}
             </Field>
           </div>

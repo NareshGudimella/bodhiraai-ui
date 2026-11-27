@@ -6,6 +6,7 @@ import { Icon } from "./icons";
 import { KfConsent } from "./kit-forms-fields";
 import { KfFocusResult } from "./kit-forms-focus";
 import { btn } from "./ui";
+import { L, emailProps } from "@/lib/input-limits";
 
 /** A field on the maroon card: label above a translucent input. */
 const FIELD = "m-0 grid gap-2";
@@ -48,11 +49,11 @@ export async function HomeRequestForm() {
         <div className="mb-5 grid grid-cols-2 gap-4 max-sm:grid-cols-1">
           <label className={FIELD}>
             <span className={LABEL}>School name</span>
-            <input type="text" id="name" name="name" placeholder="e.g. Sunrise Public School" required autoComplete="organization" defaultValue={old.name} aria-invalid={errors.name ? true : undefined} className={INPUT} />
+            <input type="text" id="name" name="name" placeholder="e.g. Sunrise Public School" required maxLength={L.name} autoComplete="organization" defaultValue={old.name} aria-invalid={errors.name ? true : undefined} className={INPUT} />
           </label>
           <label className={FIELD}>
             <span className={LABEL}>Email address</span>
-            <input type="email" id="email" name="email" placeholder="you@school.edu.in" required autoComplete="email" defaultValue={old.email} aria-invalid={errors.email ? true : undefined} className={INPUT} />
+            <input {...emailProps(L.email)} id="email" name="email" placeholder="you@school.edu.in" required defaultValue={old.email} aria-invalid={errors.email ? true : undefined} className={INPUT} />
           </label>
         </div>
         <KfConsent

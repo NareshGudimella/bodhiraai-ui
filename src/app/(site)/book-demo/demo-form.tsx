@@ -5,6 +5,7 @@ import { Icon, type IconName } from "@/components/site/icons";
 import { KF_FORM, KF_ROW, KF_SUBMIT_BTN, KfConsent, KfInput, KfSelect, KfSubmit, KfTextarea, kfFieldset, kfTile, type FieldErrors } from "@/components/site/kit-forms-fields";
 import { cx, focusRing } from "@/components/site/ui";
 import { demoStore } from "@/lib/site-actions";
+import { L, NAME_PATTERN, NAME_TITLE, PHONE_HINT, digitsOnly, emailProps, phoneProps } from "@/lib/input-limits";
 
 type Old = Record<string, string>;
 
@@ -39,19 +40,19 @@ export function DemoForm({ initialType, old, errors }: { initialType: "school" |
       <form action={demoStore} id="bookDemoForm" className={KF_FORM}>
         <input type="hidden" name="type" id="demoType" value={type} />
         <div className={KF_ROW}>
-          <KfInput id="demo-name" name="name" type="text" label={school ? "Contact Person" : "Student / Parent Name"} req icon="user" autoComplete="name" defaultValue={old.name} placeholder={school ? "e.g. Anita Rao" : "e.g. Rahul Verma"} error={e("name")} />
-          <KfInput id="demo-email" name="email" type="email" label="Email Address" req icon="mail" autoComplete="email" inputMode="email" defaultValue={old.email} placeholder="you@example.com" error={e("email")} />
+          <KfInput id="demo-name" name="name" type="text" label={school ? "Contact Person" : "Student / Parent Name"} req required maxLength={L.name} pattern={NAME_PATTERN} title={NAME_TITLE} icon="user" autoComplete="name" defaultValue={old.name} placeholder={school ? "e.g. Anita Rao" : "e.g. Rahul Verma"} error={e("name")} />
+          <KfInput id="demo-email" name="email" label="Email Address" req required {...emailProps(L.email)} icon="mail" defaultValue={old.email} placeholder="you@example.com" error={e("email")} />
         </div>
         <div className={KF_ROW}>
-          <KfInput id="demo-phone" name="phone" type="text" label="Phone Number" req icon="phone" autoComplete="tel" inputMode="tel" defaultValue={old.phone} placeholder="+91 98765 43210" error={e("phone")} />
-          <KfInput id="demo-city" name="city" type="text" label="City" icon="mapPin" autoComplete="address-level2" defaultValue={old.city} placeholder="e.g. Hyderabad" error={e("city")} />
+          <KfInput id="demo-phone" name="phone" label="Phone Number" req required {...phoneProps()} onInput={digitsOnly} hint={PHONE_HINT} icon="phone" defaultValue={old.phone} placeholder="9876543210" error={e("phone")} />
+          <KfInput id="demo-city" name="city" type="text" label="City" maxLength={L.city} icon="mapPin" autoComplete="address-level2" defaultValue={old.city} placeholder="e.g. Hyderabad" error={e("city")} />
         </div>
 
         <fieldset className={kfFieldset(school)} disabled={!school}>
           <legend className="sr-only">School details</legend>
-          <KfInput id="demo-organization" name="organization" type="text" label="School / Institution Name" req icon="school" autoComplete="organization" defaultValue={old.organization} placeholder="e.g. Sri Chaitanya High School" error={school ? e("organization") : undefined} />
+          <KfInput id="demo-organization" name="organization" type="text" label="School / Institution Name" req required maxLength={L.organization} icon="school" autoComplete="organization" defaultValue={old.organization} placeholder="e.g. Sri Chaitanya High School" error={school ? e("organization") : undefined} />
           <div className={KF_ROW}>
-            <KfInput id="demo-designation" name="designation" type="text" label="Your Designation" icon="award" autoComplete="organization-title" defaultValue={old.designation} placeholder="e.g. Principal" error={e("designation")} />
+            <KfInput id="demo-designation" name="designation" type="text" label="Your Designation" maxLength={L.designation} icon="award" autoComplete="organization-title" defaultValue={old.designation} placeholder="e.g. Principal" error={e("designation")} />
             <KfSelect id="demo-student-count" name="student_count" label="Number of Students" icon="users" placeholder="Number of Students" options={COUNTS} defaultValue={old.student_count ?? ""} error={e("student_count")} />
           </div>
         </fieldset>
@@ -59,13 +60,13 @@ export function DemoForm({ initialType, old, errors }: { initialType: "school" |
         <fieldset className={kfFieldset(!school)} disabled={school}>
           <legend className="sr-only">Student details</legend>
           <div className={KF_ROW}>
-            <KfSelect id="demo-grade" name="grade" label="Class / Grade" req icon="cap" placeholder="Select Class / Grade" options={GRADES} defaultValue={old.grade ?? ""} error={e("grade")} />
-            <KfInput id="demo-current-school" name="organization" type="text" label="Current School" icon="school" defaultValue={old.organization} placeholder="Optional" error={!school ? e("organization") : undefined} />
+            <KfSelect id="demo-grade" name="grade" label="Class / Grade" req required icon="cap" placeholder="Select Class / Grade" options={GRADES} defaultValue={old.grade ?? ""} error={e("grade")} />
+            <KfInput id="demo-current-school" name="organization" type="text" label="Current School" maxLength={L.organization} icon="school" defaultValue={old.organization} placeholder="Optional" error={!school ? e("organization") : undefined} />
           </div>
         </fieldset>
 
         <KfSelect id="demo-board" name="board" label="Board / Curriculum" icon="bookOpen" placeholder="Board / Curriculum" options={BOARDS} defaultValue={old.board ?? ""} error={e("board")} />
-        <KfTextarea id="demo-message" name="message" label="Anything you'd like us to know?" rows={4} defaultValue={old.message} placeholder="Optional: subjects you're interested in, a preferred time for the walkthrough…" error={e("message")} />
+        <KfTextarea id="demo-message" name="message" label="Anything you'd like us to know?" rows={4} maxLength={1000} defaultValue={old.message} placeholder="Optional: subjects you're interested in, a preferred time for the walkthrough…" error={e("message")} />
         <KfConsent
           id="demo-consent"
           checked={old.consent === "1"}

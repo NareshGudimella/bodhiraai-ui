@@ -7,6 +7,8 @@ import { Empty, Pill, buttonClass, secondaryButtonClass } from "@/components/ui"
 import { startChat } from "@/lib/inbox-actions";
 import { addStudent, removeStudent, setStudentStatus, updateStudent } from "@/lib/teacher-actions";
 import type { FormState } from "@/lib/action-result";
+import { NewPasswordInput } from "@/components/new-password-input";
+import { DOB_MIN, FILE, L, PHONE_HINT, checkFiles, digitsOnly, dobMax, emailProps, nameProps, phoneProps } from "@/lib/input-limits";
 
 export type RosterStudent = {
   id: number;
@@ -35,23 +37,23 @@ function StudentFields({ state, student }: { state: FormState; student?: RosterS
     <>
       <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
         <Field label="Full name" error={e.name}>
-          <input name="name" required maxLength={255} defaultValue={val("name")} className={inputClass} />
+          <input name="name" {...nameProps(L.nameLong)} defaultValue={val("name")} className={inputClass} />
         </Field>
         <Field label="Roll no." error={e.roll_no}>
-          <input name="roll_no" maxLength={30} defaultValue={val("roll_no")} className={inputClass} />
+          <input name="roll_no" maxLength={L.rollNo} defaultValue={val("roll_no")} className={inputClass} />
         </Field>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Email (optional)" error={e.email}>
-          <input name="email" type="email" maxLength={255} defaultValue={val("email")} className={inputClass} />
+          <input name="email" {...emailProps(L.emailRoster)} autoComplete="off" defaultValue={val("email")} className={inputClass} />
         </Field>
-        <Field label="Phone (optional)" error={e.phone}>
-          <input name="phone" type="tel" maxLength={30} defaultValue={val("phone")} className={inputClass} />
+        <Field label="Phone (optional)" error={e.phone} hint={PHONE_HINT}>
+          <input name="phone" {...phoneProps()} onInput={digitsOnly} autoComplete="off" defaultValue={val("phone")} className={inputClass} />
         </Field>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Date of birth" error={e.dob}>
-          <input name="dob" type="date" defaultValue={val("dob")} className={inputClass} />
+          <input name="dob" type="date" min={DOB_MIN} max={dobMax()} defaultValue={val("dob")} className={inputClass} />
         </Field>
         <Field label="Gender" error={e.gender}>
           <select name="gender" defaultValue={val("gender")} className={inputClass}>
@@ -61,12 +63,12 @@ function StudentFields({ state, student }: { state: FormState; student?: RosterS
             <option value="other">Other</option>
           </select>
         </Field>
-        <Field label={student ? "New password" : "Password"} error={e.password} hint={student ? "Leave blank to keep." : "Optional, min 6."}>
-          <input name="password" type="password" autoComplete="new-password" minLength={6} className={inputClass} />
+        <Field label={student ? "New password" : "Password"} error={e.password} hint={student ? "Leave blank to keep." : "Optional."}>
+          <NewPasswordInput name="password" className={inputClass} />
         </Field>
       </div>
       <Field label="Photo (optional)" error={e.avatar}>
-        <input name="avatar" type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="block w-full text-sm text-ink-2 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-light file:px-3 file:py-1.5 file:text-sm file:text-brand" />
+        <input name="avatar" type="file" accept={FILE.avatar.accept} onChange={checkFiles(FILE.avatar.kb)} className="block w-full text-sm text-ink-2 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-light file:px-3 file:py-1.5 file:text-sm file:text-brand" />
       </Field>
     </>
   );
@@ -107,6 +109,7 @@ export function RosterList({ classId, students }: { classId: number; students: R
           <span className="sr-only">Search students</span>
           <input
             type="search"
+            maxLength={L.search}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or roll no…"

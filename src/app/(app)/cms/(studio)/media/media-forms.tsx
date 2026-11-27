@@ -5,6 +5,7 @@ import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass, secondaryButtonClass } from "@/components/ui";
 import { createFolder, updateMedia, uploadMedia } from "@/lib/cms-actions";
 import type { Folder, Media } from "@/lib/cms-api";
+import { FILE, L, MEDIA_MAX_FILES, checkFiles, maxSizeLabel } from "@/lib/input-limits";
 
 const firstError = (errors?: Record<string, string[]>) => (errors ? Object.values(errors)[0]?.[0] : undefined);
 
@@ -13,8 +14,8 @@ export function UploadForm({ folders, activeFolder }: { folders: Folder[]; activ
   const error = firstError(state?.errors);
   return (
     <form action={action} className="flex flex-wrap items-end gap-3">
-      <Field label="Images (up to 10 MB each)">
-        <input name="files[]" type="file" accept="image/*" multiple required className="text-sm" />
+      <Field label={`Images (up to ${maxSizeLabel(FILE.mediaImage)} each, ${MEDIA_MAX_FILES} at a time)`}>
+        <input name="files[]" type="file" accept={FILE.mediaImage.accept} multiple required onChange={checkFiles(FILE.mediaImage.kb, MEDIA_MAX_FILES)} className="text-sm" />
       </Field>
       <Field label="Folder">
         <select name="media_folder_id" defaultValue={activeFolder ?? ""} className={inputClass}>
@@ -34,7 +35,7 @@ export function FolderForm({ folders }: { folders: Folder[] }) {
   return (
     <form action={action} className="space-y-2">
       <Field label="New folder" error={state?.errors?.name}>
-        <input key={`n${v?.name}`} name="name" defaultValue={v?.name} required className={inputClass} />
+        <input key={`n${v?.name}`} name="name" defaultValue={v?.name} required maxLength={L.name} className={inputClass} />
       </Field>
       <Field label="Inside" error={state?.errors?.parent_id}>
         <select name="parent_id" defaultValue="" className={inputClass}>
@@ -52,8 +53,8 @@ export function MediaDetails({ media, folders }: { media: Media; folders: Folder
   const [state, action, pending] = useActionState(updateMedia.bind(null, media.id), undefined);
   return (
     <form action={action} className="space-y-1.5">
-      <input name="alt" defaultValue={media.alt ?? ""} placeholder="Alt text" aria-label="Alt text" className={`${inputClass} py-1 text-xs`} />
-      <input name="title" defaultValue={media.title ?? ""} placeholder="Title" aria-label="Title" className={`${inputClass} py-1 text-xs`} />
+      <input name="alt" maxLength={255} defaultValue={media.alt ?? ""} placeholder="Alt text" aria-label="Alt text" className={`${inputClass} py-1 text-xs`} />
+      <input name="title" maxLength={255} defaultValue={media.title ?? ""} placeholder="Title" aria-label="Title" className={`${inputClass} py-1 text-xs`} />
       <select name="media_folder_id" defaultValue={media.media_folder_id ?? ""} aria-label="Folder" className={`${inputClass} py-1 text-xs`}>
         <option value="">— No folder —</option>
         {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}

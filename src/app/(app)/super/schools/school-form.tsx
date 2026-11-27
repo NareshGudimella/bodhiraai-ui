@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { createSchool, updateSchool } from "@/lib/super-actions";
+import { DATE_MAX, DATE_MIN, FILE, L, N, checkFiles, digitsOnly, emailProps, numberProps, phoneProps } from "@/lib/input-limits";
 
 type Key =
   | "name" | "code" | "email" | "phone" | "city" | "state" | "country" | "plan" | "plan_expires_at"
@@ -43,30 +44,37 @@ export function SchoolForm({
   const syllabusError = Object.entries(e).find(([k]) => k.startsWith("syllabi"))?.[1];
   const text = (name: Key, label: string, max: number, type = "text") => (
     <Field label={label} error={e[name]}>
-      <input name={name} type={type} maxLength={max} defaultValue={v[name] ?? ""} required={name === "name"} className={inputClass} />
+      <input
+        name={name}
+        {...(type === "email" ? emailProps(max) : type === "tel" ? { ...phoneProps(), onInput: digitsOnly } : { type, maxLength: max })}
+        autoComplete="off"
+        defaultValue={v[name] ?? ""}
+        required={name === "name"}
+        className={inputClass}
+      />
     </Field>
   );
   const num = (name: Key, label: string, max: number, fallback: number) => (
     <Field label={label} error={e[name]}>
-      <input name={name} type="number" min={0} max={max} defaultValue={v[name] ?? fallback} className={inputClass} />
+      <input name={name} {...numberProps([0, max])} defaultValue={v[name] ?? fallback} className={inputClass} />
     </Field>
   );
   const boards = Map.groupBy(syllabi, (s) => s.board);
   const shown = preview ?? logo ?? null;
   return (
     <form action={action} className="space-y-3" key={JSON.stringify(state ?? null)}>
-      {text("name", "School name", 160)}
+      {text("name", "School name", L.nameLead)}
       <div className="grid gap-3 sm:grid-cols-2">
         {!schoolId && (
           <Field label="Code" error={e.code} hint="Leave blank to generate one">
-            <input name="code" maxLength={20} defaultValue={v.code ?? ""} className={inputClass} />
+            <input name="code" maxLength={L.schoolCode} defaultValue={v.code ?? ""} className={inputClass} />
           </Field>
         )}
-        {text("email", "Email", 160, "email")}
-        {text("phone", "Phone", 20, "tel")}
-        {text("city", "City", 80)}
-        {text("state", "State", 80)}
-        {text("country", "Country", 80)}
+        {text("email", "Email", L.email, "email")}
+        {text("phone", "Phone", 10, "tel")}
+        {text("city", "City", L.city)}
+        {text("state", "State", L.city)}
+        {text("country", "Country", L.city)}
         {!direct && (
           <>
             <Field label="Plan" error={e.plan}>
@@ -79,7 +87,7 @@ export function SchoolForm({
               </select>
             </Field>
             <Field label="Plan expires" error={e.plan_expires_at}>
-              <input name="plan_expires_at" type="date" defaultValue={String(v.plan_expires_at ?? "").slice(0, 10)} className={inputClass} />
+              <input name="plan_expires_at" type="date" min={DATE_MIN} max={DATE_MAX} defaultValue={String(v.plan_expires_at ?? "").slice(0, 10)} className={inputClass} />
             </Field>
           </>
         )}
@@ -87,11 +95,11 @@ export function SchoolForm({
       <div className="grid grid-cols-3 items-end gap-3">
         {!direct && (
           <>
-            {num("max_teachers", "Max teachers", 100000, 10)}
-            {num("max_students", "Max students", 1000000, 500)}
+            {num("max_teachers", "Max teachers", N.maxTeachers[1], 10)}
+            {num("max_students", "Max students", N.maxStudents[1], 500)}
           </>
         )}
-        {num("ai_daily_token_limit", "AI tokens / day", 10000000, 5000)}
+        {num("ai_daily_token_limit", "AI tokens / day", N.aiDailyTokens[1], 5000)}
       </div>
       {!!syllabi.length && (
         <fieldset>
@@ -122,8 +130,9 @@ export function SchoolForm({
           <input
             name="logo"
             type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept={FILE.logo.accept}
             onChange={(ev) => {
+              checkFiles(FILE.logo.kb)(ev);
               const f = ev.target.files?.[0];
               setPreview(f?.type.startsWith("image/") ? URL.createObjectURL(f) : null);
             }}

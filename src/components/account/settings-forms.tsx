@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { Card, buttonClass } from "@/components/ui";
 import { changePassword, updateProfile } from "@/lib/account-actions";
+import { NewPasswordInput } from "@/components/new-password-input";
+import { DOB_MIN, FILE, L, PHONE_HINT, checkFiles, currentPasswordProps, digitsOnly, dobMax, nameProps, phoneProps } from "@/lib/input-limits";
 
 type Profile = {
   name: string;
@@ -41,8 +43,9 @@ export function ProfileForm({ user }: { user: Profile }) {
             <input
               name="avatar"
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
+              accept={FILE.avatar.accept}
               onChange={(ev) => {
+                checkFiles(FILE.avatar.kb)(ev);
                 const f = ev.target.files?.[0];
                 setPicked(f ? { url: URL.createObjectURL(f), after: state } : null);
               }}
@@ -51,15 +54,15 @@ export function ProfileForm({ user }: { user: Profile }) {
           </Field>
         </div>
         <Field label="Name" error={e.name}>
-          <input name="name" required maxLength={255} defaultValue={value("name")} className={inputClass} />
+          <input name="name" {...nameProps(L.nameLong)} defaultValue={value("name")} className={inputClass} />
         </Field>
         {user.email && <p className="text-xs text-ink-3">Email: {user.email} (contact your school to change it)</p>}
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Phone" error={e.phone}>
-            <input name="phone" type="tel" maxLength={30} defaultValue={value("phone")} className={inputClass} />
+          <Field label="Phone" error={e.phone} hint={PHONE_HINT}>
+            <input name="phone" {...phoneProps()} onInput={digitsOnly} defaultValue={value("phone")} className={inputClass} />
           </Field>
           <Field label="Date of birth" error={e.dob}>
-            <input name="dob" type="date" defaultValue={value("dob")} className={inputClass} />
+            <input name="dob" type="date" min={DOB_MIN} max={dobMax()} autoComplete="bday" defaultValue={value("dob")} className={inputClass} />
           </Field>
         </div>
         <Field label="Gender" error={e.gender}>
@@ -84,13 +87,13 @@ export function PasswordForm() {
     <Card>
       <form action={action} className="space-y-4">
         <Field label="Current password" error={e.current_password}>
-          <input name="current_password" type="password" autoComplete="current-password" required className={inputClass} />
+          <input name="current_password" type="password" {...currentPasswordProps} required className={inputClass} />
         </Field>
-        <Field label="New password" error={e.password} hint="At least 8 characters.">
-          <input name="password" type="password" autoComplete="new-password" minLength={8} required className={inputClass} />
+        <Field label="New password" error={e.password}>
+          <NewPasswordInput name="password" required className={inputClass} />
         </Field>
         <Field label="Confirm new password" error={e.password_confirmation}>
-          <input name="password_confirmation" type="password" autoComplete="new-password" required className={inputClass} />
+          <input name="password_confirmation" type="password" maxLength={L.passwordMax} autoComplete="new-password" required className={inputClass} />
         </Field>
         <FormMessage state={state} />
         <button type="submit" disabled={pending} className={buttonClass}>{pending ? "Saving…" : "Change password"}</button>

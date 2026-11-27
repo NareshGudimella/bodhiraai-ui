@@ -15,6 +15,7 @@
  * `aria-required` (the native `required` attribute is passed only where the
  * legacy form had it, so server-side validation messages still show).
  */
+import { CountedTextarea } from "@/components/counted-textarea";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { Icon, type IconName } from "./icons";
 import { btn, cx, eyebrowClass, FOCUS, focusRingGold, HERO_GLASS, HERO_GLASS_ROW, HERO_GLASS_STRONG, heroGlassLabel } from "./ui";
@@ -278,10 +279,11 @@ export function KfSelect({ id, name, label, req, hint, error, icon, className, p
   );
 }
 
-export function KfTextarea({ id, name, label, req, hint, error, icon, className, ...rest }: Common & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id" | "name" | "className">) {
+/** `maxLength` is required: the API's cap, shown as a counter near the limit. */
+export function KfTextarea({ id, name, label, req, hint, error, icon, className, maxLength, ...rest }: Common & { maxLength: number } & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id" | "name" | "className" | "maxLength">) {
   return (
     <Shell id={id} label={label} req={req} hint={hint} error={error} icon={icon} className={className}>
-      <textarea id={id} name={name} className={control("textarea", error)} {...aria({ id, hint, error, req })} {...rest} />
+      <CountedTextarea id={id} name={name} maxLength={maxLength} className={control("textarea", error)} {...aria({ id, hint, error, req })} {...rest} />
     </Shell>
   );
 }

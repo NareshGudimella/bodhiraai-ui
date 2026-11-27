@@ -4,6 +4,8 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { Card, ProgressBar, SectionTitle, buttonClass } from "@/components/ui";
 import { saveUser } from "@/lib/admin-actions";
+import { NewPasswordInput } from "@/components/new-password-input";
+import { DOB_MIN, L, PHONE_HINT, USERNAME_PATTERN, digitsOnly, dobMax, emailProps, nameProps, phoneProps } from "@/lib/input-limits";
 
 export type UserValues = {
   name?: string | null;
@@ -62,7 +64,7 @@ export function UserForm({ userId, initial, seats }: { userId: number | null; in
       <form action={action} className="space-y-4" key={JSON.stringify(state?.values ?? null)}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Full name" error={e.name}>
-            <input name="name" required maxLength={120} defaultValue={v.name ?? ""} className={inputClass} />
+            <input name="name" {...nameProps(L.name)} defaultValue={v.name ?? ""} className={inputClass} />
           </Field>
           <Field label="Role" error={e.role}>
             <select name={userId ? undefined : "role"} defaultValue={v.role ?? "student"} disabled={!!userId} className={inputClass}>
@@ -76,18 +78,18 @@ export function UserForm({ userId, initial, seats }: { userId: number | null; in
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Email" error={e.email}>
-            <input name="email" type="email" maxLength={160} defaultValue={v.email ?? ""} className={inputClass} />
+            <input name="email" {...emailProps(L.email)} autoComplete="off" defaultValue={v.email ?? ""} className={inputClass} />
           </Field>
-          <Field label="Phone" error={e.phone}>
-            <input name="phone" maxLength={20} defaultValue={v.phone ?? ""} className={inputClass} />
+          <Field label="Phone" error={e.phone} hint={PHONE_HINT}>
+            <input name="phone" {...phoneProps()} onInput={digitsOnly} autoComplete="off" defaultValue={v.phone ?? ""} className={inputClass} />
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Username" error={e.username} hint={userId ? "Set when the account is created." : "Blank: auto for students."}>
-            <input name={userId ? undefined : "username"} maxLength={40} pattern="[a-zA-Z0-9._\-]+" defaultValue={v.username ?? ""} disabled={!!userId} className={inputClass} />
+            <input name={userId ? undefined : "username"} maxLength={L.username} pattern={USERNAME_PATTERN} title="Letters, digits, . _ and -" autoComplete="off" defaultValue={v.username ?? ""} disabled={!!userId} className={inputClass} />
           </Field>
           <Field label="Grade" error={e.grade}>
-            <input name="grade" maxLength={10} defaultValue={v.grade ?? ""} className={inputClass} />
+            <input name="grade" maxLength={L.grade} defaultValue={v.grade ?? ""} className={inputClass} />
           </Field>
           <Field label="Gender" error={e.gender}>
             <select name="gender" defaultValue={v.gender ?? ""} className={inputClass}>
@@ -100,10 +102,10 @@ export function UserForm({ userId, initial, seats }: { userId: number | null; in
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Date of birth" error={e.dob}>
-            <input name="dob" type="date" defaultValue={v.dob ?? ""} className={inputClass} />
+            <input name="dob" type="date" min={DOB_MIN} max={dobMax()} autoComplete="bday" defaultValue={v.dob ?? ""} className={inputClass} />
           </Field>
-          <Field label={userId ? "New password" : "Password"} error={e.password} hint={userId ? "Leave blank to keep." : "At least 6 characters."}>
-            <input name="password" type="password" autoComplete="new-password" minLength={6} required={!userId} className={inputClass} />
+          <Field label={userId ? "New password" : "Password"} error={e.password} hint={userId ? "Leave blank to keep." : undefined}>
+            <NewPasswordInput name="password" required={!userId} className={inputClass} />
           </Field>
         </div>
         <FormMessage state={state} />

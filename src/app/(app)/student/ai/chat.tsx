@@ -6,6 +6,8 @@ import { ProgressBar, buttonClass } from "@/components/ui";
 import { aiReply, aiStart, type AiResult } from "@/lib/student-actions";
 import type { AiMessage, TokenStatus } from "@/lib/student-api";
 import { RichText } from "./rich-text";
+import { CharCount } from "@/components/counted-textarea";
+import { L } from "@/lib/input-limits";
 
 const STARTERS = [
   "Explain photosynthesis simply",
@@ -153,7 +155,7 @@ export function Chat({
                 }
               }}
               rows={1}
-              maxLength={4000}
+              maxLength={L.aiPrompt}
               placeholder="Type your question…"
               className="max-h-40 min-h-11 flex-1 resize-y rounded-xl border border-line bg-bg px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
             />
@@ -162,6 +164,7 @@ export function Chat({
             </button>
           </form>
         )}
+        <CharCount n={draft.length} max={L.aiPrompt} />
         <div className="mt-3">
           <div className="mb-1 flex justify-between text-xs text-ink-3">
             <span>Today&apos;s AI allowance</span>

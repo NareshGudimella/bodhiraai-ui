@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { saveMailSettings, sendTestMail } from "@/lib/super-actions";
+import { L, N, emailProps, numberProps } from "@/lib/input-limits";
 
 type Values = Partial<
   Record<"mailer" | "host" | "port" | "encryption" | "username" | "from_address" | "from_name", string>
@@ -24,11 +25,11 @@ export function MailSettingsForm({ initial, passwordSet }: { initial: Values; pa
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="sm:col-span-2">
           <Field label="SMTP host" error={e.host}>
-            <input name="host" maxLength={190} defaultValue={v.host} className={inputClass} />
+            <input name="host" maxLength={L.emailSetting} autoComplete="off" spellCheck={false} defaultValue={v.host} className={inputClass} />
           </Field>
         </div>
         <Field label="Port" error={e.port}>
-          <input name="port" type="number" min={1} max={65535} defaultValue={v.port} className={inputClass} />
+          <input name="port" {...numberProps(N.port)} defaultValue={v.port} className={inputClass} />
         </Field>
       </div>
       <Field label="Encryption" error={e.encryption}>
@@ -40,7 +41,7 @@ export function MailSettingsForm({ initial, passwordSet }: { initial: Values; pa
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Username" error={e.username}>
-          <input name="username" maxLength={190} autoComplete="off" defaultValue={v.username} className={inputClass} />
+          <input name="username" maxLength={L.emailSetting} autoComplete="off" defaultValue={v.username} className={inputClass} />
         </Field>
         <Field label="Password" error={e.password} hint="Leave blank to keep the saved password">
           <input name="password" type="password" maxLength={500} autoComplete="new-password" className={inputClass} />
@@ -51,10 +52,10 @@ export function MailSettingsForm({ initial, passwordSet }: { initial: Values; pa
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="From address" error={e.from_address}>
-          <input name="from_address" type="email" required maxLength={190} defaultValue={v.from_address} className={inputClass} />
+          <input name="from_address" {...emailProps(L.emailSetting)} required defaultValue={v.from_address} className={inputClass} />
         </Field>
         <Field label="From name" error={e.from_name}>
-          <input name="from_name" maxLength={120} defaultValue={v.from_name} className={inputClass} />
+          <input name="from_name" maxLength={L.name} defaultValue={v.from_name} className={inputClass} />
         </Field>
       </div>
       <FormMessage state={state} />
@@ -72,7 +73,7 @@ export function TestMailForm() {
   return (
     <form action={action} className="space-y-3">
       <Field label="Send to" error={state?.errors?.to}>
-        <input name="to" type="email" required maxLength={190} defaultValue={state?.values?.to} className={inputClass} />
+        <input name="to" {...emailProps(L.emailSetting)} required defaultValue={state?.values?.to} className={inputClass} />
       </Field>
       <FormMessage state={state} />
       <button disabled={pending} className={buttonClass}>

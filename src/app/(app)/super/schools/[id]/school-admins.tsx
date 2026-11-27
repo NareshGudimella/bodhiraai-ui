@@ -7,6 +7,8 @@ import { cardTone } from "@/lib/appearance";
 import { createSchoolAdmin, toggleSchoolAdmin, updateSchoolAdmin } from "@/lib/super-actions";
 import type { SchoolAdmin } from "@/lib/super-api";
 import { tone } from "../../format";
+import { NewPasswordInput } from "@/components/new-password-input";
+import { L, PHONE_HINT, digitsOnly, emailProps, nameProps, phoneProps } from "@/lib/input-limits";
 
 const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : "never";
@@ -59,13 +61,13 @@ function EditAdmin({ schoolId, admin: a }: { schoolId: number; admin: SchoolAdmi
       <summary className="cursor-pointer text-xs font-semibold text-brand">Edit</summary>
       <form action={action} className="mt-2 space-y-2" key={state?.ok ? `done-${state.message}` : `edit-${JSON.stringify(v)}`}>
         <Field label="Name" error={e?.name}>
-          <input name="name" defaultValue={v?.name ?? a.name} required maxLength={120} className={inputClass} />
+          <input name="name" defaultValue={v?.name ?? a.name} {...nameProps(L.name)} className={inputClass} />
         </Field>
         <Field label="Email" error={e?.email}>
-          <input name="email" type="email" defaultValue={v?.email ?? a.email} required maxLength={160} className={inputClass} />
+          <input name="email" {...emailProps(L.email)} defaultValue={v?.email ?? a.email} required className={inputClass} />
         </Field>
-        <Field label="Phone" error={e?.phone}>
-          <input name="phone" defaultValue={v?.phone ?? a.phone ?? ""} maxLength={20} className={inputClass} />
+        <Field label="Phone" error={e?.phone} hint={PHONE_HINT}>
+          <input name="phone" {...phoneProps()} onInput={digitsOnly} defaultValue={v?.phone ?? a.phone ?? ""} className={inputClass} />
         </Field>
         <FormMessage state={state} />
         <button type="submit" disabled={pending} className={secondaryButtonClass}>{pending ? "Saving…" : "Save"}</button>
@@ -85,8 +87,8 @@ function ResetPassword({ schoolId, admin: a }: { schoolId: number; admin: School
       <form action={action} className="mt-2 space-y-2" key={state?.ok ? `done-${state.message}` : "reset"}>
         <input type="hidden" name="name" value={a.name} />
         <input type="hidden" name="email" value={a.email} />
-        <Field label="New password" error={e?.password ?? e?.name ?? e?.email} hint="At least 8 characters. Signs the admin out everywhere.">
-          <input name="password" type="password" required minLength={8} autoComplete="new-password" className={inputClass} />
+        <Field label="New password" error={e?.password ?? e?.name ?? e?.email} hint="Signs the admin out everywhere.">
+          <NewPasswordInput name="password" required className={inputClass} />
         </Field>
         <FormMessage state={state} />
         <button type="submit" disabled={pending} className={secondaryButtonClass}>{pending ? "Saving…" : "Reset password"}</button>
@@ -105,16 +107,16 @@ function AddAdmin({ schoolId }: { schoolId: number }) {
       <summary className="cursor-pointer font-semibold text-brand">+ Add School Admin</summary>
       <form action={action} className="mt-4 space-y-3" key={state?.ok ? `done-${state.message}` : `new-${JSON.stringify(v)}`}>
         <Field label="Name" error={e?.name}>
-          <input name="name" defaultValue={v?.name} required maxLength={120} className={inputClass} />
+          <input name="name" defaultValue={v?.name} {...nameProps(L.name)} className={inputClass} />
         </Field>
         <Field label="Email" error={e?.email} hint="The admin signs in with this email.">
-          <input name="email" type="email" defaultValue={v?.email} required maxLength={160} className={inputClass} />
+          <input name="email" {...emailProps(L.email)} defaultValue={v?.email} required className={inputClass} />
         </Field>
-        <Field label="Phone" error={e?.phone}>
-          <input name="phone" defaultValue={v?.phone} maxLength={20} className={inputClass} />
+        <Field label="Phone" error={e?.phone} hint={PHONE_HINT}>
+          <input name="phone" {...phoneProps()} onInput={digitsOnly} defaultValue={v?.phone} className={inputClass} />
         </Field>
-        <Field label="Password" error={e?.password} hint="At least 8 characters.">
-          <input name="password" type="password" required minLength={8} autoComplete="new-password" className={inputClass} />
+        <Field label="Password" error={e?.password}>
+          <NewPasswordInput name="password" required className={inputClass} />
         </Field>
         <FormMessage state={state} />
         <button type="submit" disabled={pending} className={buttonClass}>{pending ? "Adding…" : "Add School Admin"}</button>

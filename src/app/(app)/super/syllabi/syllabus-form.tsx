@@ -5,6 +5,8 @@ import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { saveSyllabus } from "@/lib/super-actions";
 import { BOARDS, boardLabel } from "@/lib/boards";
+import { L, N, numberProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 type Values = Partial<Record<"board" | "grade" | "name" | "description" | "sort_order" | "is_active", string>>;
 
@@ -22,13 +24,13 @@ export function SyllabusForm({ id, initial = {} }: { id?: number; initial?: Valu
             {BOARDS.map((b) => <option key={b} value={b}>{boardLabel(b)}</option>)}
           </select>
         </Field>
-        <Field label="Grade" error={e.grade}><input name="grade" required maxLength={10} defaultValue={v.grade} className={inputClass} /></Field>
+        <Field label="Grade" error={e.grade}><input name="grade" required maxLength={L.grade} defaultValue={v.grade} className={inputClass} /></Field>
       </div>
-      <Field label="Name" error={e.name}><input name="name" required maxLength={120} defaultValue={v.name} className={inputClass} /></Field>
-      <Field label="Description" error={e.description}><textarea name="description" rows={2} defaultValue={v.description} className={inputClass} /></Field>
+      <Field label="Name" error={e.name}><input name="name" required maxLength={L.name} defaultValue={v.name} className={inputClass} /></Field>
+      <Field label="Description" error={e.description}><CountedTextarea name="description" rows={2} maxLength={L.description} defaultValue={v.description} className={inputClass} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Sort order" error={e.sort_order}>
-          <input name="sort_order" type="number" min={0} max={9999} required defaultValue={v.sort_order ?? "0"} className={inputClass} />
+          <input name="sort_order" {...numberProps(N.sortOrder)} required defaultValue={v.sort_order ?? "0"} className={inputClass} />
         </Field>
         <Field label="Status" error={e.is_active}>
           <select name="is_active" defaultValue={v.is_active ?? "1"} className={inputClass}>

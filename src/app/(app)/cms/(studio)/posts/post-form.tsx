@@ -6,6 +6,9 @@ import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass, secondaryButtonClass } from "@/components/ui";
 import { savePost } from "@/lib/cms-actions";
 import type { Category, Post, Tag } from "@/lib/cms-api";
+import type { InputHTMLAttributes } from "react";
+import { DATETIME_MAX, DATETIME_MIN, FILE, L, N, SLUG_PATTERN, checkFiles, numberProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 /** `Y-m-d\TH:i` for a datetime-local input (legacy prints the stored wall time). */
 const local = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
@@ -20,16 +23,16 @@ export function PostForm({ post, categories, tags, cover }: { post: Post | null;
     const x = post?.[k];
     return x === null || x === undefined ? "" : String(x);
   };
-  const text = (k: keyof Post, label: string, hint?: string) => (
+  const text = (k: keyof Post, label: string, hint?: string, props: InputHTMLAttributes<HTMLInputElement> = {}) => (
     <Field label={label} error={e?.[k]} hint={hint}>
-      <input key={`${k}${v?.[k] ?? ""}`} name={k} defaultValue={val(k)} className={inputClass} />
+      <input key={`${k}${v?.[k] ?? ""}`} name={k} defaultValue={val(k)} {...props} className={inputClass} />
     </Field>
   );
   const tagText = v ? (v.tags ?? "") : (post?.tags ?? []).map((t) => t.name).join(", ");
   return (
     <form action={action} className="grid gap-4 [&>*]:min-w-0 sm:grid-cols-2">
-      <div className="sm:col-span-2">{text("title", "Title")}</div>
-      {text("slug", "Slug", "Blank: from the title.")}
+      <div className="sm:col-span-2">{text("title", "Title", undefined, { required: true, maxLength: L.titleLong })}</div>
+      {text("slug", "Slug", "Blank: from the title.", { maxLength: 220, pattern: SLUG_PATTERN, title: "Lowercase letters, numbers and dashes" })}
       <Field label="Category" error={e?.blog_category_id}>
         <select key={`c${v?.blog_category_id ?? ""}`} name="blog_category_id" defaultValue={val("blog_category_id")} className={inputClass}>
           <option value="">—</option>
@@ -38,12 +41,12 @@ export function PostForm({ post, categories, tags, cover }: { post: Post | null;
       </Field>
       <div className="sm:col-span-2">
         <Field label="Excerpt" error={e?.excerpt}>
-          <textarea key={`x${v?.excerpt ?? ""}`} name="excerpt" defaultValue={val("excerpt")} rows={2} className={inputClass} />
+          <CountedTextarea key={`x${v?.excerpt ?? ""}`} name="excerpt" maxLength={500} defaultValue={val("excerpt")} rows={2} className={inputClass} />
         </Field>
       </div>
       <div className="sm:col-span-2">
         <Field label="Body" error={e?.body}>
-          <textarea key={`b${v?.body ?? ""}`} name="body" defaultValue={val("body")} rows={10} className={inputClass} />
+          <CountedTextarea key={`b${v?.body ?? ""}`} name="body" maxLength={L.body} defaultValue={val("body")} rows={10} className={inputClass} />
         </Field>
       </div>
       <div className="sm:col-span-2">
@@ -53,8 +56,8 @@ export function PostForm({ post, categories, tags, cover }: { post: Post | null;
               // eslint-disable-next-line @next/next/no-img-element
               <img src={cover} alt="" className="h-14 w-24 rounded-lg object-cover ring-1 ring-line" />
             )}
-            <input name="cover_image_url" defaultValue={val("cover_image_url")} placeholder="Image URL" className={`${inputClass} min-w-0 flex-1`} />
-            <input name="cover_file" type="file" accept="image/*" className="w-full text-sm" />
+            <input name="cover_image_url" maxLength={L.urlShort} defaultValue={val("cover_image_url")} placeholder="Image URL" className={`${inputClass} min-w-0 flex-1`} />
+            <input name="cover_file" type="file" accept={FILE.image.accept} onChange={checkFiles(FILE.image.kb)} className="w-full text-sm" />
           </span>
         </Field>
       </div>
@@ -66,17 +69,17 @@ export function PostForm({ post, categories, tags, cover }: { post: Post | null;
         </select>
       </Field>
       <Field label="Publish at" error={e?.published_at} hint="Blank when published: now.">
-        <input key={`p${v?.published_at ?? ""}`} name="published_at" type="datetime-local" defaultValue={v ? (v.published_at ?? "") : local(post?.published_at ?? null)} className={inputClass} />
+        <input key={`p${v?.published_at ?? ""}`} name="published_at" type="datetime-local" min={DATETIME_MIN} max={DATETIME_MAX} defaultValue={v ? (v.published_at ?? "") : local(post?.published_at ?? null)} className={inputClass} />
       </Field>
-      {text("reading_minutes", "Reading minutes")}
+      {text("reading_minutes", "Reading minutes", undefined, numberProps(N.readingMinutes))}
       <Field label="Tags" error={e?.tags} hint={tags.length ? `Existing: ${tags.map((t) => t.name).join(", ")}` : "Comma separated"}>
-        <input key={`t${tagText}`} name="tags" defaultValue={tagText} placeholder="comma, separated" className={inputClass} />
+        <input key={`t${tagText}`} name="tags" maxLength={1000} defaultValue={tagText} placeholder="comma, separated" className={inputClass} />
       </Field>
-      {text("meta_title", "Meta title")}
-      {text("og_image", "OG image URL")}
+      {text("meta_title", "Meta title", undefined, { maxLength: 180 })}
+      {text("og_image", "OG image URL", undefined, { maxLength: L.urlShort })}
       <div className="sm:col-span-2">
         <Field label="Meta description" error={e?.meta_description}>
-          <textarea key={`m${v?.meta_description ?? ""}`} name="meta_description" defaultValue={val("meta_description")} rows={2} className={inputClass} />
+          <CountedTextarea key={`m${v?.meta_description ?? ""}`} name="meta_description" maxLength={320} defaultValue={val("meta_description")} rows={2} className={inputClass} />
         </Field>
       </div>
       <label className="flex items-center gap-2 text-sm text-ink-2">

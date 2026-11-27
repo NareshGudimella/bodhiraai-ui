@@ -8,6 +8,8 @@ import type { FormState } from "@/lib/action-result";
 import { startLessonVideoUpload, saveLessonFields, updateLesson } from "@/lib/content-actions";
 import { putWithProgress } from "@/lib/direct-upload";
 import { isSignedFileUrl } from "@/lib/signed-file";
+import { FILE, L, N, checkFiles, maxSizeLabel, numberProps, urlProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 type Initial = Partial<{
   title: string;
@@ -149,7 +151,8 @@ export function LessonForm({
         canvas.height = el.videoHeight || 360;
         canvas.getContext("2d")?.drawImage(el, 0, 0, canvas.width, canvas.height);
         try {
-          setThumb(canvas.toDataURL("image/jpeg", 0.85));
+          const data = canvas.toDataURL("image/jpeg", 0.85);
+          setThumb(data.length <= L.thumbnailData ? data : null); // the API refuses a larger data URL
         } catch {
           setThumb(null);
         }
@@ -200,7 +203,7 @@ export function LessonForm({
         void submitVideo(ev.currentTarget, file);
       }}
     >
-      <Field label="Title" error={e.title}><input name="title" required maxLength={160} defaultValue={text("title")} className={inputClass} /></Field>
+      <Field label="Title" error={e.title}><input name="title" required maxLength={L.title} defaultValue={text("title")} className={inputClass} /></Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Type" error={e.type}>
           <select name="type" value={type} onChange={(ev) => setType(ev.target.value)} className={inputClass}>
@@ -217,8 +220,7 @@ export function LessonForm({
           <input
             ref={duration}
             name="duration_sec"
-            type="number"
-            min={0}
+            {...numberProps(N.durationSec)}
             defaultValue={text("duration_sec")}
             readOnly={type === "video"}
             aria-readonly={type === "video"}
@@ -228,13 +230,22 @@ export function LessonForm({
       </div>
       {type !== "text" && (
         <div className="space-y-3 rounded-xl bg-page p-3 ring-1 ring-line">
-          <Field label={edit ? "Replace file" : "Upload file"} error={e.content_file} hint={type === "pdf" ? "PDF up to 50 MB" : "MP4, MOV, WebM or MKV up to 5 GB"}>
-            <input name="content_file" type="file" accept={type === "pdf" ? "application/pdf" : "video/*"} onChange={(ev) => picked(ev.target.files?.[0])} className="block w-full text-sm" />
+          <Field label={edit ? "Replace file" : "Upload file"} error={e.content_file} hint={type === "pdf" ? `PDF up to ${maxSizeLabel(FILE.lessonPdf)}` : `MP4, MOV, WebM or MKV up to ${maxSizeLabel(FILE.lessonVideo)}`}>
+            <input
+              name="content_file"
+              type="file"
+              accept={type === "pdf" ? FILE.lessonPdf.accept : FILE.lessonVideo.accept}
+              onChange={(ev) => {
+                checkFiles((type === "pdf" ? FILE.lessonPdf : FILE.lessonVideo).kb)(ev);
+                picked(ev.target.files?.[0]);
+              }}
+              className="block w-full text-sm"
+            />
           </Field>
           <Field label="…or a URL" error={e.content_url} hint={edit ? "Leave blank to keep the current file" : undefined}>
             <input
             name="content_url"
-            type="url"
+            {...urlProps()}
             defaultValue={edit ? "" : text("content_url")}
             placeholder={edit ? current("content_url") : "https://"}
             onBlur={(ev) => measureUrl(ev.target.value)}
@@ -244,14 +255,14 @@ export function LessonForm({
         </div>
       )}
       <Field label="Body" error={e.content_body} hint="Text lessons, or notes shown under the media">
-        <textarea name="content_body" rows={type === "text" ? 6 : 3} defaultValue={text("content_body")} className={inputClass} />
+        <CountedTextarea name="content_body" rows={type === "text" ? 6 : 3} maxLength={L.body} defaultValue={text("content_body")} className={inputClass} />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Thumbnail image" error={e.thumbnail_file}>
-          <input name="thumbnail_file" type="file" accept="image/*" className="block w-full text-sm" />
+          <input name="thumbnail_file" type="file" accept={FILE.image.accept} onChange={checkFiles(FILE.image.kb)} className="block w-full text-sm" />
         </Field>
         <Field label="…or thumbnail URL" error={e.thumbnail}>
-          <input name="thumbnail" type="url" defaultValue={edit ? "" : text("thumbnail")} placeholder={edit ? current("thumbnail") : "https://"} className={inputClass} />
+          <input name="thumbnail" {...urlProps()} defaultValue={edit ? "" : text("thumbnail")} placeholder={edit ? current("thumbnail") : "https://"} className={inputClass} />
         </Field>
       </div>
       {thumb && (
@@ -267,7 +278,7 @@ export function LessonForm({
       )}
       {edit && (
         <Field label="Position" error={e.sort_order}>
-          <input name="sort_order" type="number" min={0} max={999} defaultValue={text("sort_order")} className={inputClass} />
+          <input name="sort_order" {...numberProps(N.sortOrderContent)} defaultValue={text("sort_order")} className={inputClass} />
         </Field>
       )}
       <div className="flex flex-wrap gap-4 text-sm text-ink-2">

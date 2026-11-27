@@ -5,6 +5,8 @@ import { AuthAlert, AuthField, PasswordInput, Spinner } from "@/components/auth/
 import { authButton, authInput, authLink } from "@/components/auth/auth-styles";
 import { registerStudent } from "@/lib/billing-actions";
 import type { SignupOptions } from "@/lib/billing-api";
+import { NewPasswordInput } from "@/components/new-password-input";
+import { L, digitsOnly, emailProps, nameProps, phoneProps } from "@/lib/input-limits";
 
 /** Legacy optgroup labels: CBSE, ICSE, then "State Board · <state>". */
 const boardLabel = (board: string) => (board.startsWith("STATE_") ? `State Board · ${board.slice(6)}` : board);
@@ -41,7 +43,7 @@ export function SignupForm({
       )}
       <AuthField label="Full name" error={e?.name}>
         {(c) => (
-          <input key={`n${v?.name}`} {...c} name="name" defaultValue={v?.name} autoComplete="name" required maxLength={120} autoFocus className={authInput} />
+          <input key={`n${v?.name}`} {...c} name="name" defaultValue={v?.name} {...nameProps(L.name)} autoFocus className={authInput} />
         )}
       </AuthField>
       <div className="grid gap-5 sm:grid-cols-2 [&>*]:min-w-0">
@@ -51,27 +53,23 @@ export function SignupForm({
               key={`e${v?.email}`}
               {...c}
               name="email"
-              type="email"
               defaultValue={v?.email}
-              autoComplete="email"
-              spellCheck={false}
+              {...emailProps(L.email)}
               required
-              maxLength={160}
               className={authInput}
             />
           )}
         </AuthField>
-        <AuthField label="Phone (optional)" error={e?.phone}>
+        <AuthField label="Phone (optional)" error={e?.phone} hint="10-digit mobile number">
           {(c) => (
             <input
               key={`p${v?.phone}`}
               {...c}
               name="phone"
-              type="tel"
               defaultValue={v?.phone}
-              autoComplete="tel"
-              maxLength={20}
-              placeholder="+91…"
+              {...phoneProps()}
+              onInput={digitsOnly}
+              placeholder="10-digit mobile number"
               className={authInput}
             />
           )}
@@ -95,10 +93,10 @@ export function SignupForm({
       </AuthField>
       <div className="grid gap-5 sm:grid-cols-2 [&>*]:min-w-0">
         <AuthField label="Password" error={e?.password}>
-          {(c) => <PasswordInput {...c} name="password" required minLength={6} autoComplete="new-password" />}
+          {(c) => <NewPasswordInput auth {...c} name="password" required />}
         </AuthField>
         <AuthField label="Confirm password">
-          {(c) => <PasswordInput {...c} name="password_confirmation" required autoComplete="new-password" />}
+          {(c) => <PasswordInput {...c} name="password_confirmation" required maxLength={L.passwordMax} autoComplete="new-password" />}
         </AuthField>
       </div>
       {/* Consent (not in legacy, 2026-11-22): purpose notice, guardian statement, links, `consent=1` checked by registerStudent */}

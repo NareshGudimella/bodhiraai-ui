@@ -4,6 +4,8 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { addSyllabusChapter, addSyllabusSubject } from "@/lib/super-actions";
+import { L } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 export function SubjectForm({ syllabusId }: { syllabusId: number }) {
   const [state, action, pending] = useActionState(addSyllabusSubject.bind(null, syllabusId), undefined);
@@ -11,12 +13,12 @@ export function SubjectForm({ syllabusId }: { syllabusId: number }) {
   const v = state?.ok === false ? (state.values ?? {}) : {};
   return (
     <form action={action} className="space-y-3" key={JSON.stringify(state ?? null)}>
-      <Field label="Name" error={e.name}><input name="name" required maxLength={120} defaultValue={v.name} className={inputClass} /></Field>
+      <Field label="Name" error={e.name}><input name="name" required maxLength={L.name} defaultValue={v.name} className={inputClass} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Icon" error={e.icon}><input name="icon" maxLength={8} defaultValue={v.icon ?? "📘"} className={inputClass} /></Field>
         <Field label="Colour" error={e.color}><input name="color" maxLength={20} defaultValue={v.color ?? "#C49560"} className={inputClass} /></Field>
       </div>
-      <Field label="Description" error={e.description}><textarea name="description" rows={2} defaultValue={v.description} className={inputClass} /></Field>
+      <Field label="Description" error={e.description}><CountedTextarea name="description" rows={2} maxLength={L.description} defaultValue={v.description} className={inputClass} /></Field>
       <FormMessage state={state} />
       <button disabled={pending} className={buttonClass}>{pending ? "Adding…" : "Add subject"}</button>
     </form>
@@ -29,8 +31,8 @@ export function SyllabusChapterForm({ syllabusId, subjectId }: { syllabusId: num
   const v = state?.ok === false ? (state.values ?? {}) : {};
   return (
     <form action={action} className="space-y-3" key={JSON.stringify(state ?? null)}>
-      <Field label="Title" error={e.title}><input name="title" required maxLength={160} defaultValue={v.title} className={inputClass} /></Field>
-      <Field label="Description" error={e.description}><textarea name="description" rows={2} defaultValue={v.description} className={inputClass} /></Field>
+      <Field label="Title" error={e.title}><input name="title" required maxLength={L.title} defaultValue={v.title} className={inputClass} /></Field>
+      <Field label="Description" error={e.description}><CountedTextarea name="description" rows={2} maxLength={L.description} defaultValue={v.description} className={inputClass} /></Field>
       <FormMessage state={state} />
       <button disabled={pending} className={buttonClass}>{pending ? "Adding…" : "Add chapter"}</button>
     </form>

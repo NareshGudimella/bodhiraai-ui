@@ -4,6 +4,8 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { createQuiz, updateQuiz } from "@/lib/content-actions";
+import { L, N, numberProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 type Option = { id: number; name?: string; title?: string; grade?: string | null };
 type Values = Partial<Record<"title" | "description" | "subject_id" | "chapter_id" | "duration_min" | "pass_marks" | "is_published", string>>;
@@ -15,8 +17,8 @@ export function QuizForm({ quizId, subjects, chapters, initial = {} }: { quizId?
   const v: Values = { ...initial, ...(state?.ok === false ? state.values : {}) };
   return (
     <form action={action} className="space-y-3" key={JSON.stringify(state ?? null)}>
-      <Field label="Title" error={e.title}><input name="title" required maxLength={160} defaultValue={v.title} className={inputClass} /></Field>
-      <Field label="Description" error={e.description}><textarea name="description" rows={2} defaultValue={v.description} className={inputClass} /></Field>
+      <Field label="Title" error={e.title}><input name="title" required maxLength={L.title} defaultValue={v.title} className={inputClass} /></Field>
+      <Field label="Description" error={e.description}><CountedTextarea name="description" rows={2} maxLength={L.description} defaultValue={v.description} className={inputClass} /></Field>
       <Field label="Subject" error={e.subject_id}>
         <select name="subject_id" defaultValue={v.subject_id ?? ""} className={inputClass}>
           <option value="">—</option>
@@ -33,10 +35,10 @@ export function QuizForm({ quizId, subjects, chapters, initial = {} }: { quizId?
       )}
       <div className="grid grid-cols-2 gap-3">
         <Field label="Minutes" error={e.duration_min}>
-          <input name="duration_min" type="number" required min={1} max={300} defaultValue={v.duration_min ?? "15"} className={inputClass} />
+          <input name="duration_min" {...numberProps(N.quizMinutes)} required defaultValue={v.duration_min ?? "15"} className={inputClass} />
         </Field>
         <Field label="Pass marks" error={e.pass_marks}>
-          <input name="pass_marks" type="number" min={0} defaultValue={v.pass_marks ?? "0"} className={inputClass} />
+          <input name="pass_marks" {...numberProps(N.passMarks)} defaultValue={v.pass_marks ?? "0"} className={inputClass} />
         </Field>
       </div>
       {quizId && (

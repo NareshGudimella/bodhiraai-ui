@@ -5,6 +5,8 @@ import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { saveSettings } from "@/lib/cms-actions";
 import type { SettingField } from "@/lib/cms-api";
+import { FILE, checkFiles, settingProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 /** One settings group (legacy SettingsController::update). Image fields: a URL or an upload. */
 export function SettingsForm({
@@ -36,23 +38,24 @@ export function SettingsForm({
             </label>
           );
         }
+        const lim = settingProps(group, f.key, f.type);
         const wide = ["textarea", "code", "image"].includes(f.type) ? "sm:col-span-2" : "";
         return (
           <div key={key} className={wide}>
             <Field label={f.label} error={e?.[f.key] ?? e?.[`${f.key}_file`]}>
               {f.type === "textarea" || f.type === "code" ? (
-                <textarea name={f.key} defaultValue={val(f.key)} rows={f.type === "code" ? 4 : 3} className={`${inputClass} ${f.type === "code" ? "font-mono text-xs" : ""}`} />
+                <CountedTextarea name={f.key} maxLength={lim.maxLength ?? 2000} defaultValue={val(f.key)} rows={f.type === "code" ? 4 : 3} className={`${inputClass} ${f.type === "code" ? "font-mono text-xs" : ""}`} />
               ) : f.type === "image" ? (
                 <span className="flex flex-wrap items-center gap-3">
                   {previews[f.key] && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={previews[f.key]!} alt="" className="h-12 max-w-32 rounded object-contain ring-1 ring-line" />
                   )}
-                  <input name={f.key} defaultValue={val(f.key)} placeholder="Image URL" className={`${inputClass} min-w-0 flex-1`} />
-                  <input name={`${f.key}_file`} type="file" accept="image/*" className="w-full text-sm" />
+                  <input name={f.key} {...lim} defaultValue={val(f.key)} placeholder="Image URL" className={`${inputClass} min-w-0 flex-1`} />
+                  <input name={`${f.key}_file`} type="file" accept={FILE.image.accept} onChange={checkFiles(FILE.image.kb)} className="w-full text-sm" />
                 </span>
               ) : (
-                <input name={f.key} type={f.type === "number" ? "number" : "text"} defaultValue={val(f.key)} placeholder={f.type === "color" ? "#C49560" : undefined} className={inputClass} />
+                <input name={f.key} {...lim} defaultValue={val(f.key)} placeholder={f.type === "color" ? "#C49560" : undefined} className={inputClass} />
               )}
             </Field>
           </div>

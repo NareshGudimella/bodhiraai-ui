@@ -6,6 +6,7 @@ import { FormMessage, inputClass } from "@/components/form";
 import { Card, buttonClass, secondaryButtonClass } from "@/components/ui";
 import { saveAttendance } from "@/lib/teacher-actions";
 import type { AttendanceSheet } from "@/lib/teacher-api";
+import { DATE_MAX, DATE_MIN } from "@/lib/input-limits";
 
 const STATUSES = [
   { value: "present", label: "Present", short: "P" },
@@ -30,6 +31,9 @@ export function AttendanceForm({ classId, sheet }: { classId: number; sheet: Att
           <input
             type="date"
             name="date"
+            required
+            min={DATE_MIN}
+            max={DATE_MAX}
             defaultValue={sheet.date}
             onChange={(e) => e.target.value && router.push(`?date=${e.target.value}`)}
             className={inputClass}

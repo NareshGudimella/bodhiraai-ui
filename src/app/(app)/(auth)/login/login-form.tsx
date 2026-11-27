@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { AuthAlert, AuthField, PasswordInput, Spinner } from "@/components/auth/auth-fields";
 import { authButton, authInput, authLink } from "@/components/auth/auth-styles";
 import { login } from "@/lib/auth-actions";
+import { L, currentPasswordProps } from "@/lib/input-limits";
 
 export function LoginForm() {
   const next = useSearchParams().get("next") ?? "";
@@ -29,6 +30,7 @@ export function LoginForm() {
             autoCapitalize="none"
             spellCheck={false}
             required
+            maxLength={L.identifier}
             className={authInput}
           />
         )}
@@ -42,7 +44,7 @@ export function LoginForm() {
           </Link>
         }
       >
-        {(c) => <PasswordInput {...c} name="password" autoComplete="current-password" required />}
+        {(c) => <PasswordInput {...c} name="password" {...currentPasswordProps} required />}
       </AuthField>
 
       {general && <AuthAlert tone="error">{general}</AuthAlert>}

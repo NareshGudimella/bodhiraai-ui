@@ -16,6 +16,7 @@ import { imageResolver, settingResolver, siteMetadata } from "@/lib/site";
 import { enquiryStore } from "@/lib/site-actions";
 import { getSiteFlash } from "@/lib/site-flash";
 import { SITE_STATS } from "@/lib/site-stats";
+import { L, NAME_PATTERN, NAME_TITLE, emailProps, phoneProps } from "@/lib/input-limits";
 
 /** Renders per request and may block, like the site layout (see its note). */
 export const instant = false;
@@ -128,19 +129,19 @@ function EnquiryForm({ old, errors }: { old: Record<string, string>; errors: Rec
   return (
     <form action={enquiryStore} className={KF_FORM}>
       <div className={KF_ROW}>
-        <KfInput id={IDS.name} name="name" type="text" label="Student Full Name" req required icon="user" autoComplete="name" defaultValue={old.name} placeholder="e.g. Aarav Kumar" error={e("name")} />
-        <KfInput id={IDS.email} name="email" type="email" label="Email Address" req required icon="mail" autoComplete="email" inputMode="email" defaultValue={old.email} placeholder="you@example.com" error={e("email")} />
+        <KfInput id={IDS.name} name="name" type="text" label="Student Full Name" req required maxLength={L.name} pattern={NAME_PATTERN} title={NAME_TITLE} icon="user" autoComplete="name" defaultValue={old.name} placeholder="e.g. Aarav Kumar" error={e("name")} />
+        <KfInput id={IDS.email} name="email" label="Email Address" req required {...emailProps(L.email)} icon="mail" defaultValue={old.email} placeholder="you@example.com" error={e("email")} />
       </div>
       <div className={KF_ROW}>
-        <KfInput id={IDS.phone} name="phone" type="text" label="Phone Number" req required icon="phone" autoComplete="tel" inputMode="tel" defaultValue={old.phone} placeholder="+91 98765 43210" hint="A parent's number is fine." error={e("phone")} />
-        <KfInput id={IDS.city} name="city" type="text" label="City" icon="mapPin" autoComplete="address-level2" defaultValue={old.city} placeholder="e.g. Vijayawada" error={e("city")} />
+        <KfInput id={IDS.phone} name="phone" label="Phone Number" req required {...phoneProps()} icon="phone" defaultValue={old.phone} placeholder="9876543210" hint="10-digit mobile number. A parent's number is fine." error={e("phone")} />
+        <KfInput id={IDS.city} name="city" type="text" label="City" maxLength={L.city} icon="mapPin" autoComplete="address-level2" defaultValue={old.city} placeholder="e.g. Vijayawada" error={e("city")} />
       </div>
       <div className={KF_ROW}>
         <KfSelect id={IDS.grade} name="grade" label="Grade / Class" icon="cap" placeholder="Select Grade / Class" options={GRADES} defaultValue={old.grade ?? ""} error={e("grade")} />
         <KfSelect id={IDS.board} name="board" label="Board" icon="bookOpen" placeholder="Select Board" options={BOARDS} defaultValue={old.board ?? ""} error={e("board")} />
       </div>
-      <KfInput id={IDS.school_name} name="school_name" type="text" label="Current School" icon="school" defaultValue={old.school_name} placeholder="Optional" error={e("school_name")} />
-      <KfTextarea id={IDS.message} name="message" label="Anything you'd like us to know?" rows={5} defaultValue={old.message} placeholder="Optional: subjects you need help with, a good time to call…" error={e("message")} />
+      <KfInput id={IDS.school_name} name="school_name" type="text" label="Current School" maxLength={L.organization} icon="school" defaultValue={old.school_name} placeholder="Optional" error={e("school_name")} />
+      <KfTextarea id={IDS.message} name="message" label="Anything you'd like us to know?" rows={5} maxLength={2000} defaultValue={old.message} placeholder="Optional: subjects you need help with, a good time to call…" error={e("message")} />
       <KfConsent
         id={IDS.consent}
         checked={old.consent === "1"}

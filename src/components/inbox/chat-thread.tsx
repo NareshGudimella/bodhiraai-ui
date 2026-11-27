@@ -4,6 +4,8 @@ import { Fragment, useEffect, useRef, useState, useTransition } from "react";
 import { buttonClass } from "@/components/ui";
 import { sendChatMessage } from "@/lib/inbox-actions";
 import type { ChatMessage } from "@/lib/inbox-api";
+import { CharCount } from "@/components/counted-textarea";
+import { L } from "@/lib/input-limits";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const dayKey = (d: Date) => Math.floor(d.getTime() / 86_400_000);
@@ -98,7 +100,7 @@ export function ChatThread({
         <textarea
           id="chat-input"
           rows={1}
-          maxLength={5000}
+          maxLength={L.chat}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -114,6 +116,7 @@ export function ChatThread({
           {pending ? "…" : labels.send}
         </button>
       </form>
+      <div className="px-4 empty:hidden"><CharCount n={draft.length} max={L.chat} /></div>
       {error && <p role="alert" className="px-4 pb-3 text-sm text-danger">{error}</p>}
     </div>
   );

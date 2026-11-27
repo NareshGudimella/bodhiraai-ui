@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { inputClass } from "@/components/form";
 import { secondaryButtonClass } from "@/components/ui";
+import { L } from "@/lib/input-limits";
 
 /** GET filter form: submits as search params with a client-side navigation. */
 export function FilterBar({ action, children }: { action: string; children: ReactNode }) {
@@ -15,11 +16,12 @@ export function FilterBar({ action, children }: { action: string; children: Reac
   );
 }
 
-export function FilterInput({ name, label, defaultValue, placeholder }: { name: string; label: string; defaultValue?: string; placeholder?: string }) {
+/** Search box: `maxLength` is the API's cap (120 for `q`, 200 for any other query value). */
+export function FilterInput({ name, label, defaultValue, placeholder, maxLength = L.search }: { name: string; label: string; defaultValue?: string; placeholder?: string; maxLength?: number }) {
   return (
     <label className="text-xs font-medium text-ink-2">
       <span className="mb-1 block">{label}</span>
-      <input name={name} defaultValue={defaultValue} placeholder={placeholder} className={`${inputClass} py-1.5 text-sm`} />
+      <input name={name} maxLength={maxLength} defaultValue={defaultValue} placeholder={placeholder} className={`${inputClass} py-1.5 text-sm`} />
     </label>
   );
 }

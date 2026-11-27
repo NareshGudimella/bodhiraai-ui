@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { grantPlan } from "@/lib/billing-actions";
+import { L, N, numberProps } from "@/lib/input-limits";
 
 /** Legacy "Manual Plan Grant" on the school page (BillingController::manualGrant). */
 export function GrantForm({ schoolId, plans, current }: { schoolId: number; plans: readonly string[]; current: string }) {
@@ -20,13 +21,13 @@ export function GrantForm({ schoolId, plans, current }: { schoolId: number; plan
           </select>
         </Field>
         <Field label="Days" error={e?.days}>
-          <input key={`d${v?.days}`} name="days" type="number" defaultValue={v?.days ?? 30} min={1} max={730} required className={inputClass} />
+          <input key={`d${v?.days}`} name="days" {...numberProps(N.daysGrant)} defaultValue={v?.days ?? 30} required className={inputClass} />
         </Field>
         <Field label="Amount (₹ paise)" error={e?.amount_paise} hint="paise; ₹1 = 100">
-          <input key={`a${v?.amount_paise}`} name="amount_paise" type="number" defaultValue={v?.amount_paise ?? 0} min={0} step={100} required className={inputClass} />
+          <input key={`a${v?.amount_paise}`} name="amount_paise" {...numberProps(N.amountPaise)} defaultValue={v?.amount_paise ?? 0} required className={inputClass} />
         </Field>
         <Field label="Note" error={e?.note}>
-          <input key={`n${v?.note}`} name="note" defaultValue={v?.note} maxLength={255} placeholder="Reason / reference" className={inputClass} />
+          <input key={`n${v?.note}`} name="note" defaultValue={v?.note} maxLength={L.note} placeholder="Reason / reference" className={inputClass} />
         </Field>
       </div>
       <FormMessage state={state} />

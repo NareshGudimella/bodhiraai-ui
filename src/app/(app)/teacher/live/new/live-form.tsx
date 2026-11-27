@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { Card, buttonClass } from "@/components/ui";
 import { scheduleLiveClass } from "@/lib/teacher-actions";
+import { DATETIME_MAX, HTTPS_PATTERN, L, N, numberProps, urlProps } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 export function LiveForm({
   classes,
@@ -34,10 +36,10 @@ export function LiveForm({
     <Card className="max-w-2xl">
       <form action={action} className="space-y-4">
         <Field label="Title" error={e.title}>
-          <input name="title" required maxLength={200} defaultValue={v.title} key={`t-${v.title}`} className={inputClass} />
+          <input name="title" required maxLength={L.titleLong} defaultValue={v.title} key={`t-${v.title}`} className={inputClass} />
         </Field>
         <Field label="Description (optional)" error={e.description}>
-          <textarea name="description" rows={3} maxLength={1000} defaultValue={v.description} key={`d-${v.description}`} className={inputClass} />
+          <CountedTextarea name="description" rows={3} maxLength={L.description} defaultValue={v.description} key={`d-${v.description}`} className={inputClass} />
         </Field>
         <fieldset>
           <legend className="mb-1 text-sm font-medium text-ink-2">Audience</legend>
@@ -52,14 +54,14 @@ export function LiveForm({
         </fieldset>
         {scope === "class" && (
           <Field label="Class" error={e.class_id}>
-            <select name="class_id" defaultValue={v.class_id} key={`c-${v.class_id}`} onChange={(ev) => setClassId(ev.target.value)} className={inputClass}>
+            <select name="class_id" required defaultValue={v.class_id} key={`c-${v.class_id}`} onChange={(ev) => setClassId(ev.target.value)} className={inputClass}>
               {classes.map((c) => <option key={c.id} value={c.id}>{c.label} · {c.students_count} students</option>)}
             </select>
           </Field>
         )}
         {scope === "syllabus" && (
           <Field label="Syllabus" error={e.syllabus_id}>
-            <select name="syllabus_id" defaultValue={v.syllabus_id} key={`s-${v.syllabus_id}`} className={inputClass}>
+            <select name="syllabus_id" required defaultValue={v.syllabus_id} key={`s-${v.syllabus_id}`} className={inputClass}>
               {syllabi.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </Field>
@@ -73,10 +75,10 @@ export function LiveForm({
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Starts at" error={e.scheduled_at} hint="Shown to students exactly as entered.">
-            <input name="scheduled_at" type="datetime-local" required defaultValue={v.scheduled_at} key={`at-${v.scheduled_at}`} className={inputClass} />
+            <input name="scheduled_at" type="datetime-local" max={DATETIME_MAX} required defaultValue={v.scheduled_at} key={`at-${v.scheduled_at}`} className={inputClass} />
           </Field>
           <Field label="Duration (minutes)" error={e.duration_min}>
-            <input name="duration_min" type="number" min={5} max={480} defaultValue={v.duration_min ?? 45} key={`dm-${v.duration_min}`} required className={inputClass} />
+            <input name="duration_min" {...numberProps(N.liveMinutes)} defaultValue={v.duration_min ?? 45} key={`dm-${v.duration_min}`} required className={inputClass} />
           </Field>
         </div>
         <fieldset>
@@ -92,7 +94,7 @@ export function LiveForm({
         </fieldset>
         {provider === "external" && (
           <Field label="Meeting link" error={e.meeting_url}>
-            <input name="meeting_url" type="url" placeholder="https://" required defaultValue={v.meeting_url} key={`u-${v.meeting_url}`} className={inputClass} />
+            <input name="meeting_url" {...urlProps(500)} pattern={HTTPS_PATTERN} title="A link starting with https://" placeholder="https://" required defaultValue={v.meeting_url} key={`u-${v.meeting_url}`} className={inputClass} />
           </Field>
         )}
         <FormMessage state={state} />

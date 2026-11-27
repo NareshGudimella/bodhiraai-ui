@@ -4,8 +4,8 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { submitAssignment } from "@/lib/student-actions";
-
-const ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip";
+import { FILE, L, checkFiles } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 export function SubmitForm({
   assignmentId,
@@ -22,17 +22,17 @@ export function SubmitForm({
   return (
     <form action={action} className="space-y-3">
       <Field label="Note for your teacher (optional)" error={e.note}>
-        <textarea
+        <CountedTextarea
           name="note"
           rows={3}
-          maxLength={2000}
+          maxLength={L.submissionNote}
           defaultValue={state && !state.ok && state.values ? state.values.note : initialNote}
           key={`n-${state?.values?.note}-${state?.ok}-${initialNote}`}
           className={inputClass}
         />
       </Field>
       <Field label="File (optional)" error={e.file} hint="PDF, Word, Excel, PowerPoint, text or ZIP, up to 50 MB.">
-        <input name="file" type="file" accept={ACCEPT} className="block w-full text-sm text-ink-2 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-light file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand" />
+        <input name="file" type="file" accept={FILE.document.accept} onChange={checkFiles(FILE.document.kb)} className="block w-full text-sm text-ink-2 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-light file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand" />
       </Field>
       {hasSubmission && <p className="text-xs text-ink-3">Resubmitting replaces your note; a new file replaces the old one (leave the file empty to keep it).</p>}
       <FormMessage state={state} />

@@ -19,6 +19,7 @@ import { businessDetails, CONTACT_FALLBACK } from "@/lib/site-business";
 import { contactSubmit } from "@/lib/site-actions";
 import { getSiteFlash } from "@/lib/site-flash";
 import { sanitizeMap } from "@/lib/sanitize-html";
+import { L, NAME_PATTERN, NAME_TITLE, emailProps } from "@/lib/input-limits";
 
 /** Renders per request and may block, like the site layout (see its note). */
 export const instant = false;
@@ -209,11 +210,11 @@ async function ContactForm() {
       {/* key: remount after a redirect back, so the old input repopulates */}
       <form key={JSON.stringify(old)} action={contactSubmit} className={KF_FORM}>
         <div className={KF_ROW}>
-          <KfInput id="name" name="name" type="text" label="Your Name" req icon="user" autoComplete="name" defaultValue={old.name} placeholder="e.g. Priya Sharma" error={e("name")} />
-          <KfInput id="email" name="email" type="email" label="Your Email" req icon="mail" autoComplete="email" inputMode="email" defaultValue={old.email} placeholder="you@school.edu.in" error={e("email")} />
+          <KfInput id="name" name="name" type="text" label="Your Name" req required maxLength={L.nameLead} pattern={NAME_PATTERN} title={NAME_TITLE} icon="user" autoComplete="name" defaultValue={old.name} placeholder="e.g. Priya Sharma" error={e("name")} />
+          <KfInput id="email" name="email" label="Your Email" req required {...emailProps(L.emailLead)} icon="mail" defaultValue={old.email} placeholder="you@school.edu.in" error={e("email")} />
         </div>
         <KfSelect id="subject" name="subject" label="Subject" icon="school" placeholder="Select Subject" options={SUBJECTS} defaultValue={old.subject ?? ""} hint="Which best describes your school?" error={e("subject")} />
-        <KfTextarea id="message" name="message" label="Message" rows={5} defaultValue={old.message} placeholder="Number of students, classes, boards or anything else we should know." error={e("message")} />
+        <KfTextarea id="message" name="message" label="Message" rows={5} maxLength={5000} defaultValue={old.message} placeholder="Number of students, classes, boards or anything else we should know." error={e("message")} />
         <KfConsent
           id={IDS.consent}
           checked={old.consent === "1"}

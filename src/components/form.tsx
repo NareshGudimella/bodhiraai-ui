@@ -1,4 +1,6 @@
 import { Children, cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from "react";
+import { CountedTextarea } from "./counted-textarea";
+import { NewPasswordInput } from "./new-password-input";
 
 type ControlProps = { "aria-describedby"?: string; "aria-invalid"?: boolean | "true" | "false"; children?: ReactNode };
 const CONTROLS = new Set(["input", "select", "textarea"]);
@@ -6,14 +8,14 @@ const CONTROLS = new Set(["input", "select", "textarea"]);
 /**
  * Gives the field's controls (plain `<input>`, `<select>`, `<textarea>`, also
  * when nested in plain elements) `aria-describedby` → the error or hint, and
- * `aria-invalid` while there is an error. Controls inside custom components
- * are left alone.
+ * `aria-invalid` while there is an error. Controls inside other custom components
+ * are left alone (`CountedTextarea` and `NewPasswordInput` are passed through).
  */
 function linkControls(node: ReactNode, describedBy: string | undefined, invalid: boolean): ReactNode {
   return Children.map(node, (child) => {
-    if (!isValidElement(child) || typeof child.type !== "string") return child;
+    if (!isValidElement(child) || (typeof child.type !== "string" && child.type !== CountedTextarea && child.type !== NewPasswordInput)) return child;
     const el = child as ReactElement<ControlProps>;
-    if (CONTROLS.has(el.type as string)) {
+    if (el.type === CountedTextarea || el.type === NewPasswordInput || CONTROLS.has(el.type as string)) {
       if (!describedBy && !invalid) return el;
       return cloneElement(el, {
         "aria-describedby": [el.props["aria-describedby"], describedBy].filter(Boolean).join(" ") || undefined,

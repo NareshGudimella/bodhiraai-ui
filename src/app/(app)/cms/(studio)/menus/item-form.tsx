@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Field, FormMessage, inputClass } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { saveMenuItem } from "@/lib/cms-actions";
+import { L } from "@/lib/input-limits";
 
 /** The legacy "add item" form: label, URL, icon, target, parent, visible. */
 export function ItemForm({ menuKey, parents }: { menuKey: string; parents: { id: number; label: string }[] }) {
@@ -12,9 +13,9 @@ export function ItemForm({ menuKey, parents }: { menuKey: string; parents: { id:
   const e = state?.errors;
   return (
     <form action={action} className="space-y-3">
-      <Field label="Label" error={e?.label}><input key={`l${v?.label}`} name="label" defaultValue={v?.label} required className={inputClass} /></Field>
-      <Field label="URL" error={e?.url}><input key={`u${v?.url}`} name="url" defaultValue={v?.url} placeholder="/about or https://…" required className={inputClass} /></Field>
-      <Field label="Icon (optional)" error={e?.icon}><input key={`i${v?.icon}`} name="icon" defaultValue={v?.icon} placeholder="fa-house" className={inputClass} /></Field>
+      <Field label="Label" error={e?.label}><input key={`l${v?.label}`} name="label" defaultValue={v?.label} required maxLength={120} className={inputClass} /></Field>
+      <Field label="URL" error={e?.url}><input key={`u${v?.url}`} name="url" defaultValue={v?.url} placeholder="/about or https://…" required maxLength={L.urlShort} className={inputClass} /></Field>
+      <Field label="Icon (optional)" error={e?.icon}><input key={`i${v?.icon}`} name="icon" defaultValue={v?.icon} placeholder="fa-house" maxLength={60} className={inputClass} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Open in" error={e?.target}>
           <select key={`t${v?.target}`} name="target" defaultValue={v?.target ?? "_self"} className={inputClass}>

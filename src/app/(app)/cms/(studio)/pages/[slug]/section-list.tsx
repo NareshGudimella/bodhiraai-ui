@@ -6,6 +6,8 @@ import { Field, FormMessage, inputClass } from "@/components/form";
 import { Pill, buttonClass, secondaryButtonClass } from "@/components/ui";
 import { deleteSection, reorderSections, saveSection, toggleSection } from "@/lib/cms-actions";
 import type { Section } from "@/lib/cms-api";
+import { FILE, L, checkFiles } from "@/lib/input-limits";
+import { CountedTextarea } from "@/components/counted-textarea";
 
 type Item = Section & { media_src: string | null };
 const small = "rounded-lg border border-line px-2 py-1 text-xs hover:bg-primary-light disabled:opacity-40";
@@ -68,9 +70,9 @@ function SectionForm({ pageSlug, section, types, onDone }: { pageSlug: string; s
     if (x === null || x === undefined) return "";
     return typeof x === "object" ? JSON.stringify(x, null, 2) : String(x);
   };
-  const text = (k: keyof Section, label: string) => (
+  const text = (k: keyof Section, label: string, maxLength: number) => (
     <Field label={label} error={e?.[k]}>
-      <input key={`${k}${v?.[k] ?? ""}`} name={k} defaultValue={val(k)} className={inputClass} />
+      <input key={`${k}${v?.[k] ?? ""}`} name={k} maxLength={maxLength} defaultValue={val(k)} className={inputClass} />
     </Field>
   );
   return (
@@ -80,13 +82,13 @@ function SectionForm({ pageSlug, section, types, onDone }: { pageSlug: string; s
           {Object.entries(types).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
         </select>
       </Field>
-      {text("key", "Key")}
-      {text("eyebrow", "Eyebrow")}
-      {text("heading", "Heading")}
-      <div className="sm:col-span-2">{text("subheading", "Subheading")}</div>
+      {text("key", "Key", 60)}
+      {text("eyebrow", "Eyebrow", 160)}
+      {text("heading", "Heading", 255)}
+      <div className="sm:col-span-2">{text("subheading", "Subheading", 500)}</div>
       <div className="sm:col-span-2">
         <Field label="Body" error={e?.body}>
-          <textarea key={`b${v?.body ?? ""}`} name="body" defaultValue={val("body")} rows={4} className={inputClass} />
+          <CountedTextarea key={`b${v?.body ?? ""}`} name="body" maxLength={L.body} defaultValue={val("body")} rows={4} className={inputClass} />
         </Field>
       </div>
       <div className="sm:col-span-2">
@@ -96,14 +98,14 @@ function SectionForm({ pageSlug, section, types, onDone }: { pageSlug: string; s
               // eslint-disable-next-line @next/next/no-img-element
               <img src={section.media_src} alt="" className="size-14 rounded-lg object-cover ring-1 ring-line" />
             )}
-            <input name="media_url" defaultValue={val("media_url")} placeholder="Image URL (blank keeps the current one)" className={`${inputClass} min-w-0 flex-1`} />
-            <input name="media_file" type="file" accept="image/*" className="w-full text-sm" />
+            <input name="media_url" maxLength={L.urlShort} defaultValue={val("media_url")} placeholder="Image URL (blank keeps the current one)" className={`${inputClass} min-w-0 flex-1`} />
+            <input name="media_file" type="file" accept={FILE.image.accept} onChange={checkFiles(FILE.image.kb)} className="w-full text-sm" />
           </span>
         </Field>
       </div>
       <div className="sm:col-span-2">
         <Field label="Data (JSON)" error={e?.data} hint="Block-specific items, e.g. stats or CTA links. Invalid JSON is dropped.">
-          <textarea key={`d${v?.data ?? ""}`} name="data" defaultValue={val("data")} rows={4} className={`${inputClass} font-mono text-xs`} />
+          <CountedTextarea key={`d${v?.data ?? ""}`} name="data" maxLength={L.body} defaultValue={val("data")} rows={4} className={`${inputClass} font-mono text-xs`} />
         </Field>
       </div>
       <label className="flex items-center gap-2 text-sm text-ink-2">

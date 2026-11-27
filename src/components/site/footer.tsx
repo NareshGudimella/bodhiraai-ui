@@ -15,6 +15,7 @@ import { KfConsent } from "./kit-forms-fields";
 import { KfFocusResult } from "./kit-forms-focus";
 import { Tba } from "./tba";
 import { btn, cx } from "./ui";
+import { L, emailProps } from "@/lib/input-limits";
 
 /** Paragraph font in the footer (was `.bh-footer p`: 15px/1.65, cream at 72%); callers add size, colour, line height. */
 const P = "font-sans font-normal";
@@ -60,12 +61,11 @@ async function NewsletterForm() {
       <div className="flex gap-2 rounded-full border border-[rgba(255,255,255,.12)] bg-[rgba(0,0,0,.2)] p-1.5 transition-[border-color,box-shadow] duration-200 focus-within:border-gold focus-within:shadow-[0_0_0_4px_rgba(226,184,115,.15)] max-xs:flex-col max-xs:rounded-[20px] motion-reduce:transition-none">
         <label htmlFor="email-2" className="sr-only">Email address</label>
         <input
-          type="email"
+          {...emailProps(L.emailLead)}
           id="email-2"
           name="email"
           required
           placeholder="Enter your e-mail"
-          autoComplete="email"
           defaultValue={old.email}
           aria-invalid={emailError ? true : undefined}
           aria-describedby={emailError ? "email-2-error" : undefined}
